@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Box,
@@ -14,41 +14,94 @@ import {
 } from "@chakra-ui/react";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { ArrowLeft, Clock, CheckCircle2, User, Users } from "lucide-react";
-import { PlayerService, SessionService, type Player, type Session } from "@/lib/api";
+import {
+  PlayerService,
+  SessionService,
+  type Player,
+  type Session,
+  type Court,
+  type Match,
+} from "@/lib/api";
+import BadmintonCourt from "@/components/court/BadmintonCourt";
 import toast from "react-hot-toast";
 
-export default function StatusPage() {
+function StatusPageContent() {
   const searchParams = useSearchParams();
   const playerId = searchParams.get("playerId");
-  
+
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [queuePosition, setQueuePosition] = useState(0);
   const [loading, setLoading] = useState(true);
   const [player, setPlayer] = useState<Player | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
+  const [currentCourt, setCurrentCourt] = useState<Court | null>(null);
+  const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);
+
+  // Helper function to format elapsed time for match display
+  const formatMatchElapsedTime = (startTime: Date): string => {
+    const start = new Date(startTime);
+    const elapsedMs = Date.now() - start.getTime();
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+
+    if (elapsedMinutes === 0) {
+      return "< 1 phút";
+    } else if (elapsedMinutes === 1) {
+      return "1 phút";
+    } else {
+      return `${elapsedMinutes} phút`;
+    }
+  };
 
   // Function to fetch player data
   const fetchPlayerData = async () => {
     if (!playerId) return;
-    
+
     try {
       setLoading(true);
       const playerData = await PlayerService.getPlayer(playerId);
       setPlayer(playerData);
-      
+
       // Fetch session data
       if (playerData.sessionId) {
-        const sessionData = await SessionService.getSession(playerData.sessionId);
+        const sessionData = await SessionService.getSession(
+          playerData.sessionId
+        );
         setSession(sessionData);
-        
+
         // Calculate queue position if player is waiting
         if (playerData.status === "WAITING") {
-          const waitingPlayers = sessionData.players?.filter(p => p.status === "WAITING") || [];
+          const waitingPlayers =
+            sessionData.players?.filter((p) => p.status === "WAITING") || [];
           // Sort by current wait time (descending)
-          const sortedPlayers = [...waitingPlayers].sort((a, b) => b.currentWaitTime - a.currentWaitTime);
-          const position = sortedPlayers.findIndex(p => p.id === playerData.id) + 1;
+          const sortedPlayers = [...waitingPlayers].sort(
+            (a, b) => b.currentWaitTime - a.currentWaitTime
+          );
+          const position =
+            sortedPlayers.findIndex((p) => p.id === playerData.id) + 1;
           setQueuePosition(position);
+        }
+
+        // Get match and court info if player is playing
+        if (playerData.status === "PLAYING" && playerData.currentCourtId) {
+          const court = sessionData.courts?.find(
+            (c) => c.id === playerData.currentCourtId
+          );
+          if (court) {
+            setCurrentCourt(court);
+            setCourtPlayers(court.currentPlayers || []);
+            
+            // Get the current match from the court
+            if (court.currentMatch) {
+              setCurrentMatch(court.currentMatch);
+            }
+          }
+        } else {
+          // Clear match and court info if not playing
+          setCurrentMatch(null);
+          setCurrentCourt(null);
+          setCourtPlayers([]);
         }
       }
     } catch (error) {
@@ -66,7 +119,7 @@ export default function StatusPage() {
       toast.error("Player ID is missing");
       return;
     }
-    
+
     fetchPlayerData();
   }, [playerId]);
 
@@ -109,7 +162,9 @@ export default function StatusPage() {
             mb={4}
             textAlign="center"
           >
-            <Heading size="md" mb={2}>Player Not Found</Heading>
+            <Heading size="md" mb={2}>
+              Player Not Found
+            </Heading>
             <Text>We couldn't find your player information.</Text>
           </Box>
           <NextLinkButton href="/join" colorScheme="blue">
@@ -201,7 +256,8 @@ export default function StatusPage() {
                     Currently Playing
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    Court {player.currentCourt?.courtNumber || "Unknown"} - Enjoy your match!
+                    Court {player.currentCourt?.courtNumber || "Unknown"} -
+                    Enjoy your match!
                   </Text>
                 </>
               ) : (
@@ -221,6 +277,73 @@ export default function StatusPage() {
                 </>
               )}
             </Box>
+
+            {/* Court Visual - Only show when player is playing */}
+            {player.status === "PLAYING" && currentCourt && courtPlayers.length > 0 && (
+              <Box
+                borderWidth="1px"
+                p={4}
+                borderRadius="md"
+                bg="white"
+                _dark={{ bg: "gray.800" }}
+                boxShadow="sm"
+                transition="all 0.2s"
+                _hover={{ boxShadow: "md" }}
+              >
+                <Flex justify="space-between" align="center" mb={3}>
+                  <Heading size="sm" color="green.600">
+                    Court {currentCourt.courtNumber}
+                  </Heading>
+                  {currentMatch && (
+                    <Text fontSize="sm" color="gray.500">
+                      {formatMatchElapsedTime(currentMatch.startTime)} elapsed
+                    </Text>
+                  )}
+                </Flex>
+                <BadmintonCourt
+                  players={courtPlayers.map(p => ({
+                    ...p,
+                    isCurrentPlayer: p.id === player.id
+                  }))}
+                  isActive={true}
+                  elapsedTime={
+                    currentMatch
+                      ? formatMatchElapsedTime(currentMatch.startTime)
+                      : undefined
+                  }
+                  width="100%"
+                  height="200px"
+                  showTimeInCenter={true}
+                />
+                <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
+                  You are highlighted in blue on the court above
+                </Text>
+                {courtPlayers.length > 0 && (
+                  <Box mt={2}>
+                    <Text fontSize="xs" color="gray.600" textAlign="center" mb={1}>
+                      Playing with:
+                    </Text>
+                    <Flex justify="center" wrap="wrap" gap={2}>
+                      {courtPlayers
+                        .filter(p => p.id !== player.id)
+                        .map(p => (
+                          <Text 
+                            key={p.id} 
+                            fontSize="xs" 
+                            color="gray.500"
+                            bg="gray.50"
+                            px={2}
+                            py={1}
+                            borderRadius="md"
+                          >
+                            #{p.playerNumber} {p.name?.split(" ")[0] || `P${p.playerNumber}`}
+                          </Text>
+                        ))}
+                    </Flex>
+                  </Box>
+                )}
+              </Box>
+            )}
 
             <Flex gap={4}>
               <Box
@@ -357,5 +480,13 @@ export default function StatusPage() {
         </NextLinkButton>
       </Center>
     </Container>
+  );
+}
+
+export default function StatusPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <StatusPageContent />
+    </Suspense>
   );
 }

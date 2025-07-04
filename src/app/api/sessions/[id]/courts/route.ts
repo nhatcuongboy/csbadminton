@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface SessionParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // GET /api/sessions/[id]/courts - Lấy danh sách sân trong session
-export async function GET(request: NextRequest, { params }: SessionParams) {
+export async function GET(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Validate session exists
     const session = await prisma.session.findUnique({

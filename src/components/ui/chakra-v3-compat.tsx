@@ -98,7 +98,7 @@ export const TabsComp = ({
   <Box {...props}>
     {React.Children.map(children, (child) => {
       if (React.isValidElement(child)) {
-        return React.cloneElement(child, { index, onChange });
+        return React.cloneElement(child as React.ReactElement<any>, { index, onChange });
       }
       return child;
     })}

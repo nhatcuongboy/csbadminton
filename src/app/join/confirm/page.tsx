@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -19,7 +19,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/chakra-compat";
 import { PlayerService, SessionService, type Player, type Session } from "@/lib/api";
 
-export default function ConfirmPage() {
+function ConfirmPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
@@ -325,5 +325,13 @@ export default function ConfirmPage() {
         </Box>
       </Box>
     </Container>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <ConfirmPageContent />
+    </Suspense>
   );
 }

@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface PlayerParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // GET /api/players/[id] - Lấy thông tin chi tiết người chơi
-export async function GET(request: NextRequest, { params }: PlayerParams) {
+export async function GET(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const player = await prisma.player.findUnique({
       where: { id },
@@ -64,9 +62,9 @@ export async function GET(request: NextRequest, { params }: PlayerParams) {
 }
 
 // PUT /api/players/[id] - Cập nhật thông tin người chơi
-export async function PUT(request: NextRequest, { params }: PlayerParams) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Check if player exists
@@ -114,9 +112,9 @@ export async function PUT(request: NextRequest, { params }: PlayerParams) {
 }
 
 // DELETE /api/players/[id] - Xóa người chơi
-export async function DELETE(request: NextRequest, { params }: PlayerParams) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Check if player exists
     const existingPlayer = await prisma.player.findUnique({

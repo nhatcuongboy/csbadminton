@@ -24,11 +24,11 @@ import {
   Settings,
   Calendar,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SessionService } from "@/lib/api";
 import NextLinkButton from "@/components/ui/NextLinkButton";
 import { toast } from "react-hot-toast";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 
 // Helper function to format date for datetime-local input
 function formatDateTimeLocal(date: Date): string {
@@ -42,13 +42,22 @@ function formatDateTimeLocal(date: Date): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-export default function NewSessionPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; details?: string };
-}) {
+export default function NewSessionPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewSessionPageContent />
+    </Suspense>
+  );
+}
+
+function NewSessionPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get error and details from search params
+  const error = searchParams.get('error');
+  const details = searchParams.get('details');
 
   // Set up default values for start time and end time
   const now = new Date();
@@ -86,11 +95,11 @@ export default function NewSessionPage({
 
   // Show error message if redirected with error
   useEffect(() => {
-    if (searchParams.error) {
-      const errorMessage = searchParams.details || "Failed to create session";
+    if (error) {
+      const errorMessage = details || "Failed to create session";
       toast.error(decodeURIComponent(errorMessage));
     }
-  }, [searchParams.error, searchParams.details]);
+  }, [error, details]);
 
   async function createSession(formData: FormData) {
     // Client-side form handling
@@ -198,7 +207,7 @@ export default function NewSessionPage({
           </Text>
 
           {/* Error Alert */}
-          {searchParams.error && (
+          {error && (
             <Box
               mt={4}
               p={4}
@@ -212,7 +221,7 @@ export default function NewSessionPage({
             >
               <Text fontWeight="medium">
                 {decodeURIComponent(
-                  searchParams.details || "Failed to create session"
+                  details || "Failed to create session"
                 )}
               </Text>
             </Box>

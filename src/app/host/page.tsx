@@ -14,7 +14,6 @@ import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useState } from "react";
 import SessionsList from "@/components/session/SessionsList";
-import CreateSessionForm from "@/components/session/CreateSessionForm";
 import SessionHistoryList from "@/components/session/SessionHistoryList";
 import NextLinkButton from "@/components/ui/NextLinkButton";
 

@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface PlayerParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // POST /api/players/[id]/confirm - Người chơi xác nhận tham gia
-export async function POST(request: NextRequest, { params }: PlayerParams) {
+export async function POST(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Check if player exists

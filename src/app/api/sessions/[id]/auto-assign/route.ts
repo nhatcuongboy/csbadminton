@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface SessionParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // POST /api/sessions/[id]/auto-assign - Auto-assign players to empty courts
-export async function POST(request: NextRequest, { params }: SessionParams) {
+export async function POST(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
-    const { id: sessionId } = params;
+    const { id: sessionId } = await params;
 
     // Check if session exists and is in progress
     const session = await prisma.session.findUnique({

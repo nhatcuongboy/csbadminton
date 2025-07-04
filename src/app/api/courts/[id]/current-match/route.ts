@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface CourtParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // GET /api/courts/[id]/current-match - Lấy thông tin trận đấu hiện tại trên sân
-export async function GET(request: NextRequest, { params }: CourtParams) {
+export async function GET(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Validate court exists
     const court = await prisma.court.findUnique({

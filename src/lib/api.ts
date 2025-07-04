@@ -291,15 +291,14 @@ export const PlayerService = {
     return response.data.data!;
   },
 
-  // Update wait times
+  // Update wait times (deprecated - use WaitTimeService.updateSessionWaitTimes instead)
   updateWaitTimes: async (
     sessionId: string,
     minutesToAdd: number = 1
   ): Promise<{ updatedCount: number; players: Player[] }> => {
     const response = await api.put<
       ApiResponse<{ updatedCount: number; players: Player[] }>
-    >("/players/update-wait-times", {
-      sessionId,
+    >(`/sessions/${sessionId}/wait-times`, {
       minutesToAdd,
     });
     return response.data.data!;
@@ -357,5 +356,200 @@ export const CourtService = {
       `/courts/${courtId}/current-match`
     );
     return response.data.data || null;
+  },
+};
+
+// Match service
+export const MatchService = {
+  // Get session matches
+  getSessionMatches: async (sessionId: string): Promise<{
+    matches: Match[];
+    totalMatches: number;
+    activeMatches: number;
+    completedMatches: number;
+  }> => {
+    const response = await api.get<ApiResponse<{
+      matches: Match[];
+      totalMatches: number;
+      activeMatches: number;
+      completedMatches: number;
+    }>>(`/sessions/${sessionId}/matches`);
+    return response.data.data!;
+  },
+
+  // Create match
+  createMatch: async (
+    sessionId: string,
+    data: { courtId: string; playerIds: string[] }
+  ): Promise<{ match: Match; message: string }> => {
+    const response = await api.post<ApiResponse<{
+      match: Match;
+      message: string;
+    }>>(`/sessions/${sessionId}/matches`, data);
+    toast.success("Match created successfully");
+    return response.data.data!;
+  },
+
+  // End match
+  endMatch: async (
+    sessionId: string,
+    matchId: string
+  ): Promise<Match> => {
+    const response = await api.patch<ApiResponse<Match>>(
+      `/sessions/${sessionId}/matches/${matchId}/end`
+    );
+    toast.success("Match ended successfully");
+    return response.data.data!;
+  },
+
+  // Auto-assign players
+  autoAssignPlayers: async (
+    sessionId: string,
+    options?: {
+      strategy?: "fairness" | "speed" | "level_balance";
+      maxPlayersPerCourt?: number;
+    }
+  ): Promise<{
+    matches: Match[];
+    strategy: string;
+    assignedPlayers: number;
+    courtsUsed: number;
+    message: string;
+  }> => {
+    const response = await api.post<ApiResponse<{
+      matches: Match[];
+      strategy: string;
+      assignedPlayers: number;
+      courtsUsed: number;
+      message: string;
+    }>>(`/sessions/${sessionId}/auto-assign`, options || {});
+    toast.success("Players auto-assigned successfully");
+    return response.data.data!;
+  },
+};
+
+// Wait time service
+export const WaitTimeService = {
+  // Update wait times for session
+  updateSessionWaitTimes: async (
+    sessionId: string,
+    minutesToAdd: number = 1
+  ): Promise<{
+    updatedCount: number;
+    players: Player[];
+    minutesAdded: number;
+  }> => {
+    const response = await api.put<ApiResponse<{
+      updatedCount: number;
+      players: Player[];
+      minutesAdded: number;
+    }>>(`/sessions/${sessionId}/wait-times`, { minutesToAdd });
+    return response.data.data!;
+  },
+
+  // Get wait time statistics
+  getWaitTimeStats: async (sessionId: string): Promise<{
+    stats: {
+      totalPlayers: number;
+      waitingPlayers: number;
+      playingPlayers: number;
+      averageWaitTime: number;
+      maxWaitTime: number;
+      minWaitTime: number;
+      totalWaitTime: number;
+      averageTotalWaitTime: number;
+    };
+    waitingPlayers: Player[];
+    playingPlayers: Player[];
+    lastUpdated: string;
+  }> => {
+    const response = await api.get<ApiResponse<{
+      stats: any;
+      waitingPlayers: Player[];
+      playingPlayers: Player[];
+      lastUpdated: string;
+    }>>(`/sessions/${sessionId}/wait-times`);
+    return response.data.data!;
+  },
+
+  // Reset wait times (using the update endpoint with 0 minutes)
+  resetWaitTimes: async (
+    sessionId: string,
+    playerIds: string[],
+    resetType: "current" | "total" | "both" = "current"
+  ): Promise<{
+    updatedCount: number;
+    players: Player[];
+    resetType: string;
+  }> => {
+    // Since there's no dedicated reset endpoint, we'll use the update endpoint
+    // with specific logic to reset wait times to 0
+    const response = await api.put<ApiResponse<{
+      updatedCount: number;
+      players: Player[];
+      minutesAdded: number;
+    }>>(`/sessions/${sessionId}/wait-times`, {
+      minutesToAdd: 0,
+      resetType,
+      playerIds
+    });
+    toast.success("Wait times reset successfully");
+    return {
+      updatedCount: response.data.data!.updatedCount,
+      players: response.data.data!.players,
+      resetType
+    };
+  },
+};
+
+// Real-time service for session status
+export const RealTimeService = {
+  // Get real-time session status
+  getSessionStatus: async (sessionId: string): Promise<{
+    session: Session;
+    stats: {
+      totalPlayers: number;
+      confirmedPlayers: number;
+      waitingPlayers: number;
+      playingPlayers: number;
+      availableCourts: number;
+      activeCourts: number;
+      activeMatches: number;
+    };
+    waitStats: {
+      averageWaitTime: number;
+      maxWaitTime: number;
+      minWaitTime: number;
+    };
+    waitingQueue: (Player & { queuePosition: number })[];
+    activeMatches: {
+      matchId: string;
+      courtNumber: number;
+      startTime: Date;
+      duration: number;
+      players: {
+        playerId: string;
+        playerNumber: number;
+        name: string;
+        gender: string;
+        level: string;
+        position: number;
+      }[];
+    }[];
+    courts: {
+      id: string;
+      courtNumber: number;
+      status: string;
+      currentMatch: {
+        id: string;
+        startTime: Date;
+        duration: number;
+        playerCount: number;
+      } | null;
+    }[];
+    lastUpdated: string;
+  }> => {
+    const response = await api.get<ApiResponse<any>>(`/sessions/${sessionId}/status`);
+    return response.data.data!;
   },
 };

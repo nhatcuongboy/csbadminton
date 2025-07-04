@@ -3,16 +3,14 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface MatchEndParams {
-  params: {
-    id: string;
-    matchId: string;
-  };
+  id: string;
+  matchId: string;
 }
 
 // PATCH /api/sessions/[id]/matches/[matchId]/end - End a match
-export async function PATCH(request: NextRequest, { params }: MatchEndParams) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<MatchEndParams> }) {
   try {
-    const { id: sessionId, matchId } = params;
+    const { id: sessionId, matchId } = await params;
 
     // Check if session exists and is in progress
     const session = await prisma.session.findUnique({

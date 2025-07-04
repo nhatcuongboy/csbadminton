@@ -17,10 +17,10 @@ interface BulkPlayerData {
 // POST /api/sessions/[id]/players/bulk - Tạo đồng loạt nhiều player
 export async function POST(
   request: NextRequest,
-  { params }: { params: SessionParams }
+  { params }: { params: Promise<SessionParams> }
 ) {
   try {
-    const { id: sessionId } = params;
+    const { id: sessionId } = await params;
     const body = await request.json();
 
     if (!Array.isArray(body)) {
@@ -177,10 +177,10 @@ export async function POST(
 // GET /api/sessions/[id]/players/bulk - Lấy thông tin về khả năng tạo bulk players
 export async function GET(
   request: NextRequest,
-  { params }: { params: SessionParams }
+  { params }: { params: Promise<SessionParams> }
 ) {
   try {
-    const { id: sessionId } = params;
+    const { id: sessionId } = await params;
 
     // Get session info
     const session = await prisma.session.findUnique({

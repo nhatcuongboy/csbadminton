@@ -10,11 +10,11 @@ import SessionDetailContent from "@/components/session/SessionDetailContent";
 export default function SessionDetailPage({
   params,
 }: {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
   // Use React.use() to unwrap params if it's a Promise, otherwise use it directly
-  const unwrappedParams = params instanceof Promise ? use(params) : params;
+  const unwrappedParams = use(params);
   const sessionId = unwrappedParams.id;
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);

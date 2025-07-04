@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface CourtParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // POST /api/courts/[id]/select-players - Host chọn người chơi vào sân
-export async function POST(request: NextRequest, { params }: CourtParams) {
+export async function POST(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { playerIds } = body;
 

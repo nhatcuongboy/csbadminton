@@ -3,18 +3,16 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface SessionMatchParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // POST /api/sessions/[id]/matches - Start a new match
 export async function POST(
   request: NextRequest,
-  { params }: SessionMatchParams
+  { params }: { params: Promise<SessionMatchParams> }
 ) {
   try {
-    const { id: sessionId } = params;
+    const { id: sessionId } = await params;
     const body = await request.json();
     const { courtId, playerIds } = body;
 
@@ -142,10 +140,10 @@ export async function POST(
 // GET /api/sessions/[id]/matches - Get all matches for a session
 export async function GET(
   request: NextRequest,
-  { params }: SessionMatchParams
+  { params }: { params: Promise<SessionMatchParams> }
 ) {
   try {
-    const { id: sessionId } = params;
+    const { id: sessionId } = await params;
 
     // Check if session exists
     const session = await prisma.session.findUnique({

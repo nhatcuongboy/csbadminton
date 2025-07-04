@@ -3,15 +3,16 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface SessionParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // GET /api/sessions/[id] - Lấy thông tin chi tiết session
-export async function GET(request: NextRequest, { params }: SessionParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const session = await prisma.session.findUnique({
       where: { id },
@@ -57,6 +58,19 @@ export async function GET(request: NextRequest, { params }: SessionParams) {
             confirmedByPlayer: true,
           },
         },
+        matches: {
+          where: {
+            status: "IN_PROGRESS",
+          },
+          include: {
+            players: {
+              include: {
+                player: true,
+              },
+            },
+            court: true,
+          },
+        },
         _count: {
           select: {
             players: true,
@@ -79,9 +93,12 @@ export async function GET(request: NextRequest, { params }: SessionParams) {
 }
 
 // PUT /api/sessions/[id] - Cập nhật session
-export async function PUT(request: NextRequest, { params }: SessionParams) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Check if session exists
@@ -179,9 +196,12 @@ export async function PUT(request: NextRequest, { params }: SessionParams) {
 }
 
 // DELETE /api/sessions/[id] - Xóa session
-export async function DELETE(request: NextRequest, { params }: SessionParams) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Check if session exists
     const existingSession = await prisma.session.findUnique({

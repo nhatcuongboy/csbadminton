@@ -3,15 +3,13 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 interface SessionParams {
-  params: {
-    id: string;
-  };
+  id: string;
 }
 
 // POST /api/sessions/[id]/end - Kết thúc session
-export async function POST(request: NextRequest, { params }: SessionParams) {
+export async function POST(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Check if session exists
     const existingSession = await prisma.session.findUnique({
