@@ -1,0 +1,115 @@
+import { prisma } from "@/app/lib/prisma";
+import { successResponse, errorResponse } from "@/app/lib/api-response";
+import { NextRequest } from "next/server";
+
+// GET /api/sessions - Lấy danh sách tất cả sessions
+export async function GET(request: NextRequest) {
+  try {
+    const sessions = await prisma.session.findMany({
+      include: {
+        host: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            players: true,
+            courts: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return successResponse(sessions, "Sessions retrieved successfully");
+  } catch (error) {
+    console.error("Error fetching sessions:", error);
+    return errorResponse("Failed to fetch sessions");
+  }
+}
+
+// POST /api/sessions - Tạo session mới
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Validate required fields
+    const {
+      name,
+      hostId = "cmcnle8kp00000qy1ob8hnnt0", // Sử dụng host ID mặc định nếu không có
+      numberOfCourts,
+      sessionDuration,
+      maxPlayersPerCourt,
+      requirePlayerInfo,
+      startTime,
+      endTime,
+    } = body;
+
+    if (!name) {
+      return errorResponse("Session name is required");
+    }
+
+    // Check if host exists
+    const host = await prisma.user.findUnique({
+      where: { id: hostId },
+    });
+
+    if (!host) {
+      return errorResponse("Host not found");
+    }
+
+    // Create session
+    const session = await prisma.session.create({
+      data: {
+        name,
+        hostId,
+        numberOfCourts: numberOfCourts || 2,
+        sessionDuration: sessionDuration || 120,
+        maxPlayersPerCourt: maxPlayersPerCourt || 8,
+        requirePlayerInfo: requirePlayerInfo ?? true,
+        startTime: startTime ? new Date(startTime) : new Date(),
+        endTime: endTime
+          ? new Date(endTime)
+          : new Date(Date.now() + (sessionDuration || 120) * 60 * 1000),
+        status: "PREPARING",
+      },
+      include: {
+        host: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    // Create courts for the session
+    const courts = [];
+    for (let i = 1; i <= session.numberOfCourts; i++) {
+      courts.push({
+        sessionId: session.id,
+        courtNumber: i,
+        status: "EMPTY",
+      });
+    }
+
+    await prisma.court.createMany({
+      data: courts.map((court) => ({
+        sessionId: session.id,
+        courtNumber: court.courtNumber,
+        status: "EMPTY",
+      })),
+    });
+
+    return successResponse(session, "Session created successfully");
+  } catch (error) {
+    console.error("Error creating session:", error);
+    return errorResponse("Failed to create session");
+  }
+}

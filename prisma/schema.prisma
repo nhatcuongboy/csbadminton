@@ -1,0 +1,211 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User account (Host or Player login)
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  name     String
+  role     Role   @default(PLAYER)
+  
+  // Sessions hosted or participated
+  hostedSessions Session[] @relation("HostedSessions")
+  playerRecords  Player[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}
+
+// Badminton playing session
+model Session {
+  id          String        @id @default(cuid())
+  name        String        // Session name
+  hostId      String
+  host        User          @relation("HostedSessions", fields: [hostId], references: [id])
+  
+  // Session configuration
+  numberOfCourts    Int       @default(2)       // Number of courts
+  sessionDuration   Int       @default(120)     // Session duration in minutes
+  maxPlayersPerCourt Int      @default(8)       // Maximum 8 players per court
+  requirePlayerInfo Boolean   @default(true)    // Whether players must fill in personal info before joining
+  
+  // Session status
+  status      SessionStatus @default(PREPARING)
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  // Relations
+  players     Player[]
+  courts      Court[]
+  matches     Match[]
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@map("sessions")
+}
+
+// Player in a specific session
+model Player {
+  id        String @id @default(cuid())
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id])
+  
+  // Player information
+  playerNumber Int       // Player number (starting from 1)
+  name         String?   // Full name (can be pre-filled by host or filled by player)
+  gender       Gender?   // Gender (can be pre-filled by host or filled by player)
+  level        Level?    // Y/Y+/TBY/TB-/TB/TB+ (can be pre-filled by host or filled by player)
+  phone        String?   // Phone number (optional)
+  
+  // Registration status
+  preFilledByHost Boolean @default(false) // Whether host has pre-filled this player's info
+  confirmedByPlayer Boolean @default(false) // Whether player has confirmed/joined the session
+  
+  // Session statistics
+  currentWaitTime    Int @default(0)    // Current wait time in minutes
+  totalWaitTime      Int @default(0)    // Total wait time in session
+  matchesPlayed      Int @default(0)    // Number of matches played
+  
+  // Status
+  status       PlayerStatus @default(WAITING)
+  currentCourtId String?
+  currentCourt   Court?     @relation(fields: [currentCourtId], references: [id])
+  
+  // Match participation history
+  matchPlayers MatchPlayer[]
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  @@unique([sessionId, playerNumber])
+  @@map("players")
+}
+
+// Playing court
+model Court {
+  id        String @id @default(cuid())
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  courtNumber Int          // Court number (1, 2, 3...)
+  status      CourtStatus  @default(EMPTY)
+  
+  // 4 current players on court
+  currentPlayers Player[]
+  
+  // Current match
+  currentMatchId String? @unique
+  currentMatch   Match?  @relation("CurrentMatch", fields: [currentMatchId], references: [id])
+  
+  // Match history
+  matches        Match[] @relation("CourtMatches")
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@unique([sessionId, courtNumber])
+  @@map("courts")
+}
+
+// Match
+model Match {
+  id        String @id @default(cuid())
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  courtId   String
+  court     Court   @relation("CourtMatches", fields: [courtId], references: [id])
+  
+  // Match status
+  status    MatchStatus @default(IN_PROGRESS)
+  startTime DateTime    @default(now())
+  endTime   DateTime?
+  
+  // 4 players in match
+  players   MatchPlayer[]
+  
+  // Current court relation
+  currentCourt Court? @relation("CurrentMatch")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("matches")
+}
+
+// Junction table between Match and Player
+model MatchPlayer {
+  id       String @id @default(cuid())
+  matchId  String
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  
+  position Int    // Position in match (1-4)
+  
+  @@unique([matchId, playerId])
+  @@unique([matchId, position])
+  @@map("match_players")
+}
+
+// Enums
+enum Role {
+  HOST
+  PLAYER
+}
+
+enum SessionStatus {
+  PREPARING    // Preparing
+  IN_PROGRESS  // In progress
+  FINISHED     // Finished
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Level {
+  Y          // Weak
+  Y_PLUS     // Weak+
+  TBY        // Medium-weak
+  TB_MINUS   // Medium-
+  TB         // Medium
+  TB_PLUS    // Medium+
+}
+
+enum PlayerStatus {
+  WAITING    // Waiting
+  PLAYING    // Playing
+  FINISHED   // Finished session
+}
+
+enum CourtStatus {
+  EMPTY      // Empty court
+  IN_USE     // In use
+}
+
+enum MatchStatus {
+  IN_PROGRESS // In progress
+  FINISHED    // Finished
+}

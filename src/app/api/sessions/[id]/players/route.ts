@@ -1,0 +1,137 @@
+import { prisma } from "@/app/lib/prisma";
+import { successResponse, errorResponse } from "@/app/lib/api-response";
+import { NextRequest } from "next/server";
+
+interface SessionParams {
+  params: {
+    id: string;
+  };
+}
+
+// GET /api/sessions/[id]/players - Lấy danh sách người chơi trong session
+export async function GET(request: NextRequest, { params }: SessionParams) {
+  try {
+    const { id } = params;
+
+    // Validate session exists
+    const session = await prisma.session.findUnique({
+      where: { id },
+    });
+
+    if (!session) {
+      return errorResponse("Session not found", 404);
+    }
+
+    // Get query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get("status");
+    const orderBy = searchParams.get("orderBy") || "currentWaitTime";
+    const orderDir = searchParams.get("orderDir") || "desc";
+
+    // Build query
+    const queryOptions: any = {
+      where: {
+        sessionId: id,
+      },
+      orderBy: {},
+      include: {
+        currentCourt: {
+          select: {
+            id: true,
+            courtNumber: true,
+          },
+        },
+      },
+    };
+
+    // Add status filter if provided
+    if (status) {
+      queryOptions.where.status = status;
+    }
+
+    // Add ordering
+    if (orderBy === "playerNumber") {
+      queryOptions.orderBy.playerNumber = orderDir;
+    } else if (orderBy === "currentWaitTime") {
+      queryOptions.orderBy.currentWaitTime = orderDir;
+    } else if (orderBy === "totalWaitTime") {
+      queryOptions.orderBy.totalWaitTime = orderDir;
+    } else if (orderBy === "matchesPlayed") {
+      queryOptions.orderBy.matchesPlayed = orderDir;
+    }
+
+    const players = await prisma.player.findMany(queryOptions);
+
+    return successResponse(players, "Players retrieved successfully");
+  } catch (error) {
+    console.error("Error fetching players:", error);
+    return errorResponse("Failed to fetch players");
+  }
+}
+
+// POST /api/sessions/[id]/players - Tạo người chơi mới trong session
+export async function POST(request: NextRequest, { params }: SessionParams) {
+  try {
+    const { id } = params;
+    const body = await request.json();
+
+    // Validate session exists
+    const session = await prisma.session.findUnique({
+      where: { id },
+    });
+
+    if (!session) {
+      return errorResponse("Session not found", 404);
+    }
+
+    // Determine if it's host creating a player or player self-registering
+    const {
+      playerNumber,
+      name,
+      gender,
+      level,
+      phone,
+      userId,
+      preFilledByHost,
+      confirmedByPlayer,
+    } = body;
+
+    // Validate player number
+    if (!playerNumber) {
+      return errorResponse("Player number is required", 400);
+    }
+
+    // Check if player number already exists in this session
+    const existingPlayer = await prisma.player.findFirst({
+      where: {
+        sessionId: id,
+        playerNumber: parseInt(playerNumber),
+      },
+    });
+
+    if (existingPlayer) {
+      return errorResponse("Player number already exists in this session", 400);
+    }
+
+    // Create player
+    const player = await prisma.player.create({
+      data: {
+        sessionId: id,
+        playerNumber: parseInt(playerNumber),
+        name: name || null,
+        gender: gender || null,
+        level: level || null,
+        phone: phone || null,
+        userId: userId || null,
+        preFilledByHost: preFilledByHost || false,
+        confirmedByPlayer: confirmedByPlayer || false,
+        status: "WAITING",
+      },
+    });
+
+    return successResponse(player, "Player created successfully");
+  } catch (error) {
+    console.error("Error creating player:", error);
+    return errorResponse("Failed to create player");
+  }
+}
