@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   Box,
   Container,
@@ -12,18 +13,11 @@ import {
   Input,
   Spinner,
 } from "@chakra-ui/react";
+import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { ArrowLeft, Check, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/chakra-compat";
-import {
-  PlayerService,
-  SessionService,
-  type Player,
-  type Session,
-} from "@/lib/api";
-import { useTranslations } from "next-intl";
-import { Link as IntlLink } from "@/i18n/config";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { PlayerService, SessionService, type Player, type Session } from "@/lib/api";
 
 function ConfirmPageContent() {
   const router = useRouter();
@@ -43,16 +37,11 @@ function ConfirmPageContent() {
     phone: "",
   });
 
-  // Translations
-  const t = useTranslations("pages.join.confirm");
-  const common = useTranslations("common");
-  const playerT = useTranslations("player");
-
   useEffect(() => {
     async function loadSessionAndPlayer() {
       try {
         if (!sessionId || !playerNumber) {
-          toast.error(t("errors.missingInfo"));
+          toast.error("Missing session or player information");
           router.push("/join");
           return;
         }
@@ -91,24 +80,22 @@ function ConfirmPageContent() {
               phone: foundPlayer.phone || "",
             });
           } else {
-            toast.error(t("errors.playerNotFound"));
+            toast.error("Player not found");
             router.push("/join");
           }
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        toast.error(t("errors.loadFailed"));
+        toast.error("Failed to load player information");
       } finally {
         setIsLoading(false);
       }
     }
 
     loadSessionAndPlayer();
-  }, [sessionId, playerNumber, playerId, router, t]);
+  }, [sessionId, playerNumber, playerId, router]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -118,36 +105,30 @@ function ConfirmPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!player) {
-      toast.error(t("errors.playerNotFound"));
+      toast.error("Player information not found");
       return;
     }
 
     // Validate form data
     if (!formData.name || !formData.gender || !formData.level) {
-      toast.error(t("errors.requiredFields"));
+      toast.error("Please fill in all required fields");
       return;
     }
 
     try {
       setIsSubmitting(true);
-
+      
       // Prepare data with proper types
       const playerData: Partial<Player> = {
         name: formData.name,
         gender: formData.gender as "MALE" | "FEMALE",
-        level: formData.level as
-          | "Y"
-          | "Y_PLUS"
-          | "TBY"
-          | "TB_MINUS"
-          | "TB"
-          | "TB_PLUS",
+        level: formData.level as "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS",
         phone: formData.phone || undefined,
         confirmedByPlayer: true,
       };
-
+      
       // Call the API to confirm the player
       await PlayerService.confirmPlayer(player.id, playerData);
 
@@ -155,7 +136,7 @@ function ConfirmPageContent() {
       router.push(`/join/status?playerId=${player.id}`);
     } catch (error) {
       console.error("Error confirming player:", error);
-      toast.error(t("errors.confirmFailed"));
+      toast.error("Failed to confirm registration");
       setIsSubmitting(false);
     }
   };
@@ -165,7 +146,7 @@ function ConfirmPageContent() {
       <Container maxW="md" py={12}>
         <Flex justify="center" align="center" height="50vh" direction="column">
           <Spinner size="xl" color="blue.500" mb={4} />
-          <Text>{common("loading")}</Text>
+          <Text>Loading player information...</Text>
         </Flex>
       </Container>
     );
@@ -173,34 +154,28 @@ function ConfirmPageContent() {
 
   return (
     <Container maxW="md" py={12}>
-      {/* Language Switcher */}
-      <Flex justify="flex-end" mb={4}>
-        <LanguageSwitcher />
-      </Flex>
-
       {/* Header with back button */}
       <Flex alignItems="center" mb={8} position="relative">
-        <IntlLink href="/join">
-          <Button
-            variant="outline"
-            size="sm"
-            mr={4}
-            borderRadius="full"
-            transition="all 0.2s"
-            _hover={{
-              bg: "blue.50",
-              borderColor: "blue.300",
-              transform: "translateY(-2px)",
-              boxShadow: "sm",
-            }}
-          >
-            <Flex alignItems="center">
-              <Box as={ArrowLeft} boxSize={4} mr={2} />
-              {common("back")}
-            </Flex>
-          </Button>
-        </IntlLink>
-        <Heading size="lg">{t("title")}</Heading>
+        <NextLinkButton
+          href="/join"
+          variant="outline"
+          size="sm"
+          mr={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "blue.50",
+            borderColor: "blue.300",
+            transform: "translateY(-2px)",
+            boxShadow: "sm",
+          }}
+        >
+          <Flex alignItems="center">
+            <Box as={ArrowLeft} boxSize={4} mr={2} />
+            Back
+          </Flex>
+        </NextLinkButton>
+        <Heading size="lg">Confirm Details</Heading>
       </Flex>
 
       <Box
@@ -221,10 +196,10 @@ function ConfirmPageContent() {
         >
           <Flex align="center" mb={2}>
             <Box as={User} boxSize={5} color="blue.500" mr={2} />
-            <Heading size="md">{t("subtitle")}</Heading>
+            <Heading size="md">Complete Your Registration</Heading>
           </Flex>
           <Text color="gray.500" fontSize="sm">
-            {t("description", { sessionName: session?.name || "" })}
+            Fill in your details to join {session?.name}
           </Text>
         </Box>
 
@@ -234,20 +209,17 @@ function ConfirmPageContent() {
             <Stack gap={4}>
               <Box>
                 <Text fontWeight="medium" mb={2}>
-                  {t("playerNumber", { number: player?.playerNumber || 0 })}
+                  Player #{player?.playerNumber}
                 </Text>
                 <Box mb={4}>
                   <Text fontWeight="medium" mb={1} fontSize="sm">
-                    {playerT("name")}{" "}
-                    <Box as="span" color="red.500">
-                      *
-                    </Box>
+                    Full Name <Box as="span" color="red.500">*</Box>
                   </Text>
                   <Input
                     value={formData.name}
                     onChange={handleInputChange}
                     name="name"
-                    placeholder={t("form.namePlaceholder")}
+                    placeholder="Enter your name"
                     size="lg"
                     required
                   />
@@ -256,10 +228,7 @@ function ConfirmPageContent() {
                 <Flex gap={4} mb={4}>
                   <Box flex={1}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      {t("form.gender")}{" "}
-                      <Box as="span" color="red.500">
-                        *
-                      </Box>
+                      Gender <Box as="span" color="red.500">*</Box>
                     </Text>
                     <select
                       value={formData.gender}
@@ -272,21 +241,18 @@ function ConfirmPageContent() {
                         borderRadius: "8px",
                         borderWidth: "1px",
                         borderColor: "#CBD5E0",
-                        height: "48px",
+                        height: "48px"
                       }}
                     >
-                      <option value="">{t("form.selectGender")}</option>
-                      <option value="MALE">{t("form.male")}</option>
-                      <option value="FEMALE">{t("form.female")}</option>
+                      <option value="">Select Gender</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
                     </select>
                   </Box>
 
                   <Box flex={1}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      {playerT("skillLevel")}{" "}
-                      <Box as="span" color="red.500">
-                        *
-                      </Box>
+                      Skill Level <Box as="span" color="red.500">*</Box>
                     </Text>
                     <select
                       value={formData.level}
@@ -299,37 +265,29 @@ function ConfirmPageContent() {
                         borderRadius: "8px",
                         borderWidth: "1px",
                         borderColor: "#CBD5E0",
-                        height: "48px",
+                        height: "48px"
                       }}
                     >
-                      <option value="">{t("form.selectLevel")}</option>
-                      <option value="Y">Y ({t("form.levels.weak")})</option>
-                      <option value="Y_PLUS">
-                        Y+ ({t("form.levels.weakPlus")})
-                      </option>
-                      <option value="TBY">
-                        TBY ({t("form.levels.mediumWeak")})
-                      </option>
-                      <option value="TB_MINUS">
-                        TB- ({t("form.levels.mediumMinus")})
-                      </option>
-                      <option value="TB">TB ({t("form.levels.medium")})</option>
-                      <option value="TB_PLUS">
-                        TB+ ({t("form.levels.mediumPlus")})
-                      </option>
+                      <option value="">Select Level</option>
+                      <option value="Y">Y (Weak)</option>
+                      <option value="Y_PLUS">Y+ (Weak+)</option>
+                      <option value="TBY">TBY (Medium-weak)</option>
+                      <option value="TB_MINUS">TB- (Medium-)</option>
+                      <option value="TB">TB (Medium)</option>
+                      <option value="TB_PLUS">TB+ (Medium+)</option>
                     </select>
                   </Box>
                 </Flex>
 
                 <Box>
                   <Text fontWeight="medium" mb={1} fontSize="sm">
-                    {playerT("phone")} ({common("optional")})
+                    Phone Number (Optional)
                   </Text>
                   <Input
                     value={formData.phone}
                     onChange={handleInputChange}
                     name="phone"
-                    placeholder={t("form.phonePlaceholder")}
+                    placeholder="+84 xxx xxx xxx"
                     size="lg"
                   />
                 </Box>
@@ -345,9 +303,7 @@ function ConfirmPageContent() {
                 disabled={isSubmitting}
               >
                 <Flex align="center" justify="center" width="100%">
-                  {isSubmitting
-                    ? t("form.processing")
-                    : t("form.confirmButton")}
+                  {isSubmitting ? "Processing..." : "Confirm & Join"}
                   {!isSubmitting && <Box as={Check} ml={2} boxSize={5} />}
                 </Flex>
               </Button>
@@ -364,7 +320,7 @@ function ConfirmPageContent() {
           textAlign="center"
         >
           <Text fontSize="sm" color="gray.500">
-            {t("footer")}
+            This information will be visible to the session host
           </Text>
         </Box>
       </Box>
