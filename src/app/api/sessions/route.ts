@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const {
       name,
-      hostId = "cmcosr60x00003k52n0al1blj", // Sử dụng host ID mặc định nếu không có
+      hostId = process.env.DEFAULT_HOST_ID, // Sử dụng biến môi trường
       numberOfCourts,
       sessionDuration,
       maxPlayersPerCourt,
@@ -53,6 +53,10 @@ export async function POST(request: NextRequest) {
 
     if (!name) {
       return errorResponse("Session name is required");
+    }
+
+    if (!hostId) {
+      return errorResponse("Host ID is required (check DEFAULT_HOST_ID environment variable)");
     }
 
     // Check if host exists
