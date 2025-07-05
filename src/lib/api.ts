@@ -80,6 +80,7 @@ export interface Court {
   id: string;
   sessionId: string;
   courtNumber: number;
+  courtName?: string;
   status: "EMPTY" | "IN_USE";
   currentPlayers?: Player[];
   currentMatchId?: string;
@@ -121,7 +122,7 @@ export const SessionService = {
   },
 
   // Create session
-  createSession: async (data: Partial<Session>): Promise<Session> => {
+  createSession: async (data: CreateSessionRequest): Promise<Session> => {
     const response = await api.post<ApiResponse<Session>>("/sessions", data);
     toast.success("Session created successfully");
     return response.data.data!;
@@ -362,18 +363,22 @@ export const CourtService = {
 // Match service
 export const MatchService = {
   // Get session matches
-  getSessionMatches: async (sessionId: string): Promise<{
+  getSessionMatches: async (
+    sessionId: string
+  ): Promise<{
     matches: Match[];
     totalMatches: number;
     activeMatches: number;
     completedMatches: number;
   }> => {
-    const response = await api.get<ApiResponse<{
-      matches: Match[];
-      totalMatches: number;
-      activeMatches: number;
-      completedMatches: number;
-    }>>(`/sessions/${sessionId}/matches`);
+    const response = await api.get<
+      ApiResponse<{
+        matches: Match[];
+        totalMatches: number;
+        activeMatches: number;
+        completedMatches: number;
+      }>
+    >(`/sessions/${sessionId}/matches`);
     return response.data.data!;
   },
 
@@ -382,19 +387,18 @@ export const MatchService = {
     sessionId: string,
     data: { courtId: string; playerIds: string[] }
   ): Promise<{ match: Match; message: string }> => {
-    const response = await api.post<ApiResponse<{
-      match: Match;
-      message: string;
-    }>>(`/sessions/${sessionId}/matches`, data);
+    const response = await api.post<
+      ApiResponse<{
+        match: Match;
+        message: string;
+      }>
+    >(`/sessions/${sessionId}/matches`, data);
     toast.success("Match created successfully");
     return response.data.data!;
   },
 
   // End match
-  endMatch: async (
-    sessionId: string,
-    matchId: string
-  ): Promise<Match> => {
+  endMatch: async (sessionId: string, matchId: string): Promise<Match> => {
     const response = await api.patch<ApiResponse<Match>>(
       `/sessions/${sessionId}/matches/${matchId}/end`
     );
@@ -416,13 +420,15 @@ export const MatchService = {
     courtsUsed: number;
     message: string;
   }> => {
-    const response = await api.post<ApiResponse<{
-      matches: Match[];
-      strategy: string;
-      assignedPlayers: number;
-      courtsUsed: number;
-      message: string;
-    }>>(`/sessions/${sessionId}/auto-assign`, options || {});
+    const response = await api.post<
+      ApiResponse<{
+        matches: Match[];
+        strategy: string;
+        assignedPlayers: number;
+        courtsUsed: number;
+        message: string;
+      }>
+    >(`/sessions/${sessionId}/auto-assign`, options || {});
     toast.success("Players auto-assigned successfully");
     return response.data.data!;
   },
@@ -439,16 +445,20 @@ export const WaitTimeService = {
     players: Player[];
     minutesAdded: number;
   }> => {
-    const response = await api.put<ApiResponse<{
-      updatedCount: number;
-      players: Player[];
-      minutesAdded: number;
-    }>>(`/sessions/${sessionId}/wait-times`, { minutesToAdd });
+    const response = await api.put<
+      ApiResponse<{
+        updatedCount: number;
+        players: Player[];
+        minutesAdded: number;
+      }>
+    >(`/sessions/${sessionId}/wait-times`, { minutesToAdd });
     return response.data.data!;
   },
 
   // Get wait time statistics
-  getWaitTimeStats: async (sessionId: string): Promise<{
+  getWaitTimeStats: async (
+    sessionId: string
+  ): Promise<{
     stats: {
       totalPlayers: number;
       waitingPlayers: number;
@@ -463,12 +473,14 @@ export const WaitTimeService = {
     playingPlayers: Player[];
     lastUpdated: string;
   }> => {
-    const response = await api.get<ApiResponse<{
-      stats: any;
-      waitingPlayers: Player[];
-      playingPlayers: Player[];
-      lastUpdated: string;
-    }>>(`/sessions/${sessionId}/wait-times`);
+    const response = await api.get<
+      ApiResponse<{
+        stats: any;
+        waitingPlayers: Player[];
+        playingPlayers: Player[];
+        lastUpdated: string;
+      }>
+    >(`/sessions/${sessionId}/wait-times`);
     return response.data.data!;
   },
 
@@ -484,20 +496,22 @@ export const WaitTimeService = {
   }> => {
     // Since there's no dedicated reset endpoint, we'll use the update endpoint
     // with specific logic to reset wait times to 0
-    const response = await api.put<ApiResponse<{
-      updatedCount: number;
-      players: Player[];
-      minutesAdded: number;
-    }>>(`/sessions/${sessionId}/wait-times`, {
+    const response = await api.put<
+      ApiResponse<{
+        updatedCount: number;
+        players: Player[];
+        minutesAdded: number;
+      }>
+    >(`/sessions/${sessionId}/wait-times`, {
       minutesToAdd: 0,
       resetType,
-      playerIds
+      playerIds,
     });
     toast.success("Wait times reset successfully");
     return {
       updatedCount: response.data.data!.updatedCount,
       players: response.data.data!.players,
-      resetType
+      resetType,
     };
   },
 };
@@ -505,7 +519,9 @@ export const WaitTimeService = {
 // Real-time service for session status
 export const RealTimeService = {
   // Get real-time session status
-  getSessionStatus: async (sessionId: string): Promise<{
+  getSessionStatus: async (
+    sessionId: string
+  ): Promise<{
     session: Session;
     stats: {
       totalPlayers: number;
@@ -549,7 +565,27 @@ export const RealTimeService = {
     }[];
     lastUpdated: string;
   }> => {
-    const response = await api.get<ApiResponse<any>>(`/sessions/${sessionId}/status`);
+    const response = await api.get<ApiResponse<any>>(
+      `/sessions/${sessionId}/status`
+    );
     return response.data.data!;
   },
 };
+
+// Court creation interface
+export interface CourtConfig {
+  courtNumber: number;
+  courtName?: string;
+}
+
+// Session creation interface
+export interface CreateSessionRequest {
+  name: string;
+  numberOfCourts: number;
+  sessionDuration: number;
+  maxPlayersPerCourt: number;
+  requirePlayerInfo: boolean;
+  startTime?: Date;
+  endTime?: Date;
+  courts?: CourtConfig[];
+}

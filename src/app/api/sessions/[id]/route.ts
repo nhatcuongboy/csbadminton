@@ -1,5 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
+import { generateCourtName } from "@/lib/server/sessions";
 import { NextRequest } from "next/server";
 
 interface SessionParams {
@@ -163,6 +164,7 @@ export async function PUT(
           newCourts.push({
             sessionId: id,
             courtNumber: i,
+            courtName: generateCourtName(i), // Generate court name
             status: "EMPTY",
           });
         }
@@ -171,6 +173,7 @@ export async function PUT(
           data: newCourts.map((court) => ({
             sessionId: court.sessionId,
             courtNumber: court.courtNumber,
+            courtName: court.courtName,
             status: "EMPTY",
           })),
         });

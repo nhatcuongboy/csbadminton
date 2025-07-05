@@ -26,6 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Pl
           select: {
             id: true,
             courtNumber: true,
+            courtName: true,
           },
         },
         matchPlayers: {

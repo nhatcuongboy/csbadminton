@@ -30,6 +30,7 @@ export async function GET(
             currentCourt: {
               select: {
                 courtNumber: true,
+                courtName: true,
                 currentMatch: {
                   select: {
                     id: true,

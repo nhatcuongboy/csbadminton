@@ -107,6 +107,7 @@ model Court {
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   
   courtNumber Int          // Court number (1, 2, 3...)
+  courtName   String?      // Court name (e.g., "Sân A", "Sân VIP", "Court 1")
   status      CourtStatus  @default(EMPTY)
   
   // 4 current players on court

@@ -43,3 +43,17 @@ export function mapSessionStatus(
       return "upcoming";
   }
 }
+
+// Hàm tạo court name mặc định (client-side)
+export function getCourtDisplayName(
+  courtName?: string,
+  courtNumber?: number
+): string {
+  if (courtName) {
+    return courtName;
+  }
+  if (courtNumber) {
+    return `Sân ${courtNumber}`;
+  }
+  return "Sân";
+}

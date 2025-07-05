@@ -148,6 +148,7 @@ export async function GET(
         currentCourt: {
           select: {
             courtNumber: true,
+            courtName: true,
             currentMatch: {
               select: {
                 startTime: true,

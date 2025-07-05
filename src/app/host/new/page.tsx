@@ -23,6 +23,10 @@ import {
   Trophy,
   Settings,
   Calendar,
+  Plus,
+  Minus,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SessionService } from "@/lib/api";
@@ -54,10 +58,16 @@ function NewSessionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [numberOfCourts, setNumberOfCourts] = useState(2);
+  const [courts, setCourts] = useState([
+    { courtNumber: 1, courtName: "" },
+    { courtNumber: 2, courtName: "" },
+  ]);
+  const [isCourtInfoExpanded, setIsCourtInfoExpanded] = useState(false);
 
   // Get error and details from search params
-  const error = searchParams.get('error');
-  const details = searchParams.get('details');
+  const error = searchParams.get("error");
+  const details = searchParams.get("details");
 
   // Set up default values for start time and end time
   const now = new Date();
@@ -113,9 +123,16 @@ function NewSessionPageContent() {
         return;
       }
 
+      // Validate courts
+      const courtValidationError = validateCourts();
+      if (courtValidationError) {
+        toast.error(courtValidationError);
+        setIsLoading(false);
+        return;
+      }
+
       // Extract form data
       const name = formData.get("name") as string;
-      const numberOfCourts = parseInt(formData.get("numberOfCourts") as string);
       const maxPlayersPerCourt = parseInt(
         formData.get("maxPlayersPerCourt") as string
       );
@@ -133,6 +150,10 @@ function NewSessionPageContent() {
         requirePlayerInfo,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        courts: courts.map((court) => ({
+          courtNumber: court.courtNumber,
+          courtName: court.courtName || undefined,
+        })), // Pass courts configuration
       });
 
       // Show success message
@@ -152,6 +173,59 @@ function NewSessionPageContent() {
       setIsLoading(false);
     }
   }
+
+  // Handle number of courts change
+  const handleNumberOfCourtsChange = (newNumber: number) => {
+    setNumberOfCourts(newNumber);
+
+    // Update courts array
+    const newCourts = [];
+    for (let i = 1; i <= newNumber; i++) {
+      const existingCourt = courts.find((c) => c.courtNumber === i);
+      if (existingCourt) {
+        newCourts.push(existingCourt);
+      } else {
+        // Generate default court name - leave empty
+        newCourts.push({
+          courtNumber: i,
+          courtName: "",
+        });
+      }
+    }
+    setCourts(newCourts);
+  };
+
+  // Handle court info change
+  const handleCourtChange = (
+    index: number,
+    field: "courtNumber" | "courtName",
+    value: string | number
+  ) => {
+    const newCourts = [...courts];
+    newCourts[index] = {
+      ...newCourts[index],
+      [field]: value,
+    };
+    setCourts(newCourts);
+  };
+
+  // Validate courts
+  const validateCourts = () => {
+    const courtNumbers = courts.map((c) => c.courtNumber);
+    const uniqueNumbers = new Set(courtNumbers);
+
+    if (uniqueNumbers.size !== courtNumbers.length) {
+      return "Court numbers must be unique";
+    }
+
+    for (const court of courts) {
+      if (!court.courtNumber || court.courtNumber < 1) {
+        return "All courts must have a valid court number (≥ 1)";
+      }
+    }
+
+    return null;
+  };
 
   return (
     <Box minH="100vh" bgGradient="linear(to-br, blue.50, white, green.50)">
@@ -173,7 +247,7 @@ function NewSessionPageContent() {
             <Heading
               size="2xl"
               bgGradient="linear(to-r, blue.600, green.600)"
-              bgClip="text"
+              //   bgClip="text"
               fontWeight="bold"
             >
               Create New Session
@@ -220,9 +294,7 @@ function NewSessionPageContent() {
               maxW="md"
             >
               <Text fontWeight="medium">
-                {decodeURIComponent(
-                  details || "Failed to create session"
-                )}
+                {decodeURIComponent(details || "Failed to create session")}
               </Text>
             </Box>
           )}
@@ -235,23 +307,6 @@ function NewSessionPageContent() {
           borderRadius="lg"
           overflow="hidden"
         >
-          <Box
-            bgGradient="linear(to-r, blue.500, green.500)"
-            color="white"
-            p={6}
-          >
-            <Flex align="center">
-              <Settings
-                size={24}
-                style={{ marginRight: "12px", color: "white" }}
-              />
-              <Heading size="lg">Session Configuration</Heading>
-            </Flex>
-            <Text color="blue.50" mt={2}>
-              Customize your badminton session to match your needs
-            </Text>
-          </Box>
-
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -269,7 +324,7 @@ function NewSessionPageContent() {
                       style={{ marginRight: "8px" }}
                     />
                     <Text fontWeight="semibold" color="gray.700">
-                      Session Name
+                      Session Name *
                     </Text>
                   </Flex>
                   <Input
@@ -289,8 +344,7 @@ function NewSessionPageContent() {
                 </Box>
 
                 {/* Grid Layout for Better Organization */}
-                <Grid templateColumns={{ md: "repeat(2, 1fr)" }} gap={8}>
-                  {/* Number of Courts */}
+                {/* <Grid templateColumns={{ md: "repeat(2, 1fr)" }} gap={8}>
                   <GridItem>
                     <Flex align="center" mb={3}>
                       <Settings
@@ -299,14 +353,14 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        Number of Courts
+                        Number of Courts *
                       </Text>
                     </Flex>
                     <Input
                       id="numberOfCourts"
                       name="numberOfCourts"
                       type="number"
-                      defaultValue={2}
+                      value={numberOfCourts}
                       min={1}
                       max={10}
                       required
@@ -315,13 +369,17 @@ function NewSessionPageContent() {
                       borderColor="gray.200"
                       _focus={{ borderColor: "green.500" }}
                       transition="all 0.2s"
+                      onChange={(e) =>
+                        handleNumberOfCourtsChange(
+                          parseInt(e.target.value) || 0
+                        )
+                      }
                     />
                     <Text fontSize="xs" color="gray.500" mt={2}>
                       Available courts for simultaneous matches
                     </Text>
                   </GridItem>
 
-                  {/* Session Duration */}
                   <GridItem>
                     <Flex align="center" mb={3}>
                       <Clock
@@ -350,7 +408,7 @@ function NewSessionPageContent() {
                       Automatically calculated from start and end times
                     </Text>
                   </GridItem>
-                </Grid>
+                </Grid> */}
 
                 {/* Time Controls Grid */}
                 <Grid templateColumns={{ md: "repeat(2, 1fr)" }} gap={8}>
@@ -363,7 +421,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        Start Time
+                        Start Time *
                       </Text>
                     </Flex>
                     <Input
@@ -393,7 +451,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        End Time
+                        End Time *
                       </Text>
                     </Flex>
                     <Input
@@ -423,131 +481,229 @@ function NewSessionPageContent() {
                   </GridItem>
                 </Grid>
 
-                {/* Max Players Per Court */}
-                <Box>
-                  <Flex align="center" mb={3}>
-                    <Users
-                      size={16}
-                      color="#DD6B20"
-                      style={{ marginRight: "8px" }}
+                {/* Max Players Per Court and Require Player Info Grid */}
+                <Grid templateColumns={{ md: "repeat(2, 1fr)" }} gap={8}>
+                  {/* Max Players Per Court */}
+                  <GridItem>
+                    <Flex align="center" mb={3}>
+                      <Users
+                        size={16}
+                        color="#DD6B20"
+                        style={{ marginRight: "8px" }}
+                      />
+                      <Text fontWeight="semibold" color="gray.700">
+                        Max Players Per Court *
+                      </Text>
+                    </Flex>
+                    <Input
+                      id="maxPlayersPerCourt"
+                      name="maxPlayersPerCourt"
+                      type="number"
+                      defaultValue={8}
+                      min={4}
+                      max={12}
+                      required
+                      size="lg"
+                      borderWidth={2}
+                      borderColor="gray.200"
+                      _focus={{ borderColor: "orange.500" }}
+                      transition="all 0.2s"
                     />
-                    <Text fontWeight="semibold" color="gray.700">
-                      Max Players Per Court
+                    <Text fontSize="xs" color="gray.500" mt={2}>
+                      Maximum players per court for optimal rotation
                     </Text>
-                  </Flex>
-                  <Input
-                    id="maxPlayersPerCourt"
-                    name="maxPlayersPerCourt"
-                    type="number"
-                    defaultValue={8}
-                    min={4}
-                    max={12}
-                    required
-                    size="lg"
-                    borderWidth={2}
-                    borderColor="gray.200"
-                    _focus={{ borderColor: "orange.500" }}
-                    transition="all 0.2s"
-                    maxW="xs"
-                  />
-                  <Text fontSize="xs" color="gray.500" mt={2}>
-                    Maximum players per court for optimal rotation
-                  </Text>
-                </Box>
+                  </GridItem>
 
-                {/* Require Player Info - Enhanced Checkbox */}
-                <Box
-                  bg="gray.50"
-                  p={6}
-                  rounded="lg"
-                  borderWidth={2}
-                  borderStyle="dashed"
-                  borderColor="gray.200"
-                >
-                  <HStack gap={3}>
-                    <input
-                      type="checkbox"
-                      id="requirePlayerInfo"
-                      name="requirePlayerInfo"
-                      defaultChecked
-                    />
-                    <Box>
-                      <Text
-                        fontWeight="semibold"
-                        color="gray.700"
-                        cursor="pointer"
+                  {/* Require Player Information */}
+                  <GridItem>
+                    <Flex align="center" mb={3}>
+                      <Users
+                        size={16}
+                        color="#38A169"
+                        style={{ marginRight: "8px" }}
+                      />
+                      <Text fontWeight="semibold" color="gray.700">
+                        Player Information
+                      </Text>
+                    </Flex>
+                    <Box
+                      p={4}
+                      borderWidth={2}
+                      borderColor="gray.200"
+                      borderRadius="md"
+                      bg="gray.50"
+                    >
+                      <HStack gap={3}>
+                        <input
+                          type="checkbox"
+                          id="requirePlayerInfo"
+                          name="requirePlayerInfo"
+                          defaultChecked
+                          style={{ transform: "scale(1.2)" }}
+                        />
+                        <Box>
+                          <Text fontWeight="medium" color="gray.700">
+                            Require Player Information
+                          </Text>
+                          <Text fontSize="xs" color="gray.600" mt={1}>
+                            Collect details for better session management
+                          </Text>
+                        </Box>
+                      </HStack>
+                    </Box>
+                  </GridItem>
+                </Grid>
+
+                {/* Dynamic Courts Section */}
+                <Box>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsCourtInfoExpanded(!isCourtInfoExpanded)}
+                    p={0}
+                    mb={3}
+                    _hover={{ bg: "transparent" }}
+                  >
+                    <Flex align="center" w="full">
+                      <Users
+                        size={16}
+                        color="#2B6CB0"
+                        style={{ marginRight: "8px" }}
+                      />
+                      <Text fontWeight="semibold" color="gray.700" mr={2}>
+                        Court Information
+                      </Text>
+                      {isCourtInfoExpanded ? (
+                        <ChevronUp size={16} color="#2B6CB0" />
+                      ) : (
+                        <ChevronDown size={16} color="#2B6CB0" />
+                      )}
+                    </Flex>
+                  </Button>
+
+                  {isCourtInfoExpanded && (
+                    <Box
+                      bg="gray.50"
+                      p={4}
+                      borderRadius="md"
+                      borderWidth={1}
+                      borderColor="gray.200"
+                    >
+                      {/* Render courts dynamically based on numberOfCourts */}
+                      {courts.map((court, index) => (
+                        <Box
+                          key={court.courtNumber}
+                          p={4}
+                          mb={4}
+                          borderWidth={2}
+                          borderColor="gray.200"
+                          borderRadius="md"
+                          bg="white"
+                          shadow="sm"
+                        >
+                          <Flex align="center" mb={2}>
+                            <Text
+                              fontSize="lg"
+                              fontWeight="bold"
+                              color="blue.600"
+                              mr={4}
+                            >
+                              Court {court.courtNumber}
+                            </Text>
+                            {courts.length > 1 && (
+                              <Button
+                                size="sm"
+                                colorScheme="red"
+                                variant="outline"
+                                onClick={() => {
+                                  const newCourts = courts.filter(
+                                    (c) => c.courtNumber !== court.courtNumber
+                                  );
+                                  setCourts(newCourts);
+                                  setNumberOfCourts(newCourts.length);
+                                }}
+                              >
+                                <Minus
+                                  size={12}
+                                  style={{ marginRight: "4px" }}
+                                />
+                                Remove
+                              </Button>
+                            )}
+                          </Flex>
+                          <Grid
+                            templateColumns={{
+                              base: "1fr",
+                              md: "repeat(2, 1fr)",
+                            }}
+                            gap={4}
+                          >
+                            {/* Court Number */}
+                            <GridItem>
+                              <Text fontWeight="medium" color="gray.700" mb={2}>
+                                Court Number *
+                              </Text>
+                              <Input
+                                type="number"
+                                value={court.courtNumber}
+                                onChange={(e) =>
+                                  handleCourtChange(
+                                    index,
+                                    "courtNumber",
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
+                                size="lg"
+                                borderWidth={2}
+                                borderColor="gray.200"
+                                _focus={{ borderColor: "blue.500" }}
+                                transition="all 0.2s"
+                                min={1}
+                                required
+                              />
+                            </GridItem>
+
+                            {/* Court Name */}
+                            <GridItem>
+                              <Text fontWeight="medium" color="gray.700" mb={2}>
+                                Court Name
+                              </Text>
+                              <Input
+                                type="text"
+                                value={court.courtName}
+                                onChange={(e) =>
+                                  handleCourtChange(
+                                    index,
+                                    "courtName",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="e.g., Main Court, Court A"
+                                size="lg"
+                                borderWidth={2}
+                                borderColor="gray.200"
+                                _focus={{ borderColor: "blue.500" }}
+                                transition="all 0.2s"
+                              />
+                            </GridItem>
+                          </Grid>
+                        </Box>
+                      ))}
+
+                      {/* Add Court Button */}
+                      <Button
+                        size="lg"
+                        colorScheme="green"
+                        variant="outline"
+                        width="full"
+                        onClick={() =>
+                          handleNumberOfCourtsChange(numberOfCourts + 1)
+                        }
                       >
-                        Require Player Information
-                      </Text>
-                      <Text fontSize="xs" color="gray.600" mt={1}>
-                        Collect player details for better session management and
-                        communication
-                      </Text>
+                        <Plus size={16} style={{ marginRight: "8px" }} />
+                        Add Another Court
+                      </Button>
                     </Box>
-                  </HStack>
-                </Box>
-
-                {/* Quick Tips Section */}
-                <Box
-                  bg="blue.50"
-                  p={6}
-                  rounded="lg"
-                  border="1px"
-                  borderColor="blue.200"
-                >
-                  <Flex align="center" mb={3}>
-                    <Trophy size={16} style={{ marginRight: "8px" }} />
-                    <Heading size="sm" color="blue.800">
-                      Pro Tips for Your Session
-                    </Heading>
-                  </Flex>
-                  <Stack gap={2}>
-                    <Box display="flex" alignItems="start">
-                      <Box
-                        w={2}
-                        h={2}
-                        bg="blue.400"
-                        rounded="full"
-                        mt={2}
-                        mr={3}
-                        flexShrink={0}
-                      />
-                      <Text fontSize="sm" color="blue.700">
-                        Optimal court rotation: 8 players per court allows for
-                        smooth doubles rotation
-                      </Text>
-                    </Box>
-                    <Box display="flex" alignItems="start">
-                      <Box
-                        w={2}
-                        h={2}
-                        bg="blue.400"
-                        rounded="full"
-                        mt={2}
-                        mr={3}
-                        flexShrink={0}
-                      />
-                      <Text fontSize="sm" color="blue.700">
-                        Session duration: 2 hours provides good balance between
-                        play time and stamina
-                      </Text>
-                    </Box>
-                    <Box display="flex" alignItems="start">
-                      <Box
-                        w={2}
-                        h={2}
-                        bg="blue.400"
-                        rounded="full"
-                        mt={2}
-                        mr={3}
-                        flexShrink={0}
-                      />
-                      <Text fontSize="sm" color="blue.700">
-                        Player info helps with skill balancing and contact for
-                        future sessions
-                      </Text>
-                    </Box>
-                  </Stack>
+                  )}
                 </Box>
               </Stack>
             </Box>
@@ -589,6 +745,69 @@ function NewSessionPageContent() {
                   )}
                 </Button>
               </Flex>
+            </Box>
+
+            {/* Quick Tips Section */}
+            <Box
+              bg="blue.50"
+              p={8}
+              rounded="lg"
+              border="1px"
+              borderColor="blue.200"
+            >
+              <Flex align="center" mb={3}>
+                <Trophy size={16} style={{ marginRight: "8px" }} />
+                <Heading size="sm" color="blue.800">
+                  Pro Tips for Your Session
+                </Heading>
+              </Flex>
+              <Stack gap={2}>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    Optimal court rotation: 8 players per court allows for
+                    smooth doubles rotation
+                  </Text>
+                </Box>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    Session duration: 2 hours provides good balance between play
+                    time and stamina
+                  </Text>
+                </Box>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    Player info helps with skill balancing and contact for
+                    future sessions
+                  </Text>
+                </Box>
+              </Stack>
             </Box>
           </form>
         </Box>

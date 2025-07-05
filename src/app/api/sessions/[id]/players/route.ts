@@ -37,6 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Se
           select: {
             id: true,
             courtNumber: true,
+            courtName: true,
           },
         },
       },

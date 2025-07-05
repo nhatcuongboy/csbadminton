@@ -42,7 +42,11 @@ import {
   VStack,
 } from "@/components/ui/chakra-compat";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import { formatDuration, formatTime } from "@/lib/api/sessions";
+import {
+  formatDuration,
+  formatTime,
+  getCourtDisplayName,
+} from "@/lib/api/sessions";
 import BulkPlayersForm from "@/components/player/BulkPlayersForm";
 import SessionManagement from "@/components/session/SessionManagement";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
@@ -76,6 +80,7 @@ interface Player {
 interface Court {
   id: string;
   courtNumber: number;
+  courtName?: string;
   status: string;
   currentMatchId?: string;
   currentPlayers: Player[];
@@ -469,18 +474,21 @@ export default function SessionDetailContent({
       }
 
       // Select the top 4 waiting players (those with longest wait time)
-      const selectedPlayerIds = waitingPlayers.slice(0, 4).map(p => p.id);
+      const selectedPlayerIds = waitingPlayers.slice(0, 4).map((p) => p.id);
 
       // First, assign players to the court
-      const selectResponse = await fetch(`/api/courts/${courtId}/select-players`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          playerIds: selectedPlayerIds,
-        }),
-      });
+      const selectResponse = await fetch(
+        `/api/courts/${courtId}/select-players`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            playerIds: selectedPlayerIds,
+          }),
+        }
+      );
 
       const selectResult = await selectResponse.json();
 
@@ -798,9 +806,6 @@ export default function SessionDetailContent({
             Active Courts ({activeCourts.length})
           </Tab>
           <Tab flex="1" textAlign="center">
-            Waiting Queue ({waitingPlayers.length})
-          </Tab>
-          <Tab flex="1" textAlign="center">
             Match History ({completedMatches.length})
           </Tab>
           <Tab flex="1" textAlign="center">
@@ -928,6 +933,10 @@ export default function SessionDetailContent({
                                     )
                                   : "Playing..."
                               }
+                              courtName={getCourtDisplayName(
+                                court.courtName,
+                                court.courtNumber
+                              )}
                               width="100%"
                               height="180px"
                               showTimeInCenter={true}
@@ -997,6 +1006,10 @@ export default function SessionDetailContent({
                             <BadmintonCourt
                               players={[]}
                               isActive={false}
+                              courtName={getCourtDisplayName(
+                                court.courtName,
+                                court.courtNumber
+                              )}
                               width="100%"
                               //   height="120px"
                               height="180px"
@@ -1008,7 +1021,9 @@ export default function SessionDetailContent({
                                 <Button
                                   colorScheme="green"
                                   leftIcon={<Box as={Shuffle} boxSize={4} />}
-                                  onClick={() => autoAssignPlayersToSpecificCourt(court.id)}
+                                  onClick={() =>
+                                    autoAssignPlayersToSpecificCourt(court.id)
+                                  }
                                   size="sm"
                                   width="full"
                                 >
@@ -1017,7 +1032,9 @@ export default function SessionDetailContent({
                                 <Button
                                   colorScheme="blue"
                                   leftIcon={<Box as={Plus} boxSize={4} />}
-                                  onClick={() => startManualMatchCreation(court.id)}
+                                  onClick={() =>
+                                    startManualMatchCreation(court.id)
+                                  }
                                   size="sm"
                                   width="full"
                                   variant="outline"
@@ -1075,12 +1092,14 @@ export default function SessionDetailContent({
                           borderRadius="md" // More angular corners
                           borderWidth="2px"
                           borderColor={
-                            showMatchCreation && selectedPlayers.includes(player.id)
+                            showMatchCreation &&
+                            selectedPlayers.includes(player.id)
                               ? "blue.400"
                               : `rgba(251, 146, 60, ${borderOpacity})`
                           } // Orange color
                           bg={
-                            showMatchCreation && selectedPlayers.includes(player.id)
+                            showMatchCreation &&
+                            selectedPlayers.includes(player.id)
                               ? "blue.100"
                               : `rgba(251, 146, 60, ${bgOpacity})`
                           } // Orange color
@@ -1095,7 +1114,11 @@ export default function SessionDetailContent({
                               : {}
                           }
                           onClick={() => {
-                            if (session.status === "IN_PROGRESS" && showMatchCreation && matchMode === "manual") {
+                            if (
+                              session.status === "IN_PROGRESS" &&
+                              showMatchCreation &&
+                              matchMode === "manual"
+                            ) {
                               togglePlayerSelection(player.id);
                             }
                           }}
@@ -1207,7 +1230,8 @@ export default function SessionDetailContent({
                       textAlign="center"
                       mt={4}
                     >
-                      Use "Manual Selection" on any court to select players for a match
+                      Use "Manual Selection" on any court to select players for
+                      a match
                     </Text>
                   )}
                 </Box>
@@ -1215,10 +1239,25 @@ export default function SessionDetailContent({
 
               {/* Manual Match Creation Interface */}
               {showMatchCreation && matchMode === "manual" && selectedCourt && (
-                <Box mt={8} p={6} bg="blue.50" borderRadius="lg" borderWidth="1px" borderColor="blue.200">
-                  <Flex justifyContent="space-between" alignItems="center" mb={4}>
+                <Box
+                  mt={8}
+                  p={6}
+                  bg="blue.50"
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor="blue.200"
+                >
+                  <Flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={4}
+                  >
                     <Heading size="md" color="blue.700">
-                      Create Match - Court {session.courts.find(c => c.id === selectedCourt)?.courtNumber}
+                      Create Match - Court{" "}
+                      {
+                        session.courts.find((c) => c.id === selectedCourt)
+                          ?.courtNumber
+                      }
                     </Heading>
                     <Button
                       size="sm"
@@ -1231,10 +1270,15 @@ export default function SessionDetailContent({
                   </Flex>
 
                   <Text fontSize="sm" color="blue.600" mb={4}>
-                    Select exactly 4 players from the waiting queue above. Selected players are highlighted in blue.
+                    Select exactly 4 players from the waiting queue above.
+                    Selected players are highlighted in blue.
                   </Text>
 
-                  <Flex justifyContent="space-between" alignItems="center" mb={4}>
+                  <Flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={4}
+                  >
                     <Text fontSize="sm" fontWeight="medium">
                       Selected Players: {selectedPlayers.length}/4
                     </Text>
@@ -1252,10 +1296,14 @@ export default function SessionDetailContent({
 
                   {selectedPlayers.length > 0 && (
                     <Box mb={4}>
-                      <Text fontSize="sm" fontWeight="medium" mb={2}>Selected:</Text>
+                      <Text fontSize="sm" fontWeight="medium" mb={2}>
+                        Selected:
+                      </Text>
                       <Flex wrap="wrap" gap={2}>
-                        {selectedPlayers.map(playerId => {
-                          const player = waitingPlayers.find(p => p.id === playerId);
+                        {selectedPlayers.map((playerId) => {
+                          const player = waitingPlayers.find(
+                            (p) => p.id === playerId
+                          );
                           return player ? (
                             <Badge
                               key={playerId}
@@ -1267,7 +1315,8 @@ export default function SessionDetailContent({
                               alignItems="center"
                               gap={1}
                             >
-                              #{player.playerNumber} {player.name || `Player ${player.playerNumber}`}
+                              #{player.playerNumber}{" "}
+                              {player.name || `Player ${player.playerNumber}`}
                               <Box
                                 as="button"
                                 ml={1}
@@ -1301,92 +1350,6 @@ export default function SessionDetailContent({
                     </Button>
                   </Flex>
                 </Box>
-              )}
-            </TabPanel>
-
-            {/* Tab 2: Waiting Queue */}
-            <TabPanel>
-              <Flex justifyContent="space-between" mb={4}>
-                <Heading size="md">Waiting Queue</Heading>
-
-                {session.status === "IN_PROGRESS" && (
-                  <Button
-                    size="sm"
-                    leftIcon={<Box as={Plus} boxSize={4} />}
-                    onClick={playerModalDisclosure.onOpen}
-                  >
-                    Add Player
-                  </Button>
-                )}
-              </Flex>
-
-              {waitingPlayers.length === 0 ? (
-                <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
-                  No players in the waiting queue
-                </Text>
-              ) : (
-                <Table variant="simple" mt={4}>
-                  <Thead>
-                    <Tr>
-                      <Th>#</Th>
-                      <Th>Name</Th>
-                      <Th>Wait Time</Th>
-                      <Th>Matches</Th>
-                      <Th>Actions</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {waitingPlayers.map((player) => (
-                      <Tr key={player.id}>
-                        <Td>{player.playerNumber}</Td>
-                        <Td>
-                          <VStack align="start" spacing={0}>
-                            <Text fontWeight="medium">
-                              {player.name || `Player ${player.playerNumber}`}
-                            </Text>
-                            <Text fontSize="sm" color="gray.500">
-                              {player.level}{" "}
-                              {player.gender === "MALE" ? "♂" : "♀"}
-                            </Text>
-                          </VStack>
-                        </Td>
-                        <Td>
-                          <Badge
-                            colorScheme={
-                              player.currentWaitTime > 15
-                                ? "red"
-                                : player.currentWaitTime > 5
-                                ? "yellow"
-                                : "green"
-                            }
-                            variant="subtle"
-                            px={2}
-                            py={1}
-                            borderRadius="full"
-                          >
-                            {formatWaitTime(player.currentWaitTime)}
-                          </Badge>
-                        </Td>
-                        <Td>{player.matchesPlayed}</Td>
-                        <Td>
-                          {session.status === "IN_PROGRESS" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              colorScheme="blue"
-                              onClick={() => {
-                                togglePlayerSelection(player.id);
-                                matchModalDisclosure.onOpen();
-                              }}
-                            >
-                              Select
-                            </Button>
-                          )}
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
               )}
             </TabPanel>
 

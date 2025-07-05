@@ -16,6 +16,8 @@ interface BadmintonCourtProps {
   players: Player[];
   isActive: boolean;
   elapsedTime?: string;
+  courtName?: string;
+  courtNumber?: number;
   width?: string;
   height?: string;
   showTimeInCenter?: boolean;
@@ -25,6 +27,8 @@ export default function BadmintonCourt({
   players,
   isActive,
   elapsedTime,
+  courtName,
+  courtNumber,
   width = "100%",
   height = "180px",
   showTimeInCenter = true,
@@ -40,6 +44,34 @@ export default function BadmintonCourt({
       borderRadius="md"
       overflow="hidden"
     >
+      {/* Court Number and Name Display - Top Left */}
+      {(courtNumber || courtName) && (
+        <Box
+          position="absolute"
+          top="8px"
+          left="8px"
+          display="flex"
+          alignItems="center"
+          gap={2}
+          zIndex={3}
+        >
+          {courtNumber && (
+            <Box
+              bg="blue.500"
+              color="white"
+              px={2}
+              py={1}
+              borderRadius="md"
+              fontSize="xs"
+              fontWeight="bold"
+              boxShadow="sm"
+            >
+              Court {courtNumber}
+            </Box>
+          )}
+        </Box>
+      )}
+
       {/* Match Time Display - Center */}
       {showTimeInCenter && elapsedTime && (
         <Box

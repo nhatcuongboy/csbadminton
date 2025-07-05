@@ -22,6 +22,7 @@ import {
   type Court,
   type Match,
 } from "@/lib/api";
+import { getCourtDisplayName } from "@/lib/api/sessions";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import toast from "react-hot-toast";
 
@@ -311,6 +312,7 @@ function StatusPageContent() {
                       ? formatMatchElapsedTime(currentMatch.startTime)
                       : undefined
                   }
+                  courtName={getCourtDisplayName(currentCourt?.courtName, currentCourt?.courtNumber)}
                   width="100%"
                   height="200px"
                   showTimeInCenter={true}

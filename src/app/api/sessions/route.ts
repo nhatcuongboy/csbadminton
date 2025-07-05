@@ -1,5 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
+import { generateCourtName } from "@/lib/server/sessions";
 import { NextRequest } from "next/server";
 
 // GET /api/sessions - Lấy danh sách tất cả sessions
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const {
       name,
-      hostId = "cmcnle8kp00000qy1ob8hnnt0", // Sử dụng host ID mặc định nếu không có
+      hostId = "cmcosr60x00003k52n0al1blj", // Sử dụng host ID mặc định nếu không có
       numberOfCourts,
       sessionDuration,
       maxPlayersPerCourt,
@@ -90,21 +91,33 @@ export async function POST(request: NextRequest) {
     });
 
     // Create courts for the session
+    const courtsConfig = body.courts;
     const courts = [];
-    for (let i = 1; i <= session.numberOfCourts; i++) {
-      courts.push({
-        sessionId: session.id,
-        courtNumber: i,
-        status: "EMPTY",
-      });
+    
+    if (courtsConfig && Array.isArray(courtsConfig)) {
+      // Use provided courts configuration
+      for (const courtConfig of courtsConfig) {
+        courts.push({
+          sessionId: session.id,
+          courtNumber: courtConfig.courtNumber,
+          courtName: courtConfig.courtName || generateCourtName(courtConfig.courtNumber),
+          status: "EMPTY" as const,
+        });
+      }
+    } else {
+      // Use default sequential courts
+      for (let i = 1; i <= session.numberOfCourts; i++) {
+        courts.push({
+          sessionId: session.id,
+          courtNumber: i,
+          courtName: generateCourtName(i), // Generate court name
+          status: "EMPTY" as const,
+        });
+      }
     }
 
     await prisma.court.createMany({
-      data: courts.map((court) => ({
-        sessionId: session.id,
-        courtNumber: court.courtNumber,
-        status: "EMPTY",
-      })),
+      data: courts,
     });
 
     return successResponse(session, "Session created successfully");
