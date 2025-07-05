@@ -12,7 +12,6 @@ import {
   Center,
   Spinner,
 } from "@chakra-ui/react";
-import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { ArrowLeft, Clock, CheckCircle2, User, Users } from "lucide-react";
 import {
   PlayerService,
@@ -25,6 +24,10 @@ import {
 import { getCourtDisplayName } from "@/lib/api/sessions";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
+import { Link as IntlLink } from "@/i18n/config";
+import { Button } from "@/components/ui/chakra-compat";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 function StatusPageContent() {
   const searchParams = useSearchParams();
@@ -40,6 +43,11 @@ function StatusPageContent() {
   const [currentCourt, setCurrentCourt] = useState<Court | null>(null);
   const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);
 
+  // Translations
+  const t = useTranslations("pages.join.status");
+  const common = useTranslations("common");
+  const playerT = useTranslations("player");
+
   // Helper function to format elapsed time for match display
   const formatMatchElapsedTime = (startTime: Date): string => {
     const start = new Date(startTime);
@@ -47,11 +55,11 @@ function StatusPageContent() {
     const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
     if (elapsedMinutes === 0) {
-      return "< 1 phút";
+      return t("time.lessThanMinute");
     } else if (elapsedMinutes === 1) {
-      return "1 phút";
+      return t("time.oneMinute");
     } else {
-      return `${elapsedMinutes} phút`;
+      return t("time.minutes", { count: elapsedMinutes });
     }
   };
 
@@ -92,7 +100,7 @@ function StatusPageContent() {
           if (court) {
             setCurrentCourt(court);
             setCourtPlayers(court.currentPlayers || []);
-            
+
             // Get the current match from the court
             if (court.currentMatch) {
               setCurrentMatch(court.currentMatch);
@@ -107,7 +115,7 @@ function StatusPageContent() {
       }
     } catch (error) {
       console.error("Error fetching player data:", error);
-      toast.error("Failed to load player status");
+      toast.error(t("errors.loadFailed"));
     } finally {
       setLoading(false);
       setLastRefreshed(new Date());
@@ -117,12 +125,12 @@ function StatusPageContent() {
   // Initial data fetch
   useEffect(() => {
     if (!playerId) {
-      toast.error("Player ID is missing");
+      toast.error(t("errors.missingPlayerId"));
       return;
     }
 
     fetchPlayerData();
-  }, [playerId]);
+  }, [playerId, t]);
 
   // Set up auto-refresh
   useEffect(() => {
@@ -144,7 +152,7 @@ function StatusPageContent() {
       <Container maxW="md" py={12}>
         <Flex justify="center" align="center" height="50vh" direction="column">
           <Spinner size="xl" color="blue.500" mb={4} />
-          <Text>Loading player information...</Text>
+          <Text>{common("loading")}</Text>
         </Flex>
       </Container>
     );
@@ -164,13 +172,13 @@ function StatusPageContent() {
             textAlign="center"
           >
             <Heading size="md" mb={2}>
-              Player Not Found
+              {t("errors.playerNotFound")}
             </Heading>
-            <Text>We couldn't find your player information.</Text>
+            <Text>{t("errors.playerNotFoundDescription")}</Text>
           </Box>
-          <NextLinkButton href="/join" colorScheme="blue">
-            Return to Join Page
-          </NextLinkButton>
+          <IntlLink href="/join">
+            <Button colorScheme="blue">{t("errors.returnToJoin")}</Button>
+          </IntlLink>
         </Flex>
       </Container>
     );
@@ -178,6 +186,11 @@ function StatusPageContent() {
 
   return (
     <Container maxW="md" py={12}>
+      {/* Language Switcher */}
+      <Flex justify="flex-end" mb={4}>
+        <LanguageSwitcher />
+      </Flex>
+
       {/* Header */}
       <Box textAlign="center" mb={8}>
         <Heading
@@ -189,7 +202,10 @@ function StatusPageContent() {
           {session.name}
         </Heading>
         <Text color="gray.500">
-          Player #{player.playerNumber} - {player.name}
+          {t("playerInfo", {
+            number: player.playerNumber,
+            name: player.name || "",
+          })}
         </Text>
       </Box>
 
@@ -213,9 +229,9 @@ function StatusPageContent() {
           <Flex align="center">
             <Box as={User} boxSize={5} color="blue.500" mr={2} />
             <Box>
-              <Heading size="md">Your Status</Heading>
+              <Heading size="md">{t("yourStatus")}</Heading>
               <Text color="gray.500" fontSize="sm">
-                Current status in the badminton session
+                {t("statusDescription")}
               </Text>
             </Box>
           </Flex>
@@ -239,10 +255,10 @@ function StatusPageContent() {
                     <Clock size={32} color="var(--chakra-colors-blue-500)" />
                   </Center>
                   <Heading size="sm" fontWeight="medium">
-                    Waiting to Play
+                    {t("status.waiting.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    You are in the waiting queue
+                    {t("status.waiting.description")}
                   </Text>
                 </>
               ) : player.status === "PLAYING" ? (
@@ -254,11 +270,13 @@ function StatusPageContent() {
                     />
                   </Center>
                   <Heading size="sm" fontWeight="medium">
-                    Currently Playing
+                    {t("status.playing.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    Court {player.currentCourt?.courtNumber || "Unknown"} -
-                    Enjoy your match!
+                    {t("status.playing.description", {
+                      courtNumber:
+                        player.currentCourt?.courtNumber || "Unknown",
+                    })}
                   </Text>
                 </>
               ) : (
@@ -270,82 +288,100 @@ function StatusPageContent() {
                     />
                   </Center>
                   <Heading size="sm" fontWeight="medium">
-                    Session Finished
+                    {t("status.finished.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    Thank you for participating
+                    {t("status.finished.description")}
                   </Text>
                 </>
               )}
             </Box>
 
             {/* Court Visual - Only show when player is playing */}
-            {player.status === "PLAYING" && currentCourt && courtPlayers.length > 0 && (
-              <Box
-                borderWidth="1px"
-                p={4}
-                borderRadius="md"
-                bg="white"
-                _dark={{ bg: "gray.800" }}
-                boxShadow="sm"
-                transition="all 0.2s"
-                _hover={{ boxShadow: "md" }}
-              >
-                <Flex justify="space-between" align="center" mb={3}>
-                  <Heading size="sm" color="green.600">
-                    Court {currentCourt.courtNumber}
-                  </Heading>
-                  {currentMatch && (
-                    <Text fontSize="sm" color="gray.500">
-                      {formatMatchElapsedTime(currentMatch.startTime)} elapsed
-                    </Text>
+            {player.status === "PLAYING" &&
+              currentCourt &&
+              courtPlayers.length > 0 && (
+                <Box
+                  borderWidth="1px"
+                  p={4}
+                  borderRadius="md"
+                  bg="white"
+                  _dark={{ bg: "gray.800" }}
+                  boxShadow="sm"
+                  transition="all 0.2s"
+                  _hover={{ boxShadow: "md" }}
+                >
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Heading size="sm" color="green.600">
+                      {t("court.title", { number: currentCourt.courtNumber })}
+                    </Heading>
+                    {currentMatch && (
+                      <Text fontSize="sm" color="gray.500">
+                        {t("court.elapsed", {
+                          time: formatMatchElapsedTime(currentMatch.startTime),
+                        })}
+                      </Text>
+                    )}
+                  </Flex>
+                  <BadmintonCourt
+                    players={courtPlayers.map((p) => ({
+                      ...p,
+                      isCurrentPlayer: p.id === player.id,
+                    }))}
+                    isActive={true}
+                    elapsedTime={
+                      currentMatch
+                        ? formatMatchElapsedTime(currentMatch.startTime)
+                        : undefined
+                    }
+                    courtName={getCourtDisplayName(
+                      currentCourt?.courtName,
+                      currentCourt?.courtNumber
+                    )}
+                    width="100%"
+                    height="200px"
+                    showTimeInCenter={true}
+                  />
+                  <Text
+                    fontSize="xs"
+                    color="gray.500"
+                    mt={2}
+                    textAlign="center"
+                  >
+                    {t("court.playerHighlight")}
+                  </Text>
+                  {courtPlayers.length > 0 && (
+                    <Box mt={2}>
+                      <Text
+                        fontSize="xs"
+                        color="gray.600"
+                        textAlign="center"
+                        mb={1}
+                      >
+                        {t("court.playingWith")}
+                      </Text>
+                      <Flex justify="center" wrap="wrap" gap={2}>
+                        {courtPlayers
+                          .filter((p) => p.id !== player.id)
+                          .map((p) => (
+                            <Text
+                              key={p.id}
+                              fontSize="xs"
+                              color="gray.500"
+                              bg="gray.50"
+                              px={2}
+                              py={1}
+                              borderRadius="md"
+                            >
+                              #{p.playerNumber}{" "}
+                              {p.name?.split(" ")[0] || `P${p.playerNumber}`}
+                            </Text>
+                          ))}
+                      </Flex>
+                    </Box>
                   )}
-                </Flex>
-                <BadmintonCourt
-                  players={courtPlayers.map(p => ({
-                    ...p,
-                    isCurrentPlayer: p.id === player.id
-                  }))}
-                  isActive={true}
-                  elapsedTime={
-                    currentMatch
-                      ? formatMatchElapsedTime(currentMatch.startTime)
-                      : undefined
-                  }
-                  courtName={getCourtDisplayName(currentCourt?.courtName, currentCourt?.courtNumber)}
-                  width="100%"
-                  height="200px"
-                  showTimeInCenter={true}
-                />
-                <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
-                  You are highlighted in blue on the court above
-                </Text>
-                {courtPlayers.length > 0 && (
-                  <Box mt={2}>
-                    <Text fontSize="xs" color="gray.600" textAlign="center" mb={1}>
-                      Playing with:
-                    </Text>
-                    <Flex justify="center" wrap="wrap" gap={2}>
-                      {courtPlayers
-                        .filter(p => p.id !== player.id)
-                        .map(p => (
-                          <Text 
-                            key={p.id} 
-                            fontSize="xs" 
-                            color="gray.500"
-                            bg="gray.50"
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                          >
-                            #{p.playerNumber} {p.name?.split(" ")[0] || `P${p.playerNumber}`}
-                          </Text>
-                        ))}
-                    </Flex>
-                  </Box>
-                )}
-              </Box>
-            )}
+                </Box>
+              )}
 
             <Flex gap={4}>
               <Box
@@ -366,10 +402,10 @@ function StatusPageContent() {
                   <Clock size={16} color="var(--chakra-colors-gray-500)" />
                 </Center>
                 <Text fontSize="xl" fontWeight="semibold">
-                  {player.currentWaitTime} min
+                  {player.currentWaitTime} {t("stats.minutes")}
                 </Text>
                 <Text fontSize="xs" color="gray.500">
-                  Current Wait
+                  {t("stats.currentWait")}
                 </Text>
               </Box>
 
@@ -394,7 +430,7 @@ function StatusPageContent() {
                   {player.matchesPlayed}
                 </Text>
                 <Text fontSize="xs" color="gray.500">
-                  Matches Played
+                  {t("stats.matchesPlayed")}
                 </Text>
               </Box>
             </Flex>
@@ -410,13 +446,14 @@ function StatusPageContent() {
               >
                 <Flex justify="space-between" align="center" mb={2}>
                   <Text fontSize="sm" fontWeight="medium">
-                    Queue Position
+                    {t("queue.title")}
                   </Text>
                   <Text fontSize="sm" color="gray.500">
-                    Updated{" "}
-                    {lastRefreshed.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
+                    {t("queue.updated", {
+                      time: lastRefreshed.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
                     })}
                   </Text>
                 </Flex>
@@ -447,7 +484,7 @@ function StatusPageContent() {
                   </Text>
                 </Flex>
                 <Text fontSize="xs" color="gray.500" mt={2}>
-                  Auto-refreshes in {refreshInterval} seconds
+                  {t("queue.autoRefresh", { seconds: refreshInterval })}
                 </Text>
               </Box>
             )}
@@ -457,29 +494,30 @@ function StatusPageContent() {
         {/* Card Footer */}
         <Box p={4} borderTopWidth="1px" textAlign="center">
           <Text fontSize="xs" color="gray.500">
-            Please keep this page open to maintain your place in the queue
+            {t("footer")}
           </Text>
         </Box>
       </Box>
 
       <Center>
-        <NextLinkButton
-          href="/"
-          variant="outline"
-          borderRadius="full"
-          transition="all 0.2s"
-          _hover={{
-            bg: "blue.50",
-            borderColor: "blue.300",
-            transform: "translateY(-2px)",
-            boxShadow: "sm",
-          }}
-        >
-          <Flex align="center">
-            <Box as={ArrowLeft} boxSize={4} mr={2} />
-            Back to Home
-          </Flex>
-        </NextLinkButton>
+        <IntlLink href="/">
+          <Button
+            variant="outline"
+            borderRadius="full"
+            transition="all 0.2s"
+            _hover={{
+              bg: "blue.50",
+              borderColor: "blue.300",
+              transform: "translateY(-2px)",
+              boxShadow: "sm",
+            }}
+          >
+            <Flex align="center">
+              <Box as={ArrowLeft} boxSize={4} mr={2} />
+              {common("backToHome")}
+            </Flex>
+          </Button>
+        </IntlLink>
       </Center>
     </Container>
   );

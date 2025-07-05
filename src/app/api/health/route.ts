@@ -5,11 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     // Test database connection
     await prisma.$connect();
-    
+
     // Simple query to verify connection
     const userCount = await prisma.user.count();
     const sessionCount = await prisma.session.count();
-    
+
     // Get database info
     const dbStatus = {
       connected: true,
@@ -23,20 +23,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: dbStatus,
-      message: "Database connection successful"
+      message: "Database connection successful",
     });
-    
   } catch (error) {
     console.error("Database health check failed:", error);
-    
-    return NextResponse.json({
-      success: false,
-      error: "Database connection failed",
-      details: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-    }, { status: 500 });
-    
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Database connection failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+      },
+      { status: 500 }
+    );
   } finally {
     await prisma.$disconnect();
   }

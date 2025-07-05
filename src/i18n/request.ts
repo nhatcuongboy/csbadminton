@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
-import { getRequestConfig } from 'next-intl/server';
-import { routing } from './config';
+import { notFound } from "next/navigation";
+import { getRequestConfig } from "next-intl/server";
+import { routing } from "./config";
 
 export default getRequestConfig(async ({ locale }) => {
   // Validate that the incoming `locale` parameter is valid
@@ -9,7 +9,8 @@ export default getRequestConfig(async ({ locale }) => {
   try {
     const messages = (await import(`./messages/${locale}.json`)).default;
     return {
-      messages
+      locale: locale as string,
+      messages,
     };
   } catch (error) {
     notFound();

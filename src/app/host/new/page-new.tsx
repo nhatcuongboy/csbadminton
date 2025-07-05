@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Box,
   Button,
@@ -27,11 +28,9 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SessionService } from "@/lib/api";
+import NextLinkButton from "@/components/ui/NextLinkButton";
 import { toast } from "react-hot-toast";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useTranslations } from "next-intl";
-import { Link as IntlLink } from "@/i18n/config";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 // Helper function to format date for datetime-local input
 function formatDateTimeLocal(date: Date): string {
@@ -57,12 +56,10 @@ function NewSessionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [courts, setCourts] = useState([{ courtNumber: 1, courtName: "" }]);
-
-  // Translations
-  const t = useTranslations("session");
-  const common = useTranslations("common");
-  const pages = useTranslations("pages");
+  const [courts, setCourts] = useState([
+    { courtNumber: 1, courtName: "" },
+    { courtNumber: 2, courtName: "" },
+  ]);
 
   // Calculate number of courts based on courts array
   const numberOfCourts = courts.length;
@@ -81,20 +78,22 @@ function NewSessionPageContent() {
   // Calculate session duration based on start and end times
   const sessionDuration = useMemo(() => {
     try {
+      // Parse dates ensuring they're treated as local timezone dates
       const start = new Date(startTime);
       const end = new Date(endTime);
       const durationMinutes = Math.round(
         (end.getTime() - start.getTime()) / (60 * 1000)
       );
-      return durationMinutes > 0 ? durationMinutes : 120;
+      return durationMinutes > 0 ? durationMinutes : 120; // If end is before start, default to 2 hours
     } catch (e) {
-      return 120;
+      return 120; // Default to 2 hours if dates are invalid
     }
   }, [startTime, endTime]);
 
   // Check if end time is before start time
   const isEndTimeValid = useMemo(() => {
     try {
+      // Parse dates ensuring they're treated as local timezone dates
       const start = new Date(startTime);
       const end = new Date(endTime);
       return end > start;
@@ -112,6 +111,7 @@ function NewSessionPageContent() {
   }, [error, details]);
 
   async function createSession(formData: FormData) {
+    // Client-side form handling
     setIsLoading(true);
 
     try {
@@ -137,11 +137,14 @@ function NewSessionPageContent() {
       );
       const requirePlayerInfo = formData.get("requirePlayerInfo") === "on";
 
-      // Create session using SessionService
+      // Use the state values for startTime, endTime, and sessionDuration
+      // instead of reading from form
+
+      // Sử dụng SessionService để tạo session mới
       const session = await SessionService.createSession({
         name,
         numberOfCourts,
-        sessionDuration,
+        sessionDuration, // Calculated from start/end time
         maxPlayersPerCourt,
         requirePlayerInfo,
         startTime: new Date(startTime),
@@ -149,7 +152,7 @@ function NewSessionPageContent() {
         courts: courts.map((court) => ({
           courtNumber: court.courtNumber,
           courtName: court.courtName || undefined,
-        })),
+        })), // Pass courts configuration
       });
 
       // Show success message
@@ -161,6 +164,7 @@ function NewSessionPageContent() {
       }, 500);
     } catch (error) {
       console.error("Error creating session:", error);
+      // Show error message
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       toast.error(errorMessage);
@@ -206,12 +210,12 @@ function NewSessionPageContent() {
     const uniqueNumbers = new Set(courtNumbers);
 
     if (uniqueNumbers.size !== courtNumbers.length) {
-      return t("validation.courtNumberUnique");
+      return "Court numbers must be unique";
     }
 
     for (const court of courts) {
       if (!court.courtNumber || court.courtNumber < 1) {
-        return t("validation.courtNumberMin");
+        return "All courts must have a valid court number (≥ 1)";
       }
     }
 
@@ -221,32 +225,26 @@ function NewSessionPageContent() {
   return (
     <Box minH="100vh" bgGradient="linear(to-br, blue.50, white, green.50)">
       <Container maxW="4xl" py={8} px={4}>
-        {/* Language Switcher */}
-        <Flex justify="flex-end" mb={4}>
-          <LanguageSwitcher />
-        </Flex>
-
         {/* Header with back button */}
         <Flex align="center" mb={8}>
-          <IntlLink href="/host">
-            <Button
-              variant="outline"
-              size="sm"
-              mr={4}
-              _hover={{ bg: "blue.50" }}
-              transition="all 0.2s"
-            >
-              <ArrowLeft size={16} style={{ marginRight: "8px" }} />
-              {common("back")}
-            </Button>
-          </IntlLink>
+          <NextLinkButton
+            href="/host"
+            variant="outline"
+            size="sm"
+            mr={4}
+            _hover={{ bg: "blue.50" }}
+            transition="all 0.2s"
+          >
+            <ArrowLeft size={16} style={{ marginRight: "8px" }} />
+            Back to Dashboard
+          </NextLinkButton>
           <Box>
             <Heading
               size="2xl"
               bgGradient="linear(to-r, blue.600, green.600)"
               fontWeight="bold"
             >
-              {t("createSession")}
+              Create New Session
             </Heading>
             <Text color="gray.600" mt={1}>
               Set up your badminton session with ease
@@ -320,7 +318,7 @@ function NewSessionPageContent() {
                       style={{ marginRight: "8px" }}
                     />
                     <Text fontWeight="semibold" color="gray.700">
-                      {t("sessionName")} *
+                      Session Name *
                     </Text>
                   </Flex>
                   <Input
@@ -350,7 +348,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("numberOfCourts")}
+                        Number of Courts
                       </Text>
                     </Flex>
                     <Input
@@ -484,7 +482,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("maxPlayersPerCourt")} *
+                        Max Players Per Court *
                       </Text>
                     </Flex>
                     <Input
@@ -515,38 +513,34 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("requirePlayerInfo")}
+                        Player Information
                       </Text>
                     </Flex>
-                    <HStack
-                      gap={3}
+                    <Box
                       p={4}
                       borderWidth={2}
                       borderColor="gray.200"
                       borderRadius="md"
-                      minH="66px"
-                      align="center"
+                      bg="gray.50"
                     >
-                      <input
-                        type="checkbox"
-                        id="requirePlayerInfo"
-                        name="requirePlayerInfo"
-                        defaultChecked
-                        style={{
-                          transform: "scale(1.5)",
-                          accentColor: "#38A169",
-                        }}
-                      />
-                      <Box>
-                        <Text fontWeight="medium" color="gray.700">
-                          Collect player information
-                        </Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          Enable to gather player details for better session
-                          management
-                        </Text>
-                      </Box>
-                    </HStack>
+                      <HStack gap={3}>
+                        <input
+                          type="checkbox"
+                          id="requirePlayerInfo"
+                          name="requirePlayerInfo"
+                          defaultChecked
+                          style={{ transform: "scale(1.2)" }}
+                        />
+                        <Box>
+                          <Text fontWeight="medium" color="gray.700">
+                            Require Player Information
+                          </Text>
+                          <Text fontSize="xs" color="gray.600" mt={1}>
+                            Collect details for better session management
+                          </Text>
+                        </Box>
+                      </HStack>
+                    </Box>
                   </GridItem>
                 </Grid>
 
@@ -559,7 +553,7 @@ function NewSessionPageContent() {
                       style={{ marginRight: "8px" }}
                     />
                     <Text fontWeight="semibold" color="gray.700">
-                      {t("courtInformation")} *
+                      Courts Configuration *
                     </Text>
                   </Flex>
                   <Text fontSize="xs" color="gray.500" mb={4}>
@@ -604,7 +598,7 @@ function NewSessionPageContent() {
                               }
                             >
                               <Minus size={12} style={{ marginRight: "4px" }} />
-                              {common("remove")}
+                              Remove
                             </Button>
                           )}
                         </Flex>
@@ -618,7 +612,7 @@ function NewSessionPageContent() {
                           {/* Court Number */}
                           <GridItem>
                             <Text fontWeight="medium" color="gray.700" mb={2}>
-                              {t("courtNumber")} *
+                              Court Number *
                             </Text>
                             <Input
                               type="number"
@@ -643,7 +637,7 @@ function NewSessionPageContent() {
                           {/* Court Name */}
                           <GridItem>
                             <Text fontWeight="medium" color="gray.700" mb={2}>
-                              {t("courtName")}
+                              Court Name
                             </Text>
                             <Input
                               type="text"
@@ -655,7 +649,7 @@ function NewSessionPageContent() {
                                   e.target.value
                                 )
                               }
-                              placeholder={t("courtNamePlaceholder")}
+                              placeholder="e.g., Main Court, Court A"
                               size="lg"
                               borderWidth={2}
                               borderColor="gray.200"
@@ -676,7 +670,7 @@ function NewSessionPageContent() {
                       onClick={() => handleAddCourt()}
                     >
                       <Plus size={16} style={{ marginRight: "8px" }} />
-                      {t("addCourt")}
+                      Add Another Court
                     </Button>
                   </Box>
                 </Box>
@@ -685,17 +679,16 @@ function NewSessionPageContent() {
 
             <Box bg="gray.50" p={8}>
               <Flex w="full" justify="space-between">
-                <IntlLink href="/host">
-                  <Button
-                    variant="outline"
-                    px={8}
-                    py={3}
-                    _hover={{ bg: "gray.100" }}
-                    transition="all 0.2s"
-                  >
-                    {common("cancel")}
-                  </Button>
-                </IntlLink>
+                <NextLinkButton
+                  href="/host"
+                  variant="outline"
+                  px={8}
+                  py={3}
+                  _hover={{ bg: "gray.100" }}
+                  transition="all 0.2s"
+                >
+                  Cancel
+                </NextLinkButton>
                 <Button
                   type="submit"
                   px={8}
@@ -716,13 +709,87 @@ function NewSessionPageContent() {
                   ) : (
                     <>
                       <Save size={16} style={{ marginRight: "8px" }} />
-                      {t("createSession")}
+                      Create Session
                     </>
                   )}
                 </Button>
               </Flex>
             </Box>
+
+            {/* Quick Tips Section */}
+            <Box
+              bg="blue.50"
+              p={8}
+              rounded="lg"
+              border="1px"
+              borderColor="blue.200"
+            >
+              <Flex align="center" mb={3}>
+                <Trophy size={16} style={{ marginRight: "8px" }} />
+                <Heading size="sm" color="blue.800">
+                  Pro Tips for Your Session
+                </Heading>
+              </Flex>
+              <Stack gap={2}>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    Optimal court rotation: 8 players per court allows for
+                    smooth doubles rotation
+                  </Text>
+                </Box>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    Session duration: 2 hours provides good balance between play
+                    time and stamina
+                  </Text>
+                </Box>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    Player info helps with skill balancing and contact for
+                    future sessions
+                  </Text>
+                </Box>
+              </Stack>
+            </Box>
           </form>
+        </Box>
+
+        {/* Additional Information */}
+        <Box mt={8} textAlign="center">
+          <Text color="gray.600" fontSize="sm">
+            Need help? Check out our{" "}
+            <Link href="#" style={{ color: "#3182ce", fontWeight: "500" }}>
+              session setup guide
+            </Link>{" "}
+            for best practices.
+          </Text>
         </Box>
       </Container>
     </Box>

@@ -3,21 +3,25 @@
 ## Tổng quan
 
 Ứng dụng Badminton đã được cài đặt hệ thống đa ngôn ngữ (internationalization - i18n) hỗ trợ:
+
 - **Tiếng Anh (English)** - Ngôn ngữ mặc định (`en`)
 - **Tiếng Việt (Vietnamese)** - (`vi`)
 
 ## Cấu trúc i18n
 
 ### 1. Cấu hình chính
+
 - **`src/i18n/config.ts`**: Cấu hình routing và navigation cho i18n
 - **`src/i18n/request.ts`**: Xử lý request và load messages
 - **`middleware.ts`**: Middleware xử lý routing với locale
 
 ### 2. File messages
+
 - **`src/i18n/messages/en.json`**: Bản dịch tiếng Anh
 - **`src/i18n/messages/vi.json`**: Bản dịch tiếng Việt
 
 ### 3. Cấu trúc URL
+
 ```
 /en              → Tiếng Anh (mặc định)
 /vi              → Tiếng Việt
@@ -32,16 +36,16 @@
 ### 1. Sử dụng translations trong component
 
 ```tsx
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 export default function MyComponent() {
-  const t = useTranslations('session');
-  const common = useTranslations('common');
-  
+  const t = useTranslations("session");
+  const common = useTranslations("common");
+
   return (
     <div>
-      <h1>{t('createSession')}</h1>
-      <button>{common('save')}</button>
+      <h1>{t("createSession")}</h1>
+      <button>{common("save")}</button>
     </div>
   );
 }
@@ -50,7 +54,7 @@ export default function MyComponent() {
 ### 2. Navigation với i18n
 
 ```tsx
-import { Link } from '@/i18n/config';
+import { Link } from "@/i18n/config";
 
 export default function Navigation() {
   return (
@@ -67,7 +71,7 @@ export default function Navigation() {
 Component `LanguageSwitcher` đã được tích hợp sẵn:
 
 ```tsx
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export default function Header() {
   return (
@@ -95,49 +99,53 @@ export default function Header() {
 
 ```tsx
 // Session related
-const t = useTranslations('session');
-t('createSession')        // "Create Session" / "Tạo Phiên Chơi"
-t('sessionName')          // "Session Name" / "Tên Phiên Chơi"
-t('maxPlayersPerCourt')   // "Max Players Per Court" / "Tối Đa Người Chơi Mỗi Sân"
+const t = useTranslations("session");
+t("createSession"); // "Create Session" / "Tạo Phiên Chơi"
+t("sessionName"); // "Session Name" / "Tên Phiên Chơi"
+t("maxPlayersPerCourt"); // "Max Players Per Court" / "Tối Đa Người Chơi Mỗi Sân"
 
 // Common words
-const common = useTranslations('common');
-common('save')            // "Save" / "Lưu"
-common('cancel')          // "Cancel" / "Hủy"
-common('loading')         // "Loading..." / "Đang tải..."
+const common = useTranslations("common");
+common("save"); // "Save" / "Lưu"
+common("cancel"); // "Cancel" / "Hủy"
+common("loading"); // "Loading..." / "Đang tải..."
 
 // Validation messages
-t('validation.sessionNameRequired')  // "Session name is required" / "Tên phiên chơi là bắt buộc"
+t("validation.sessionNameRequired"); // "Session name is required" / "Tên phiên chơi là bắt buộc"
 ```
 
 ## Thêm ngôn ngữ mới
 
 ### Bước 1: Thêm locale vào config
+
 ```typescript
 // src/i18n/config.ts
 export const routing = defineRouting({
-  locales: ['en', 'vi', 'fr'], // Thêm 'fr' cho tiếng Pháp
-  defaultLocale: 'en',
-  localePrefix: 'always'
+  locales: ["en", "vi", "fr"], // Thêm 'fr' cho tiếng Pháp
+  defaultLocale: "en",
+  localePrefix: "always",
 });
 ```
 
 ### Bước 2: Tạo file messages mới
+
 Tạo file `src/i18n/messages/fr.json` với cấu trúc tương tự file tiếng Anh.
 
 ### Bước 3: Cập nhật LanguageSwitcher
+
 ```typescript
 // src/components/ui/LanguageSwitcher.tsx
 const locales = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' } // Thêm tiếng Pháp
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+  { code: "fr", label: "Français", flag: "🇫🇷" }, // Thêm tiếng Pháp
 ];
 ```
 
 ## Thêm bản dịch mới
 
 ### 1. Thêm vào file messages
+
 ```json
 // src/i18n/messages/en.json
 {
@@ -150,31 +158,35 @@ const locales = [
 // src/i18n/messages/vi.json
 {
   "newFeature": {
-    "title": "Tính Năng Mới", 
+    "title": "Tính Năng Mới",
     "description": "Đây là tính năng mới"
   }
 }
 ```
 
 ### 2. Sử dụng trong component
+
 ```tsx
-const t = useTranslations('newFeature');
-return <h1>{t('title')}</h1>;
+const t = useTranslations("newFeature");
+return <h1>{t("title")}</h1>;
 ```
 
 ## Best Practices
 
 ### 1. Tổ chức messages
+
 - Nhóm theo chức năng (session, court, player)
 - Sử dụng nested structure cho các messages liên quan
 - Validation messages nên được nhóm riêng
 
 ### 2. Naming conventions
+
 - Sử dụng camelCase cho keys
 - Đặt tên mô tả rõ ràng
 - Tránh viết tắt không rõ nghĩa
 
 ### 3. Fallback handling
+
 - Luôn có bản dịch tiếng Anh đầy đủ
 - Kiểm tra missing translations thường xuyên
 - Sử dụng TypeScript để type safety
@@ -182,26 +194,32 @@ return <h1>{t('title')}</h1>;
 ## Troubleshooting
 
 ### 1. Lỗi "useTranslations must be used within NextIntlClientProvider"
+
 Đảm bảo component được wrap trong `NextIntlClientProvider` ở layout.
 
 ### 2. Missing translation keys
+
 Kiểm tra file messages có đúng cấu trúc và tồn tại key không.
 
 ### 3. Routing issues
+
 Đảm bảo middleware được cấu hình đúng và exclude API routes.
 
 ## Testing i18n
 
 ### 1. Test UI với các ngôn ngữ
+
 - Truy cập `/en` và `/vi` để kiểm tra
 - Test Language Switcher
 - Kiểm tra navigation links
 
 ### 2. Test responsive text
+
 - Tiếng Việt thường dài hơn tiếng Anh
 - Đảm bảo UI không bị vỡ với text dài
 
 ### 3. Test fallback
+
 - Xóa tạm một key để test fallback behavior
 - Kiểm tra error handling
 

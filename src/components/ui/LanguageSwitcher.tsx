@@ -1,15 +1,15 @@
 "use client";
 
-import { useTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
-import { Button, Box, Text, Flex } from '@chakra-ui/react';
-import { ChevronDown, Languages } from 'lucide-react';
-import { useState } from 'react';
+import { useTransition } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useLocale } from "next-intl";
+import { Button, Box, Text, Flex } from "@chakra-ui/react";
+import { ChevronDown, Languages } from "lucide-react";
+import { useState } from "react";
 
 const locales = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' }
+  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
 ];
 
 export default function LanguageSwitcher() {
@@ -19,7 +19,7 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
   const locale = useLocale();
 
-  const currentLocale = locales.find(l => l.code === locale) || locales[0];
+  const currentLocale = locales.find((l) => l.code === locale) || locales[0];
 
   const handleLocaleChange = (newLocale: string) => {
     startTransition(() => {
@@ -45,7 +45,7 @@ export default function LanguageSwitcher() {
         {currentLocale.flag} {currentLocale.label}
         <ChevronDown size={16} />
       </Button>
-      
+
       {isOpen && (
         <Box
           position="absolute"
@@ -67,8 +67,8 @@ export default function LanguageSwitcher() {
               px={4}
               py={2}
               cursor="pointer"
-              bg={locale === loc.code ? 'blue.50' : 'transparent'}
-              _hover={{ bg: 'blue.50' }}
+              bg={locale === loc.code ? "blue.50" : "transparent"}
+              _hover={{ bg: "blue.50" }}
               onClick={() => handleLocaleChange(loc.code)}
             >
               <Flex align="center" gap={2}>

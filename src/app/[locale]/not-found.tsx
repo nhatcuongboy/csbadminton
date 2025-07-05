@@ -1,11 +1,11 @@
-import { useTranslations } from 'next-intl';
-import { Box, Container, Heading, Text } from '@chakra-ui/react';
-import { Link as IntlLink } from '@/i18n/config';
-import { Button } from '@chakra-ui/react';
+import { useTranslations } from "next-intl";
+import { Box, Container, Heading, Text } from "@chakra-ui/react";
+import { Link as IntlLink } from "@/i18n/config";
+import { Button } from "@chakra-ui/react";
 
 export default function NotFound() {
-  const common = useTranslations('common');
-  
+  const common = useTranslations("common");
+
   return (
     <Container maxW="lg" py={20}>
       <Box textAlign="center">
@@ -16,9 +16,7 @@ export default function NotFound() {
           Page not found
         </Text>
         <IntlLink href="/">
-          <Button size="lg">
-            {common('back')} to Home
-          </Button>
+          <Button size="lg">{common("back")} to Home</Button>
         </IntlLink>
       </Box>
     </Container>

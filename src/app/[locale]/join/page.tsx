@@ -23,24 +23,24 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/chakra-compat";
 import { SessionService, type Session } from "@/lib/api";
-import { useTranslations } from 'next-intl';
-import { Link as IntlLink } from '@/i18n/config';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import { useTranslations } from "next-intl";
+import { Link as IntlLink } from "@/i18n/config";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export default function JoinPage() {
   const [sessionId, setSessionId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  
+
   // Translations
-  const t = useTranslations('pages.join');
-  const common = useTranslations('common');
-  const sessionT = useTranslations('session');
+  const t = useTranslations("pages.join");
+  const common = useTranslations("common");
+  const sessionT = useTranslations("session");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sessionId.trim()) {
-      toast.error(sessionT('validation.sessionCodeRequired'));
+      toast.error(sessionT("validation.sessionCodeRequired"));
       return;
     }
 
@@ -49,7 +49,7 @@ export default function JoinPage() {
       const foundSession = await SessionService.getSession(sessionId);
       setSession(foundSession);
       toast.success("Session found! Redirecting...");
-      
+
       // Redirect to the session page
       window.location.href = `/join/confirm?sessionId=${sessionId}`;
     } catch (error) {
@@ -79,7 +79,7 @@ export default function JoinPage() {
               transition="all 0.2s"
             >
               <ArrowLeft size={16} style={{ marginRight: "8px" }} />
-              {common('back')}
+              {common("back")}
             </Button>
           </IntlLink>
           <Box>
@@ -88,10 +88,10 @@ export default function JoinPage() {
               bgGradient="linear(to-r, blue.600, green.600)"
               fontWeight="bold"
             >
-              {t('title')}
+              {t("title")}
             </Heading>
             <Text color="gray.600" mt={1}>
-              {t('description')}
+              {t("description")}
             </Text>
           </Box>
         </Flex>
@@ -122,7 +122,7 @@ export default function JoinPage() {
               <Users size={32} color="white" />
             </Flex>
             <Heading size="lg" color="gray.800" mb={2}>
-              {t('enterCode')}
+              {t("enterCode")}
             </Heading>
             <Text color="gray.600">
               Enter the session code provided by the host
@@ -139,7 +139,7 @@ export default function JoinPage() {
                     style={{ marginRight: "8px" }}
                   />
                   <Text fontWeight="semibold" color="gray.700">
-                    {sessionT('sessionCode')} *
+                    {sessionT("sessionCode")} *
                   </Text>
                 </Flex>
                 <Input
@@ -185,7 +185,7 @@ export default function JoinPage() {
                 ) : (
                   <>
                     <LogIn size={16} style={{ marginRight: "8px" }} />
-                    {t('joinButton')}
+                    {t("joinButton")}
                   </>
                 )}
               </Button>
@@ -203,7 +203,11 @@ export default function JoinPage() {
               borderColor="green.200"
             >
               <Flex align="center" mb={2}>
-                <Activity size={16} color="#38A169" style={{ marginRight: "8px" }} />
+                <Activity
+                  size={16}
+                  color="#38A169"
+                  style={{ marginRight: "8px" }}
+                />
                 <Text fontWeight="semibold" color="green.800">
                   Session Found!
                 </Text>
@@ -212,7 +216,8 @@ export default function JoinPage() {
                 {session.name}
               </Text>
               <Text fontSize="sm" color="green.600">
-                {session.numberOfCourts} courts • {session.maxPlayersPerCourt} players per court
+                {session.numberOfCourts} courts • {session.maxPlayersPerCourt}{" "}
+                players per court
               </Text>
             </Box>
           )}
@@ -221,9 +226,13 @@ export default function JoinPage() {
         {/* How to Join Section */}
         <Box mt={12} textAlign="center">
           <Heading size="md" mb={4} color="gray.800">
-            How to Join a Session
+            {t("howToJoin")}
           </Heading>
-          <Stack direction={{ base: "column", md: "row" }} spacing={8} justify="center">
+          <Stack
+            direction={{ base: "column", md: "row" }}
+            gap={8}
+            justify="center"
+          >
             <Box>
               <Box
                 bg="blue.100"
@@ -242,10 +251,10 @@ export default function JoinPage() {
                 1
               </Box>
               <Text fontWeight="medium" color="gray.700">
-                Get Session Code
+                {t("steps.getCode.title")}
               </Text>
               <Text fontSize="sm" color="gray.600">
-                Ask the host for the 6-digit session code
+                {t("steps.getCode.description")}
               </Text>
             </Box>
             <Box>
@@ -266,10 +275,10 @@ export default function JoinPage() {
                 2
               </Box>
               <Text fontWeight="medium" color="gray.700">
-                Enter Code
+                {t("steps.enterCode.title")}
               </Text>
               <Text fontSize="sm" color="gray.600">
-                Enter the code in the field above
+                {t("steps.enterCode.description")}
               </Text>
             </Box>
             <Box>
@@ -290,10 +299,10 @@ export default function JoinPage() {
                 3
               </Box>
               <Text fontWeight="medium" color="gray.700">
-                Start Playing
+                {t("steps.startPlaying.title")}
               </Text>
               <Text fontSize="sm" color="gray.600">
-                Join the session and start playing!
+                {t("steps.startPlaying.description")}
               </Text>
             </Box>
           </Stack>

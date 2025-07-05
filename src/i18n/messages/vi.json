@@ -8,7 +8,7 @@
     "save": "Lưu",
     "cancel": "Hủy",
     "delete": "Xóa",
-    "edit": "Sửa",
+    "edit": "Chỉnh sửa",
     "add": "Thêm",
     "remove": "Xóa",
     "confirm": "Xác nhận",
@@ -16,6 +16,7 @@
     "error": "Lỗi",
     "success": "Thành công",
     "back": "Quay lại",
+    "backToHome": "Quay lại trang chủ",
     "next": "Tiếp theo",
     "submit": "Gửi",
     "close": "Đóng",
@@ -25,19 +26,19 @@
     "optional": "Tùy chọn"
   },
   "session": {
-    "title": "Phiên Chơi Cầu Lông",
-    "createSession": "Tạo Phiên Chơi",
-    "joinSession": "Tham Gia Phiên Chơi",
-    "sessionName": "Tên Phiên Chơi",
-    "sessionCode": "Mã Phiên Chơi",
-    "maxPlayersPerCourt": "Tối Đa Người Chơi Mỗi Sân",
-    "requirePlayerInfo": "Yêu Cầu Thông Tin Người Chơi",
-    "courtInformation": "Thông Tin Sân",
-    "numberOfCourts": "Số Lượng Sân",
-    "addCourt": "Thêm Sân",
-    "removeCourt": "Xóa Sân",
-    "courtNumber": "Số Sân",
-    "courtName": "Tên Sân",
+    "title": "Phiên chơi cầu lông",
+    "createSession": "Tạo phiên chơi",
+    "joinSession": "Tham gia phiên chơi",
+    "sessionName": "Tên phiên chơi",
+    "sessionCode": "Mã phiên chơi",
+    "maxPlayersPerCourt": "Số người tối đa mỗi sân",
+    "requirePlayerInfo": "Yêu cầu thông tin người chơi",
+    "courtInformation": "Thông tin sân",
+    "numberOfCourts": "Số lượng sân",
+    "addCourt": "Thêm sân",
+    "removeCourt": "Xóa sân",
+    "courtNumber": "Số sân",
+    "courtName": "Tên sân",
     "courtNamePlaceholder": "Nhập tên sân (tùy chọn)",
     "validation": {
       "sessionNameRequired": "Tên phiên chơi là bắt buộc",
@@ -45,11 +46,11 @@
       "sessionCodeRequired": "Mã phiên chơi là bắt buộc",
       "sessionCodeMinLength": "Mã phiên chơi phải có ít nhất 4 ký tự",
       "maxPlayersMin": "Phải có ít nhất 2 người chơi mỗi sân",
-      "maxPlayersMax": "Không được vượt quá 6 người chơi mỗi sân",
+      "maxPlayersMax": "Không thể vượt quá 6 người chơi mỗi sân",
       "courtNumberRequired": "Số sân là bắt buộc",
       "courtNumberMin": "Số sân phải ít nhất là 1",
       "courtNumberUnique": "Số sân phải là duy nhất",
-      "atLeastOneCourt": "Phải có ít nhất một sân"
+      "atLeastOneCourt": "Cần có ít nhất một sân"
     }
   },
   "court": {
@@ -60,55 +61,151 @@
       "waiting": "Đang chờ"
     },
     "actions": {
-      "createMatch": "Tạo Trận Đấu",
-      "endMatch": "Kết Thúc Trận Đấu",
-      "autoAssign": "Tự Động Phân Bổ",
-      "manualAssign": "Phân Bổ Thủ Công"
+      "createMatch": "Tạo trận đấu",
+      "endMatch": "Kết thúc trận đấu",
+      "autoAssign": "Tự động phân bổ",
+      "manualAssign": "Phân bổ thủ công"
     }
   },
   "player": {
-    "title": "Người Chơi",
-    "name": "Tên Người Chơi",
+    "title": "Người chơi",
+    "name": "Tên người chơi",
     "email": "Email",
-    "phone": "Số Điện Thoại",
-    "skillLevel": "Trình Độ",
-    "waitTime": "Thời Gian Chờ",
-    "playing": "Đang Chơi",
-    "waiting": "Đang Chờ",
-    "joined": "Đã Tham Gia",
+    "phone": "Điện thoại",
+    "skillLevel": "Trình độ",
+    "waitTime": "Thời gian chờ",
+    "playing": "Đang chơi",
+    "waiting": "Đang chờ",
+    "joined": "Đã tham gia",
     "skillLevels": {
-      "beginner": "Mới Bắt Đầu",
-      "intermediate": "Trung Bình",
-      "advanced": "Nâng Cao"
+      "beginner": "Mới bắt đầu",
+      "intermediate": "Trung bình",
+      "advanced": "Nâng cao"
     }
   },
   "match": {
-    "title": "Trận Đấu",
-    "currentMatch": "Trận Đấu Hiện Tại",
-    "startMatch": "Bắt Đầu Trận Đấu",
-    "endMatch": "Kết Thúc Trận Đấu",
-    "players": "Người Chơi",
-    "duration": "Thời Gian",
-    "score": "Điểm Số"
+    "title": "Trận đấu",
+    "currentMatch": "Trận đấu hiện tại",
+    "startMatch": "Bắt đầu trận đấu",
+    "endMatch": "Kết thúc trận đấu",
+    "players": "Người chơi",
+    "duration": "Thời gian",
+    "score": "Điểm số"
   },
   "pages": {
     "home": {
-      "title": "Quản Lý Sân Cầu Lông",
+      "title": "Quản lý sân cầu lông",
       "description": "Quản lý các phiên chơi và sân cầu lông một cách hiệu quả",
-      "hostButton": "Tổ Chức Phiên Chơi",
-      "joinButton": "Tham Gia Phiên Chơi"
+      "hostButton": "Tổ chức phiên chơi",
+      "joinButton": "Tham gia phiên chơi"
     },
     "host": {
-      "title": "Tổ Chức Phiên Chơi",
+      "title": "Tổ chức phiên chơi",
       "description": "Tạo và quản lý phiên chơi cầu lông",
-      "createNew": "Tạo Phiên Chơi Mới",
-      "existingSessions": "Phiên Chơi Hiện Có"
+      "createNew": "Tạo phiên chơi mới",
+      "existingSessions": "Phiên chơi hiện có"
     },
     "join": {
-      "title": "Tham Gia Phiên Chơi",
+      "title": "Tham gia phiên chơi",
       "description": "Nhập mã phiên chơi để tham gia",
-      "enterCode": "Nhập Mã Phiên Chơi",
-      "joinButton": "Tham Gia Phiên Chơi"
+      "enterCode": "Nhập mã phiên chơi",
+      "joinButton": "Tham gia phiên chơi",
+      "howToJoin": "Cách tham gia phiên chơi",
+      "steps": {
+        "getCode": {
+          "title": "Lấy mã phiên chơi",
+          "description": "Hỏi người tổ chức để lấy mã phiên chơi 6 chữ số"
+        },
+        "enterCode": {
+          "title": "Nhập mã",
+          "description": "Nhập mã vào trường ở trên"
+        },
+        "startPlaying": {
+          "title": "Bắt đầu chơi",
+          "description": "Tham gia phiên chơi và bắt đầu chơi!"
+        }
+      },
+      "confirm": {
+        "title": "Xác nhận thông tin",
+        "subtitle": "Hoàn tất đăng ký",
+        "description": "Điền thông tin để tham gia {sessionName}",
+        "playerNumber": "Người chơi #{number}",
+        "form": {
+          "namePlaceholder": "Nhập tên của bạn",
+          "gender": "Giới tính",
+          "selectGender": "Chọn giới tính",
+          "male": "Nam",
+          "female": "Nữ",
+          "selectLevel": "Chọn trình độ",
+          "levels": {
+            "weak": "Yếu",
+            "weakPlus": "Yếu+",
+            "mediumWeak": "Trung bình yếu",
+            "mediumMinus": "Trung bình-",
+            "medium": "Trung bình",
+            "mediumPlus": "Trung bình+"
+          },
+          "phonePlaceholder": "+84 xxx xxx xxx",
+          "processing": "Đang xử lý...",
+          "confirmButton": "Xác nhận & Tham gia"
+        },
+        "footer": "Thông tin này sẽ hiển thị cho người tổ chức phiên chơi",
+        "errors": {
+          "missingInfo": "Thiếu thông tin phiên chơi hoặc người chơi",
+          "playerNotFound": "Không tìm thấy người chơi",
+          "loadFailed": "Không thể tải thông tin người chơi",
+          "requiredFields": "Vui lòng điền đầy đủ các trường bắt buộc",
+          "confirmFailed": "Không thể xác nhận đăng ký"
+        }
+      },
+      "status": {
+        "playerInfo": "Người chơi #{number} - {name}",
+        "yourStatus": "Trạng thái của bạn",
+        "statusDescription": "Trạng thái hiện tại trong phiên chơi cầu lông",
+        "time": {
+          "lessThanMinute": "< 1 phút",
+          "oneMinute": "1 phút",
+          "minutes": "{count} phút"
+        },
+        "status": {
+          "waiting": {
+            "title": "Đang chờ chơi",
+            "description": "Bạn đang trong hàng chờ"
+          },
+          "playing": {
+            "title": "Đang chơi",
+            "description": "Sân {courtNumber} - Chúc bạn chơi vui vẻ!"
+          },
+          "finished": {
+            "title": "Phiên chơi kết thúc",
+            "description": "Cảm ơn bạn đã tham gia"
+          }
+        },
+        "court": {
+          "title": "Sân {number}",
+          "elapsed": "Đã chơi {time}",
+          "playerHighlight": "Bạn được tô sáng màu xanh trên sân ở trên",
+          "playingWith": "Chơi cùng với:"
+        },
+        "stats": {
+          "minutes": "phút",
+          "currentWait": "Thời gian chờ",
+          "matchesPlayed": "Trận đã chơi"
+        },
+        "queue": {
+          "title": "Vị trí trong hàng chờ",
+          "updated": "Cập nhật {time}",
+          "autoRefresh": "Tự động làm mới sau {seconds} giây"
+        },
+        "footer": "Vui lòng giữ trang này mở để duy trì vị trí trong hàng chờ",
+        "errors": {
+          "missingPlayerId": "Thiếu ID người chơi",
+          "loadFailed": "Không thể tải trạng thái người chơi",
+          "playerNotFound": "Không tìm thấy người chơi",
+          "playerNotFoundDescription": "Chúng tôi không thể tìm thấy thông tin người chơi của bạn.",
+          "returnToJoin": "Quay lại trang tham gia"
+        }
+      }
     }
   },
   "errors": {
