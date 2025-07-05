@@ -1,0 +1,121 @@
+{
+  "navigation": {
+    "host": "Host",
+    "join": "Join",
+    "home": "Home"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "session": {
+    "title": "Badminton Session",
+    "createSession": "Create Session",
+    "joinSession": "Join Session",
+    "sessionName": "Session Name",
+    "sessionCode": "Session Code",
+    "maxPlayersPerCourt": "Max Players Per Court",
+    "requirePlayerInfo": "Require Player Information",
+    "courtInformation": "Court Information",
+    "numberOfCourts": "Number of Courts",
+    "addCourt": "Add Court",
+    "removeCourt": "Remove Court",
+    "courtNumber": "Court Number",
+    "courtName": "Court Name",
+    "courtNamePlaceholder": "Enter court name (optional)",
+    "validation": {
+      "sessionNameRequired": "Session name is required",
+      "sessionNameMinLength": "Session name must be at least 3 characters",
+      "sessionCodeRequired": "Session code is required",
+      "sessionCodeMinLength": "Session code must be at least 4 characters",
+      "maxPlayersMin": "Must be at least 2 players per court",
+      "maxPlayersMax": "Cannot exceed 6 players per court",
+      "courtNumberRequired": "Court number is required",
+      "courtNumberMin": "Court number must be at least 1",
+      "courtNumberUnique": "Court numbers must be unique",
+      "atLeastOneCourt": "At least one court is required"
+    }
+  },
+  "court": {
+    "title": "Court",
+    "status": {
+      "available": "Available",
+      "playing": "Playing",
+      "waiting": "Waiting"
+    },
+    "actions": {
+      "createMatch": "Create Match",
+      "endMatch": "End Match",
+      "autoAssign": "Auto Assign",
+      "manualAssign": "Manual Assign"
+    }
+  },
+  "player": {
+    "title": "Player",
+    "name": "Player Name",
+    "email": "Email",
+    "phone": "Phone",
+    "skillLevel": "Skill Level",
+    "waitTime": "Wait Time",
+    "playing": "Playing",
+    "waiting": "Waiting",
+    "joined": "Joined",
+    "skillLevels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
+  "match": {
+    "title": "Match",
+    "currentMatch": "Current Match",
+    "startMatch": "Start Match",
+    "endMatch": "End Match",
+    "players": "Players",
+    "duration": "Duration",
+    "score": "Score"
+  },
+  "pages": {
+    "home": {
+      "title": "Badminton Court Management",
+      "description": "Manage your badminton sessions and courts efficiently",
+      "hostButton": "Host a Session",
+      "joinButton": "Join a Session"
+    },
+    "host": {
+      "title": "Host Session",
+      "description": "Create and manage a badminton session",
+      "createNew": "Create New Session",
+      "existingSessions": "Existing Sessions"
+    },
+    "join": {
+      "title": "Join Session",
+      "description": "Enter session code to join",
+      "enterCode": "Enter Session Code",
+      "joinButton": "Join Session"
+    }
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "sessionNotFound": "Session not found",
+    "invalidSessionCode": "Invalid session code",
+    "networkError": "Network error",
+    "validationError": "Validation error"
+  }
+}

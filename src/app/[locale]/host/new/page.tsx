@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Box,
   Button,
@@ -28,12 +27,11 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SessionService } from "@/lib/api";
-import NextLinkButton from "@/components/ui/NextLinkButton";
 import { toast } from "react-hot-toast";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useTranslations } from "next-intl";
-import { Link as IntlLink } from "@/i18n/config";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { useTranslations } from 'next-intl';
+import { Link as IntlLink } from '@/i18n/config';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 
 // Helper function to format date for datetime-local input
 function formatDateTimeLocal(date: Date): string {
@@ -60,11 +58,11 @@ function NewSessionPageContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [courts, setCourts] = useState([{ courtNumber: 1, courtName: "" }]);
-
+  
   // Translations
-  const t = useTranslations("session");
-  const common = useTranslations("common");
-  const pages = useTranslations("pages");
+  const t = useTranslations('session');
+  const common = useTranslations('common');
+  const pages = useTranslations('pages');
 
   // Calculate number of courts based on courts array
   const numberOfCourts = courts.length;
@@ -83,22 +81,20 @@ function NewSessionPageContent() {
   // Calculate session duration based on start and end times
   const sessionDuration = useMemo(() => {
     try {
-      // Parse dates ensuring they're treated as local timezone dates
       const start = new Date(startTime);
       const end = new Date(endTime);
       const durationMinutes = Math.round(
         (end.getTime() - start.getTime()) / (60 * 1000)
       );
-      return durationMinutes > 0 ? durationMinutes : 120; // If end is before start, default to 2 hours
+      return durationMinutes > 0 ? durationMinutes : 120;
     } catch (e) {
-      return 120; // Default to 2 hours if dates are invalid
+      return 120;
     }
   }, [startTime, endTime]);
 
   // Check if end time is before start time
   const isEndTimeValid = useMemo(() => {
     try {
-      // Parse dates ensuring they're treated as local timezone dates
       const start = new Date(startTime);
       const end = new Date(endTime);
       return end > start;
@@ -116,7 +112,6 @@ function NewSessionPageContent() {
   }, [error, details]);
 
   async function createSession(formData: FormData) {
-    // Client-side form handling
     setIsLoading(true);
 
     try {
@@ -142,14 +137,11 @@ function NewSessionPageContent() {
       );
       const requirePlayerInfo = formData.get("requirePlayerInfo") === "on";
 
-      // Use the state values for startTime, endTime, and sessionDuration
-      // instead of reading from form
-
-      // Sử dụng SessionService để tạo session mới
+      // Create session using SessionService
       const session = await SessionService.createSession({
         name,
         numberOfCourts,
-        sessionDuration, // Calculated from start/end time
+        sessionDuration,
         maxPlayersPerCourt,
         requirePlayerInfo,
         startTime: new Date(startTime),
@@ -157,7 +149,7 @@ function NewSessionPageContent() {
         courts: courts.map((court) => ({
           courtNumber: court.courtNumber,
           courtName: court.courtName || undefined,
-        })), // Pass courts configuration
+        })),
       });
 
       // Show success message
@@ -169,7 +161,6 @@ function NewSessionPageContent() {
       }, 500);
     } catch (error) {
       console.error("Error creating session:", error);
-      // Show error message
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       toast.error(errorMessage);
@@ -215,12 +206,12 @@ function NewSessionPageContent() {
     const uniqueNumbers = new Set(courtNumbers);
 
     if (uniqueNumbers.size !== courtNumbers.length) {
-      return "Court numbers must be unique";
+      return t('validation.courtNumberUnique');
     }
 
     for (const court of courts) {
       if (!court.courtNumber || court.courtNumber < 1) {
-        return "All courts must have a valid court number (≥ 1)";
+        return t('validation.courtNumberMin');
       }
     }
 
@@ -230,29 +221,35 @@ function NewSessionPageContent() {
   return (
     <Box minH="100vh" bgGradient="linear(to-br, blue.50, white, green.50)">
       <Container maxW="4xl" py={8} px={4}>
+        {/* Language Switcher */}
+        <Flex justify="flex-end" mb={4}>
+          <LanguageSwitcher />
+        </Flex>
+
         {/* Header with back button */}
         <Flex align="center" mb={8}>
-          <NextLinkButton
-            href="/host"
-            variant="outline"
-            size="sm"
-            mr={4}
-            _hover={{ bg: "blue.50" }}
-            transition="all 0.2s"
-          >
-            <ArrowLeft size={16} style={{ marginRight: "8px" }} />
-            {common("backToDashboard")}
-          </NextLinkButton>
+          <IntlLink href="/host">
+            <Button
+              variant="outline"
+              size="sm"
+              mr={4}
+              _hover={{ bg: "blue.50" }}
+              transition="all 0.2s"
+            >
+              <ArrowLeft size={16} style={{ marginRight: "8px" }} />
+              {common('back')}
+            </Button>
+          </IntlLink>
           <Box>
             <Heading
               size="2xl"
               bgGradient="linear(to-r, blue.600, green.600)"
               fontWeight="bold"
             >
-              {t("createNewSession")}
+              {t('createSession')}
             </Heading>
             <Text color="gray.600" mt={1}>
-              {t("setUpYourBadmintonSession")}
+              Set up your badminton session with ease
             </Text>
           </Box>
         </Flex>
@@ -272,10 +269,11 @@ function NewSessionPageContent() {
             <Trophy size={40} color="white" />
           </Flex>
           <Heading size="lg" color="gray.800" mb={2}>
-            {t("startYourBadmintonJourney")}
+            Start Your Badminton Journey
           </Heading>
           <Text color="gray.600" maxW="2xl" mx="auto">
-            {t("configureYourSessionSettingsBelow")}
+            Configure your session settings below to create an amazing badminton
+            experience for all players
           </Text>
 
           {/* Error Alert */}
@@ -322,13 +320,13 @@ function NewSessionPageContent() {
                       style={{ marginRight: "8px" }}
                     />
                     <Text fontWeight="semibold" color="gray.700">
-                      {t("sessionName")} *
+                      {t('sessionName')} *
                     </Text>
                   </Flex>
                   <Input
                     id="name"
                     name="name"
-                    placeholder={t("sessionNamePlaceholder")}
+                    placeholder="Saturday Morning Badminton Championship"
                     required
                     size="lg"
                     borderWidth={2}
@@ -337,7 +335,7 @@ function NewSessionPageContent() {
                     transition="all 0.2s"
                   />
                   <Text fontSize="xs" color="gray.500" mt={2} ml={6}>
-                    {t("sessionNameDescription")}
+                    Choose a memorable name that describes your session
                   </Text>
                 </Box>
 
@@ -352,7 +350,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("numberOfCourts")}
+                        {t('numberOfCourts')}
                       </Text>
                     </Flex>
                     <Input
@@ -369,7 +367,7 @@ function NewSessionPageContent() {
                       bg="gray.100"
                     />
                     <Text fontSize="xs" color="gray.500" mt={2}>
-                      {t("calculatedFromCourtsConfig")}
+                      Calculated from courts configuration below
                     </Text>
                   </GridItem>
 
@@ -382,7 +380,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("sessionDuration")}
+                        Session Duration (minutes)
                       </Text>
                     </Flex>
                     <Input
@@ -399,7 +397,7 @@ function NewSessionPageContent() {
                       bg="gray.100"
                     />
                     <Text fontSize="xs" color="gray.500" mt={2}>
-                      {t("automaticallyCalculated")}
+                      Automatically calculated from start and end times
                     </Text>
                   </GridItem>
                 </Grid>
@@ -415,7 +413,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("startTime")} *
+                        Start Time *
                       </Text>
                     </Flex>
                     <Input
@@ -432,7 +430,7 @@ function NewSessionPageContent() {
                       transition="all 0.2s"
                     />
                     <Text fontSize="xs" color="gray.500" mt={2}>
-                      {t("whenTheSessionWillBegin")}
+                      When the session will begin
                     </Text>
                   </GridItem>
 
@@ -445,7 +443,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("endTime")} *
+                        End Time *
                       </Text>
                     </Flex>
                     <Input
@@ -469,8 +467,8 @@ function NewSessionPageContent() {
                       mt={2}
                     >
                       {isEndTimeValid
-                        ? t("whenTheSessionWillEnd")
-                        : t("endTimeMustBeAfterStartTime")}
+                        ? "When the session will end"
+                        : "End time must be after start time"}
                     </Text>
                   </GridItem>
                 </Grid>
@@ -486,7 +484,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("maxPlayersPerCourt")} *
+                        {t('maxPlayersPerCourt')} *
                       </Text>
                     </Flex>
                     <Input
@@ -504,7 +502,7 @@ function NewSessionPageContent() {
                       transition="all 0.2s"
                     />
                     <Text fontSize="xs" color="gray.500" mt={2}>
-                      {t("maxPlayersDescription")}
+                      Maximum players per court for optimal rotation
                     </Text>
                   </GridItem>
 
@@ -517,7 +515,7 @@ function NewSessionPageContent() {
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("requirePlayerInformation")}
+                        {t('requirePlayerInfo')}
                       </Text>
                     </Flex>
                     <HStack
@@ -541,10 +539,11 @@ function NewSessionPageContent() {
                       />
                       <Box>
                         <Text fontWeight="medium" color="gray.700">
-                          {t("collectPlayerInformation")}
+                          Collect player information
                         </Text>
                         <Text fontSize="xs" color="gray.500" mt={1}>
-                          {t("enableToGatherPlayerDetails")}
+                          Enable to gather player details for better session
+                          management
                         </Text>
                       </Box>
                     </HStack>
@@ -560,11 +559,11 @@ function NewSessionPageContent() {
                       style={{ marginRight: "8px" }}
                     />
                     <Text fontWeight="semibold" color="gray.700">
-                      {t("courtsConfiguration")} *
+                      {t('courtInformation')} *
                     </Text>
                   </Flex>
                   <Text fontSize="xs" color="gray.500" mb={4}>
-                    {t("addOrRemoveCourtsToCustomize")}
+                    Add or remove courts to customize your session setup
                   </Text>
 
                   <Box
@@ -593,7 +592,7 @@ function NewSessionPageContent() {
                             color="blue.600"
                             mr={4}
                           >
-                            {t("court")} {court.courtNumber}
+                            Court {court.courtNumber}
                           </Text>
                           {courts.length > 1 && (
                             <Button
@@ -605,7 +604,7 @@ function NewSessionPageContent() {
                               }
                             >
                               <Minus size={12} style={{ marginRight: "4px" }} />
-                              {t("remove")}
+                              {common('remove')}
                             </Button>
                           )}
                         </Flex>
@@ -619,7 +618,7 @@ function NewSessionPageContent() {
                           {/* Court Number */}
                           <GridItem>
                             <Text fontWeight="medium" color="gray.700" mb={2}>
-                              {t("courtNumber")} *
+                              {t('courtNumber')} *
                             </Text>
                             <Input
                               type="number"
@@ -644,7 +643,7 @@ function NewSessionPageContent() {
                           {/* Court Name */}
                           <GridItem>
                             <Text fontWeight="medium" color="gray.700" mb={2}>
-                              {t("courtName")}
+                              {t('courtName')}
                             </Text>
                             <Input
                               type="text"
@@ -656,7 +655,7 @@ function NewSessionPageContent() {
                                   e.target.value
                                 )
                               }
-                              placeholder={t("courtNamePlaceholder")}
+                              placeholder={t('courtNamePlaceholder')}
                               size="lg"
                               borderWidth={2}
                               borderColor="gray.200"
@@ -677,7 +676,7 @@ function NewSessionPageContent() {
                       onClick={() => handleAddCourt()}
                     >
                       <Plus size={16} style={{ marginRight: "8px" }} />
-                      {t("addAnotherCourt")}
+                      {t('addCourt')}
                     </Button>
                   </Box>
                 </Box>
@@ -686,16 +685,17 @@ function NewSessionPageContent() {
 
             <Box bg="gray.50" p={8}>
               <Flex w="full" justify="space-between">
-                <NextLinkButton
-                  href="/host"
-                  variant="outline"
-                  px={8}
-                  py={3}
-                  _hover={{ bg: "gray.100" }}
-                  transition="all 0.2s"
-                >
-                  {common("cancel")}
-                </NextLinkButton>
+                <IntlLink href="/host">
+                  <Button
+                    variant="outline"
+                    px={8}
+                    py={3}
+                    _hover={{ bg: "gray.100" }}
+                    transition="all 0.2s"
+                  >
+                    {common('cancel')}
+                  </Button>
+                </IntlLink>
                 <Button
                   type="submit"
                   px={8}
@@ -712,88 +712,17 @@ function NewSessionPageContent() {
                   disabled={isLoading || !isEndTimeValid}
                 >
                   {isLoading ? (
-                    t("creatingSession")
+                    "Creating Session..."
                   ) : (
                     <>
                       <Save size={16} style={{ marginRight: "8px" }} />
-                      {t("createSession")}
+                      {t('createSession')}
                     </>
                   )}
                 </Button>
               </Flex>
             </Box>
-
-            {/* Quick Tips Section */}
-            <Box
-              bg="blue.50"
-              p={8}
-              rounded="lg"
-              border="1px"
-              borderColor="blue.200"
-            >
-              <Flex align="center" mb={3}>
-                <Trophy size={16} style={{ marginRight: "8px" }} />
-                <Heading size="sm" color="blue.800">
-                  {t("proTipsForYourSession")}
-                </Heading>
-              </Flex>
-              <Stack gap={2}>
-                <Box display="flex" alignItems="start">
-                  <Box
-                    w={2}
-                    h={2}
-                    bg="blue.400"
-                    rounded="full"
-                    mt={2}
-                    mr={3}
-                    flexShrink={0}
-                  />
-                  <Text fontSize="sm" color="blue.700">
-                    {t("optimalCourtRotation")}
-                  </Text>
-                </Box>
-                <Box display="flex" alignItems="start">
-                  <Box
-                    w={2}
-                    h={2}
-                    bg="blue.400"
-                    rounded="full"
-                    mt={2}
-                    mr={3}
-                    flexShrink={0}
-                  />
-                  <Text fontSize="sm" color="blue.700">
-                    {t("sessionDurationTip")}
-                  </Text>
-                </Box>
-                <Box display="flex" alignItems="start">
-                  <Box
-                    w={2}
-                    h={2}
-                    bg="blue.400"
-                    rounded="full"
-                    mt={2}
-                    mr={3}
-                    flexShrink={0}
-                  />
-                  <Text fontSize="sm" color="blue.700">
-                    {t("playerInfoHelps")}
-                  </Text>
-                </Box>
-              </Stack>
-            </Box>
           </form>
-        </Box>
-
-        {/* Additional Information */}
-        <Box mt={8} textAlign="center">
-          <Text color="gray.600" fontSize="sm">
-            {t("needHelp")}{" "}
-            <Link href="#" style={{ color: "#3182ce", fontWeight: "500" }}>
-              {t("sessionSetupGuide")}
-            </Link>{" "}
-            {t("forBestPractices")}
-          </Text>
         </Box>
       </Container>
     </Box>

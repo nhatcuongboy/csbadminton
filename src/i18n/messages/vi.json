@@ -1,0 +1,121 @@
+{
+  "navigation": {
+    "host": "Tổ chức",
+    "join": "Tham gia",
+    "home": "Trang chủ"
+  },
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm",
+    "remove": "Xóa",
+    "confirm": "Xác nhận",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "submit": "Gửi",
+    "close": "Đóng",
+    "yes": "Có",
+    "no": "Không",
+    "required": "Bắt buộc",
+    "optional": "Tùy chọn"
+  },
+  "session": {
+    "title": "Phiên Chơi Cầu Lông",
+    "createSession": "Tạo Phiên Chơi",
+    "joinSession": "Tham Gia Phiên Chơi",
+    "sessionName": "Tên Phiên Chơi",
+    "sessionCode": "Mã Phiên Chơi",
+    "maxPlayersPerCourt": "Tối Đa Người Chơi Mỗi Sân",
+    "requirePlayerInfo": "Yêu Cầu Thông Tin Người Chơi",
+    "courtInformation": "Thông Tin Sân",
+    "numberOfCourts": "Số Lượng Sân",
+    "addCourt": "Thêm Sân",
+    "removeCourt": "Xóa Sân",
+    "courtNumber": "Số Sân",
+    "courtName": "Tên Sân",
+    "courtNamePlaceholder": "Nhập tên sân (tùy chọn)",
+    "validation": {
+      "sessionNameRequired": "Tên phiên chơi là bắt buộc",
+      "sessionNameMinLength": "Tên phiên chơi phải có ít nhất 3 ký tự",
+      "sessionCodeRequired": "Mã phiên chơi là bắt buộc",
+      "sessionCodeMinLength": "Mã phiên chơi phải có ít nhất 4 ký tự",
+      "maxPlayersMin": "Phải có ít nhất 2 người chơi mỗi sân",
+      "maxPlayersMax": "Không được vượt quá 6 người chơi mỗi sân",
+      "courtNumberRequired": "Số sân là bắt buộc",
+      "courtNumberMin": "Số sân phải ít nhất là 1",
+      "courtNumberUnique": "Số sân phải là duy nhất",
+      "atLeastOneCourt": "Phải có ít nhất một sân"
+    }
+  },
+  "court": {
+    "title": "Sân",
+    "status": {
+      "available": "Có sẵn",
+      "playing": "Đang chơi",
+      "waiting": "Đang chờ"
+    },
+    "actions": {
+      "createMatch": "Tạo Trận Đấu",
+      "endMatch": "Kết Thúc Trận Đấu",
+      "autoAssign": "Tự Động Phân Bổ",
+      "manualAssign": "Phân Bổ Thủ Công"
+    }
+  },
+  "player": {
+    "title": "Người Chơi",
+    "name": "Tên Người Chơi",
+    "email": "Email",
+    "phone": "Số Điện Thoại",
+    "skillLevel": "Trình Độ",
+    "waitTime": "Thời Gian Chờ",
+    "playing": "Đang Chơi",
+    "waiting": "Đang Chờ",
+    "joined": "Đã Tham Gia",
+    "skillLevels": {
+      "beginner": "Mới Bắt Đầu",
+      "intermediate": "Trung Bình",
+      "advanced": "Nâng Cao"
+    }
+  },
+  "match": {
+    "title": "Trận Đấu",
+    "currentMatch": "Trận Đấu Hiện Tại",
+    "startMatch": "Bắt Đầu Trận Đấu",
+    "endMatch": "Kết Thúc Trận Đấu",
+    "players": "Người Chơi",
+    "duration": "Thời Gian",
+    "score": "Điểm Số"
+  },
+  "pages": {
+    "home": {
+      "title": "Quản Lý Sân Cầu Lông",
+      "description": "Quản lý các phiên chơi và sân cầu lông một cách hiệu quả",
+      "hostButton": "Tổ Chức Phiên Chơi",
+      "joinButton": "Tham Gia Phiên Chơi"
+    },
+    "host": {
+      "title": "Tổ Chức Phiên Chơi",
+      "description": "Tạo và quản lý phiên chơi cầu lông",
+      "createNew": "Tạo Phiên Chơi Mới",
+      "existingSessions": "Phiên Chơi Hiện Có"
+    },
+    "join": {
+      "title": "Tham Gia Phiên Chơi",
+      "description": "Nhập mã phiên chơi để tham gia",
+      "enterCode": "Nhập Mã Phiên Chơi",
+      "joinButton": "Tham Gia Phiên Chơi"
+    }
+  },
+  "errors": {
+    "generic": "Đã xảy ra lỗi",
+    "sessionNotFound": "Không tìm thấy phiên chơi",
+    "invalidSessionCode": "Mã phiên chơi không hợp lệ",
+    "networkError": "Lỗi mạng",
+    "validationError": "Lỗi xác thực"
+  }
+}
