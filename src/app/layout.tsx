@@ -1,11 +1,9 @@
-import { routing } from '@/i18n/config';
-import { redirect } from 'next/navigation';
-
+// This file serves as a root layout but doesn't contain any pages
+// All pages are in the [locale] directory
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Redirect to default locale
-  redirect(`/${routing.defaultLocale}`);
+  return children;
 }

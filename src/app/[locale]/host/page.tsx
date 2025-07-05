@@ -29,7 +29,7 @@ export default function HostPage() {
       <Flex alignItems="center" mb={8}>
         <IntlLink href="/">
           <Button variant="outline" size="sm" mr={4}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> {common('back')}
+            <ArrowLeft size={16} style={{ marginRight: "8px" }} /> {common('back')}
           </Button>
         </IntlLink>
         <Heading size="lg" fontWeight="bold">
@@ -93,7 +93,7 @@ export default function HostPage() {
             <Heading size="md">{t('existingSessions')}</Heading>
             <IntlLink href="/host/new">
               <Button>
-                <Plus className="mr-2 h-4 w-4" /> {t('createNew')}
+                <Plus size={16} style={{ marginRight: "8px" }} /> {t('createNew')}
               </Button>
             </IntlLink>
           </Flex>
