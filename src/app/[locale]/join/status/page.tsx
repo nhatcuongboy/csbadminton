@@ -13,6 +13,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
+import TopBar from "@/components/ui/TopBar";
 import { ArrowLeft, Clock, CheckCircle2, User, Users } from "lucide-react";
 import {
   PlayerService,
@@ -25,15 +26,19 @@ import {
 import { getCourtDisplayName } from "@/lib/api/sessions";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 function StatusPageContent() {
   const searchParams = useSearchParams();
   const playerId = searchParams.get("playerId");
+  const t = useTranslations("pages.join.status");
+  const common = useTranslations("common");
 
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [queuePosition, setQueuePosition] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
@@ -47,11 +52,11 @@ function StatusPageContent() {
     const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
     if (elapsedMinutes === 0) {
-      return "< 1 phút";
+      return t("time.lessThanMinute");
     } else if (elapsedMinutes === 1) {
-      return "1 phút";
+      return t("time.oneMinute");
     } else {
-      return `${elapsedMinutes} phút`;
+      return t("time.minutes", { count: elapsedMinutes });
     }
   };
 
@@ -61,6 +66,7 @@ function StatusPageContent() {
 
     try {
       setLoading(true);
+      setError(null);
       const playerData = await PlayerService.getPlayer(playerId);
       setPlayer(playerData);
 
@@ -105,9 +111,16 @@ function StatusPageContent() {
           setCourtPlayers([]);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching player data:", error);
-      toast.error("Failed to load player status");
+      
+      // Handle different types of errors
+      if (error.response?.status === 404) {
+        setError("PLAYER_NOT_FOUND");
+      } else {
+        setError("GENERAL_ERROR");
+        toast.error(t("errors.loadFailed"));
+      }
     } finally {
       setLoading(false);
       setLastRefreshed(new Date());
@@ -117,12 +130,13 @@ function StatusPageContent() {
   // Initial data fetch
   useEffect(() => {
     if (!playerId) {
-      toast.error("Player ID is missing");
+      setError("MISSING_PLAYER_ID");
+      setLoading(false);
       return;
     }
 
     fetchPlayerData();
-  }, [playerId]);
+  }, [playerId, t]);
 
   // Set up auto-refresh
   useEffect(() => {
@@ -141,43 +155,84 @@ function StatusPageContent() {
 
   if (loading && !player) {
     return (
-      <Container maxW="md" py={12}>
-        <Flex justify="center" align="center" height="50vh" direction="column">
-          <Spinner size="xl" color="blue.500" mb={4} />
-          <Text>Loading player information...</Text>
-        </Flex>
-      </Container>
+      <>
+        <TopBar 
+          title={t("yourStatus")}
+          showBackButton={true}
+          backHref="/join"
+        />
+        <Container maxW="md" py={12}>
+          <Flex justify="center" align="center" height="50vh" direction="column">
+            <Spinner size="xl" color="blue.500" mb={4} />
+            <Text>{common("loading")}</Text>
+          </Flex>
+        </Container>
+      </>
     );
   }
 
-  if (!player || !session) {
+  if (!player || !session || error) {
     return (
-      <Container maxW="md" py={12}>
-        <Flex justify="center" align="center" height="50vh" direction="column">
-          <Box
-            as="div"
-            p={5}
-            borderRadius="md"
-            bg="red.50"
-            color="red.500"
-            mb={4}
-            textAlign="center"
-          >
-            <Heading size="md" mb={2}>
-              Player Not Found
-            </Heading>
-            <Text>We couldn't find your player information.</Text>
-          </Box>
-          <NextLinkButton href="/join" colorScheme="blue">
-            Return to Join Page
-          </NextLinkButton>
-        </Flex>
-      </Container>
+      <>
+        <TopBar 
+          title={t("yourStatus")}
+          showBackButton={true}
+          backHref="/join"
+        />
+        <Container maxW="md" py={12}>
+          <Flex justify="center" align="center" height="50vh" direction="column">
+            <Box
+              as="div"
+              p={5}
+              borderRadius="md"
+              bg="red.50"
+              color="red.500"
+              mb={4}
+              textAlign="center"
+            >
+              <Heading size="md" mb={2}>
+                {error === "MISSING_PLAYER_ID" ? t("errors.missingPlayerId") :
+                 error === "PLAYER_NOT_FOUND" ? t("errors.playerNotFound") :
+                 t("errors.loadFailed")}
+              </Heading>
+              <Text>
+                {error === "MISSING_PLAYER_ID" ? t("errors.missingPlayerIdDescription") :
+                 error === "PLAYER_NOT_FOUND" ? t("errors.playerNotFoundDescription") :
+                 t("errors.generalErrorDescription")}
+              </Text>
+            </Box>
+            <Flex gap={3}>
+              <NextLinkButton href="/join" colorScheme="blue">
+                {t("errors.returnToJoin")}
+              </NextLinkButton>
+              {error === "GENERAL_ERROR" && (
+                <NextLinkButton 
+                  href="#" 
+                  variant="outline" 
+                  colorScheme="blue"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    fetchPlayerData();
+                  }}
+                >
+                  {common("retry")}
+                </NextLinkButton>
+              )}
+            </Flex>
+          </Flex>
+        </Container>
+      </>
     );
   }
 
   return (
-    <Container maxW="md" py={12}>
+    <>
+      <TopBar 
+        title={t("yourStatus")}
+        showBackButton={true}
+        backHref="/join"
+      />
+      <Container maxW="md" py={12}>
       {/* Header */}
       <Box textAlign="center" mb={8}>
         <Heading
@@ -189,7 +244,7 @@ function StatusPageContent() {
           {session.name}
         </Heading>
         <Text color="gray.500">
-          Player #{player.playerNumber} - {player.name}
+          {t("playerInfo", { number: player.playerNumber, name: player.name || `Player ${player.playerNumber}` })}
         </Text>
       </Box>
 
@@ -213,9 +268,9 @@ function StatusPageContent() {
           <Flex align="center">
             <Box as={User} boxSize={5} color="blue.500" mr={2} />
             <Box>
-              <Heading size="md">Your Status</Heading>
+              <Heading size="md">{t("yourStatus")}</Heading>
               <Text color="gray.500" fontSize="sm">
-                Current status in the badminton session
+                {t("statusDescription")}
               </Text>
             </Box>
           </Flex>
@@ -239,10 +294,10 @@ function StatusPageContent() {
                     <Clock size={32} color="var(--chakra-colors-blue-500)" />
                   </Center>
                   <Heading size="sm" fontWeight="medium">
-                    Waiting to Play
+                    {t("status.waiting.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    You are in the waiting queue
+                    {t("status.waiting.description")}
                   </Text>
                 </>
               ) : player.status === "PLAYING" ? (
@@ -254,11 +309,10 @@ function StatusPageContent() {
                     />
                   </Center>
                   <Heading size="sm" fontWeight="medium">
-                    Currently Playing
+                    {t("status.playing.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    Court {player.currentCourt?.courtNumber || "Unknown"} -
-                    Enjoy your match!
+                    {t("status.playing.description", { courtNumber: player.currentCourt?.courtNumber || "Unknown" })}
                   </Text>
                 </>
               ) : (
@@ -270,10 +324,10 @@ function StatusPageContent() {
                     />
                   </Center>
                   <Heading size="sm" fontWeight="medium">
-                    Session Finished
+                    {t("status.finished.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.500">
-                    Thank you for participating
+                    {t("status.finished.description")}
                   </Text>
                 </>
               )}
@@ -293,11 +347,11 @@ function StatusPageContent() {
               >
                 <Flex justify="space-between" align="center" mb={3}>
                   <Heading size="sm" color="green.600">
-                    Court {currentCourt.courtNumber}
+                    {t("court.title", { number: currentCourt.courtNumber })}
                   </Heading>
                   {currentMatch && (
                     <Text fontSize="sm" color="gray.500">
-                      {formatMatchElapsedTime(currentMatch.startTime)} elapsed
+                      {t("court.elapsed", { time: formatMatchElapsedTime(currentMatch.startTime) })}
                     </Text>
                   )}
                 </Flex>
@@ -318,12 +372,12 @@ function StatusPageContent() {
                   showTimeInCenter={true}
                 />
                 <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
-                  You are highlighted in blue on the court above
+                  {t("court.playerHighlight")}
                 </Text>
                 {courtPlayers.length > 0 && (
                   <Box mt={2}>
                     <Text fontSize="xs" color="gray.600" textAlign="center" mb={1}>
-                      Playing with:
+                      {t("court.playingWith")}
                     </Text>
                     <Flex justify="center" wrap="wrap" gap={2}>
                       {courtPlayers
@@ -366,10 +420,10 @@ function StatusPageContent() {
                   <Clock size={16} color="var(--chakra-colors-gray-500)" />
                 </Center>
                 <Text fontSize="xl" fontWeight="semibold">
-                  {player.currentWaitTime} min
+                  {player.currentWaitTime} {t("stats.minutes")}
                 </Text>
                 <Text fontSize="xs" color="gray.500">
-                  Current Wait
+                  {t("stats.currentWait")}
                 </Text>
               </Box>
 
@@ -394,7 +448,7 @@ function StatusPageContent() {
                   {player.matchesPlayed}
                 </Text>
                 <Text fontSize="xs" color="gray.500">
-                  Matches Played
+                  {t("stats.matchesPlayed")}
                 </Text>
               </Box>
             </Flex>
@@ -410,14 +464,13 @@ function StatusPageContent() {
               >
                 <Flex justify="space-between" align="center" mb={2}>
                   <Text fontSize="sm" fontWeight="medium">
-                    Queue Position
+                    {t("queue.title")}
                   </Text>
                   <Text fontSize="sm" color="gray.500">
-                    Updated{" "}
-                    {lastRefreshed.toLocaleTimeString([], {
+                    {t("queue.updated", { time: lastRefreshed.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}
+                    }) })}
                   </Text>
                 </Flex>
                 <Flex align="center">
@@ -447,7 +500,7 @@ function StatusPageContent() {
                   </Text>
                 </Flex>
                 <Text fontSize="xs" color="gray.500" mt={2}>
-                  Auto-refreshes in {refreshInterval} seconds
+                  {t("queue.autoRefresh", { seconds: refreshInterval })}
                 </Text>
               </Box>
             )}
@@ -457,7 +510,7 @@ function StatusPageContent() {
         {/* Card Footer */}
         <Box p={4} borderTopWidth="1px" textAlign="center">
           <Text fontSize="xs" color="gray.500">
-            Please keep this page open to maintain your place in the queue
+            {t("footer")}
           </Text>
         </Box>
       </Box>
@@ -474,20 +527,20 @@ function StatusPageContent() {
             transform: "translateY(-2px)",
             boxShadow: "sm",
           }}
-        >
-          <Flex align="center">
-            <Box as={ArrowLeft} boxSize={4} mr={2} />
-            Back to Home
-          </Flex>
+        >        <Flex align="center">
+          <Box as={ArrowLeft} boxSize={4} mr={2} />
+          {common("backToHome")}
+        </Flex>
         </NextLinkButton>
       </Center>
     </Container>
+    </>
   );
 }
 
 export default function StatusPage() {
   return (
-    <Suspense fallback={<Spinner />}>
+    <Suspense fallback={<Center><Spinner size="xl" /></Center>}>
       <StatusPageContent />
     </Suspense>
   );

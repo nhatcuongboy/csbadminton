@@ -17,20 +17,25 @@
     "success": "Thành công",
     "back": "Quay lại",
     "backToHome": "Quay lại trang chủ",
+    "backToDashboard": "Quay lại bảng điều khiển",
     "next": "Tiếp theo",
     "submit": "Gửi",
     "close": "Đóng",
     "yes": "Có",
     "no": "Không",
     "required": "Bắt buộc",
-    "optional": "Tùy chọn"
+    "optional": "Tùy chọn",
+    "language": "Ngôn ngữ",
+    "settings": "Cài đặt",
+    "about": "Giới thiệu",
+    "navigation": "Điều hướng"
   },
   "session": {
-    "title": "Phiên chơi cầu lông",
-    "createSession": "Tạo phiên chơi",
-    "joinSession": "Tham gia phiên chơi",
-    "sessionName": "Tên phiên chơi",
-    "sessionCode": "Mã phiên chơi",
+    "title": "Kèo cầu lông",
+    "createSession": "Tạo kèo",
+    "joinSession": "Tham gia kèo",
+    "sessionName": "Tên kèo",
+    "sessionCode": "Mã kèo",
     "maxPlayersPerCourt": "Số người tối đa mỗi sân",
     "requirePlayerInfo": "Yêu cầu thông tin người chơi",
     "courtInformation": "Thông tin sân",
@@ -40,17 +45,57 @@
     "courtNumber": "Số sân",
     "courtName": "Tên sân",
     "courtNamePlaceholder": "Nhập tên sân (tùy chọn)",
+    "createNewSession": "Tạo kèo mới",
+    "setUpYourBadmintonSession": "Thiết lập kèo cầu lông của bạn",
+    "startYourBadmintonJourney": "Bắt đầu hành trình cầu lông của bạn",
+    "configureYourSessionSettingsBelow": "Cấu hình cài đặt kèo bên dưới để tạo trải nghiệm cầu lông hoàn hảo",
+    "sessionNamePlaceholder": "Nhập tên kèo (ví dụ: 'Cầu lông thứ 2 tối')",
+    "sessionNameDescription": "Chọn một tên mô tả cho kèo của bạn",
+    "sessionDuration": "Thời gian kèo",
+    "startTime": "Thời gian bắt đầu",
+    "endTime": "Thời gian kết thúc",
+    "calculatedFromCourtsConfig": "Tính từ cấu hình sân",
+    "automaticallyCalculated": "Tự động tính từ thời gian bắt đầu/kết thúc",
+    "whenTheSessionWillBegin": "Khi kèo sẽ bắt đầu",
+    "whenTheSessionWillEnd": "Khi kèo sẽ kết thúc",
+    "endTimeMustBeAfterStartTime": "Thời gian kết thúc phải sau thời gian bắt đầu",
+    "maxPlayersDescription": "Số người chơi tối đa cho phép mỗi sân (4-12)",
+    "requirePlayerInformation": "Yêu cầu thông tin người chơi",
+    "collectPlayerInformation": "Thu thập thông tin người chơi",
+    "enableToGatherPlayerDetails": "Bật để thu thập thông tin chi tiết người chơi khi họ tham gia",
+    "courtsConfiguration": "Cấu hình sân",
+    "addOrRemoveCourtsToCustomize": "Thêm hoặc xóa sân để tùy chỉnh kèo của bạn",
+    "court": "Sân",
+    "remove": "Xóa",
+    "addAnotherCourt": "Thêm sân khác",
+    "creatingSession": "Đang tạo kèo...",
+    "proTipsForYourSession": "Mẹo chuyên nghiệp cho kèo của bạn",
+    "optimalCourtRotation": "Thiết lập luân phiên sân mỗi 15-20 phút để dòng chảy trò chơi tối ưu",
+    "sessionDurationTip": "2-3 giờ là lý tưởng cho hầu hết các kèo cầu lông giải trí",
+    "playerInfoHelps": "Thông tin người chơi giúp ghép cặp theo kỹ năng và giao tiếp",
+    "needHelp": "Cần trợ giúp?",
+    "sessionSetupGuide": "Hướng dẫn thiết lập kèo",
+    "forBestPractices": "để biết các thực hành tốt nhất",
     "validation": {
-      "sessionNameRequired": "Tên phiên chơi là bắt buộc",
-      "sessionNameMinLength": "Tên phiên chơi phải có ít nhất 3 ký tự",
-      "sessionCodeRequired": "Mã phiên chơi là bắt buộc",
-      "sessionCodeMinLength": "Mã phiên chơi phải có ít nhất 4 ký tự",
+      "sessionNameRequired": "Tên kèo là bắt buộc",
+      "sessionNameMinLength": "Tên kèo phải có ít nhất 3 ký tự",
+      "sessionCodeRequired": "Mã kèo là bắt buộc",
+      "sessionCodeMinLength": "Mã kèo phải có ít nhất 4 ký tự",
       "maxPlayersMin": "Phải có ít nhất 2 người chơi mỗi sân",
       "maxPlayersMax": "Không thể vượt quá 6 người chơi mỗi sân",
       "courtNumberRequired": "Số sân là bắt buộc",
       "courtNumberMin": "Số sân phải ít nhất là 1",
       "courtNumberUnique": "Số sân phải là duy nhất",
-      "atLeastOneCourt": "Cần có ít nhất một sân"
+      "atLeastOneCourt": "Cần có ít nhất một sân",
+      "sessionCreateFailed": "Không thể tạo kèo",
+      "sessionCreatedSuccessfully": "Tạo kèo thành công!",
+      "unknownError": "Đã xảy ra lỗi không xác định",
+      "allCourtsMustHaveValidNumber": "Tất cả sân phải có số sân hợp lệ (≥ 1)",
+      "sessionIdNotProvided": "Không cung cấp ID kèo",
+      "loadSessionFailed": "Đã xảy ra lỗi khi tải dữ liệu kèo",
+      "tryAgainOrContactSupport": "Vui lòng thử lại hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn.",
+      "sessionNotFound": "Không tìm thấy kèo",
+      "sessionNotFoundDescription": "Kèo bạn đang tìm kiếm có thể đã bị xóa hoặc không tồn tại."
     }
   },
   "court": {
@@ -94,27 +139,72 @@
   },
   "pages": {
     "home": {
-      "title": "Quản lý sân cầu lông",
-      "description": "Quản lý các phiên chơi và sân cầu lông một cách hiệu quả",
-      "hostButton": "Tổ chức phiên chơi",
-      "joinButton": "Tham gia phiên chơi"
+      "title": "Quản lý kèo cầu lông",
+      "description": "Quản lý các kèo cầu lông, theo dõi luân phiên người chơi và tối ưu hóa việc sử dụng sân",
+      "hostButton": "Chế độ host",
+      "joinButton": "Tham gia như người chơi",
+      "sectionTitle": "Quản lý kèo cầu lông",
+      "sectionTitleHighlight": "dễ dàng",
+      "sectionDescription": "Nền tảng trực quan của chúng tôi giúp bạn tổ chức các kèo cầu lông một cách dễ dàng. Dễ dàng theo dõi người chơi, quản lý sân và đảm bảo mọi người có thời gian chơi công bằng với hệ thống luân phiên thông minh của chúng tôi.",
+      "getStarted": "Bắt đầu",
+      "exploreFeatures": "Khám phá tính năng",
+      "keyFeatures": "Tính năng chính",
+      "gettingStarted": "Bắt đầu",
+      "copyright": "Tất cả quyền được bảo lưu.",
+      "features": {
+        "sessionManagement": {
+          "title": "Quản lý kèo",
+          "description": "Tạo và cấu hình các kèo cầu lông tùy chỉnh với cài đặt linh hoạt cho sân, thời gian và yêu cầu người chơi",
+          "buttonText": "Tạo kèo"
+        },
+        "playerTracking": {
+          "title": "Theo dõi người chơi",
+          "description": "Theo dõi nâng cao thời gian chờ của người chơi, lịch sử trận đấu và hệ thống luân phiên công bằng tự động cho tất cả người tham gia",
+          "buttonText": "Quản lý người chơi"
+        },
+        "sessionHistory": {
+          "title": "Lịch sử kèo",
+          "description": "Thống kê toàn diện và lịch sử kèo với những hiểu biết để cải thiện tổ chức chơi trong tương lai và trải nghiệm người chơi",
+          "buttonText": "Xem lịch sử"
+        }
+      },
+      "guides": {
+        "hosts": {
+          "title": "Dành cho người tổ chức",
+          "buttonText": "Tổ chức kèo",
+          "step1": "Tạo kèo mới với cài đặt ưa thích của bạn",
+          "step2": "Thêm người chơi hoặc để họ tham gia bằng số người chơi",
+          "step3": "Bắt đầu kèo khi sẵn sàng",
+          "step4": "Quản lý luân phiên sân và phân công người chơi",
+          "step5": "Kết thúc kèo để tạo thống kê"
+        },
+        "players": {
+          "title": "Dành cho người chơi",
+          "buttonText": "Tham gia kèo",
+          "step1": "Nhận số người chơi từ người tổ chức",
+          "step2": "Nhập số của bạn để tham gia kèo",
+          "step3": "Điền thông tin của bạn nếu được yêu cầu",
+          "step4": "Theo dõi hàng đợi và phân công sân",
+          "step5": "Thưởng thức kèo cầu lông của bạn!"
+        }
+      }
     },
     "host": {
-      "title": "Tổ chức phiên chơi",
-      "description": "Tạo và quản lý phiên chơi cầu lông",
-      "createNew": "Tạo phiên chơi mới",
-      "existingSessions": "Phiên chơi hiện có"
+      "title": "Tổ chức kèo",
+      "description": "Tạo và quản lý kèo cầu lông",
+      "createNew": "Tạo kèo mới",
+      "existingSessions": "Kèo hiện có"
     },
     "join": {
-      "title": "Tham gia phiên chơi",
-      "description": "Nhập mã phiên chơi để tham gia",
-      "enterCode": "Nhập mã phiên chơi",
-      "joinButton": "Tham gia phiên chơi",
-      "howToJoin": "Cách tham gia phiên chơi",
+      "title": "Tham gia kèo",
+      "description": "Nhập mã kèo để tham gia",
+      "enterCode": "Nhập mã kèo",
+      "joinButton": "Tham gia kèo",
+      "howToJoin": "Cách tham gia kèo",
       "steps": {
         "getCode": {
-          "title": "Lấy mã phiên chơi",
-          "description": "Hỏi người tổ chức để lấy mã phiên chơi 6 chữ số"
+          "title": "Lấy mã kèo",
+          "description": "Hỏi người tổ chức để lấy mã kèo 6 chữ số"
         },
         "enterCode": {
           "title": "Nhập mã",
@@ -122,7 +212,7 @@
         },
         "startPlaying": {
           "title": "Bắt đầu chơi",
-          "description": "Tham gia phiên chơi và bắt đầu chơi!"
+          "description": "Tham gia kèo và bắt đầu chơi!"
         }
       },
       "confirm": {
@@ -149,9 +239,9 @@
           "processing": "Đang xử lý...",
           "confirmButton": "Xác nhận & Tham gia"
         },
-        "footer": "Thông tin này sẽ hiển thị cho người tổ chức phiên chơi",
+        "footer": "Thông tin này sẽ hiển thị cho người tổ chức kèo",
         "errors": {
-          "missingInfo": "Thiếu thông tin phiên chơi hoặc người chơi",
+          "missingInfo": "Thiếu thông tin kèo hoặc người chơi",
           "playerNotFound": "Không tìm thấy người chơi",
           "loadFailed": "Không thể tải thông tin người chơi",
           "requiredFields": "Vui lòng điền đầy đủ các trường bắt buộc",
@@ -161,7 +251,7 @@
       "status": {
         "playerInfo": "Người chơi #{number} - {name}",
         "yourStatus": "Trạng thái của bạn",
-        "statusDescription": "Trạng thái hiện tại trong phiên chơi cầu lông",
+        "statusDescription": "Trạng thái hiện tại trong kèo cầu lông",
         "time": {
           "lessThanMinute": "< 1 phút",
           "oneMinute": "1 phút",
@@ -177,7 +267,7 @@
             "description": "Sân {courtNumber} - Chúc bạn chơi vui vẻ!"
           },
           "finished": {
-            "title": "Phiên chơi kết thúc",
+            "title": "Kèo kết thúc",
             "description": "Cảm ơn bạn đã tham gia"
           }
         },
@@ -200,9 +290,11 @@
         "footer": "Vui lòng giữ trang này mở để duy trì vị trí trong hàng chờ",
         "errors": {
           "missingPlayerId": "Thiếu ID người chơi",
+          "missingPlayerIdDescription": "Không có ID người chơi trong URL. Vui lòng tham gia phiên trước.",
           "loadFailed": "Không thể tải trạng thái người chơi",
+          "generalErrorDescription": "Có lỗi khi tải thông tin người chơi. Vui lòng thử lại.",
           "playerNotFound": "Không tìm thấy người chơi",
-          "playerNotFoundDescription": "Chúng tôi không thể tìm thấy thông tin người chơi của bạn.",
+          "playerNotFoundDescription": "Chúng tôi không thể tìm thấy thông tin người chơi của bạn. Bạn có thể cần tham gia lại phiên.",
           "returnToJoin": "Quay lại trang tham gia"
         }
       }
@@ -210,8 +302,8 @@
   },
   "errors": {
     "generic": "Đã xảy ra lỗi",
-    "sessionNotFound": "Không tìm thấy phiên chơi",
-    "invalidSessionCode": "Mã phiên chơi không hợp lệ",
+    "sessionNotFound": "Không tìm thấy kèo",
+    "invalidSessionCode": "Mã kèo không hợp lệ",
     "networkError": "Lỗi mạng",
     "validationError": "Lỗi xác thực"
   }

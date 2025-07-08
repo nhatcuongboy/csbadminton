@@ -194,6 +194,14 @@ export const SessionService = {
     );
     return response.data.data || [];
   },
+
+  // Get session matches
+  getSessionMatches: async (id: string): Promise<Match[]> => {
+    const response = await api.get<ApiResponse<Match[]>>(
+      `/sessions/${id}/matches`
+    );
+    return response.data.data || [];
+  },
 };
 
 // Bulk Player types

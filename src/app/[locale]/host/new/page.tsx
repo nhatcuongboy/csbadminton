@@ -34,6 +34,7 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { Link as IntlLink } from "@/i18n/config";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import TopBar from "@/components/ui/TopBar";
 
 // Helper function to format date for datetime-local input
 function formatDateTimeLocal(date: Date): string {
@@ -110,10 +111,10 @@ function NewSessionPageContent() {
   // Show error message if redirected with error
   useEffect(() => {
     if (error) {
-      const errorMessage = details || "Failed to create session";
+      const errorMessage = details || t("validation.sessionCreateFailed");
       toast.error(decodeURIComponent(errorMessage));
     }
-  }, [error, details]);
+  }, [error, details, t]);
 
   async function createSession(formData: FormData) {
     // Client-side form handling
@@ -122,7 +123,7 @@ function NewSessionPageContent() {
     try {
       // Validate dates
       if (!isEndTimeValid) {
-        toast.error("End time must be after start time");
+        toast.error(t("endTimeMustBeAfterStartTime"));
         setIsLoading(false);
         return;
       }
@@ -161,7 +162,7 @@ function NewSessionPageContent() {
       });
 
       // Show success message
-      toast.success("Session created successfully!");
+      toast.success(t("validation.sessionCreatedSuccessfully"));
 
       // Redirect to host page after short delay
       setTimeout(() => {
@@ -171,7 +172,7 @@ function NewSessionPageContent() {
       console.error("Error creating session:", error);
       // Show error message
       const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
+        error instanceof Error ? error.message : t("validation.unknownError");
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -215,12 +216,12 @@ function NewSessionPageContent() {
     const uniqueNumbers = new Set(courtNumbers);
 
     if (uniqueNumbers.size !== courtNumbers.length) {
-      return "Court numbers must be unique";
+      return t("validation.courtNumberUnique");
     }
 
     for (const court of courts) {
       if (!court.courtNumber || court.courtNumber < 1) {
-        return "All courts must have a valid court number (≥ 1)";
+        return t("validation.allCourtsMustHaveValidNumber");
       }
     }
 
@@ -229,34 +230,10 @@ function NewSessionPageContent() {
 
   return (
     <Box minH="100vh" bgGradient="linear(to-br, blue.50, white, green.50)">
-      <Container maxW="4xl" py={8} px={4}>
-        {/* Header with back button */}
-        <Flex align="center" mb={8}>
-          <NextLinkButton
-            href="/host"
-            variant="outline"
-            size="sm"
-            mr={4}
-            _hover={{ bg: "blue.50" }}
-            transition="all 0.2s"
-          >
-            <ArrowLeft size={16} style={{ marginRight: "8px" }} />
-            {common("backToDashboard")}
-          </NextLinkButton>
-          <Box>
-            <Heading
-              size="2xl"
-              bgGradient="linear(to-r, blue.600, green.600)"
-              fontWeight="bold"
-            >
-              {t("createNewSession")}
-            </Heading>
-            <Text color="gray.600" mt={1}>
-              {t("setUpYourBadmintonSession")}
-            </Text>
-          </Box>
-        </Flex>
+      {/* Top Bar */}
+      <TopBar showBackButton={true} backHref="/host" title="New Session" />
 
+      <Container maxW="4xl" py={8} px={4} pt={24}>
         {/* Hero Section */}
         <VStack mb={8} textAlign="center">
           <Flex
@@ -290,10 +267,9 @@ function NewSessionPageContent() {
               borderColor="red.200"
               w="full"
               maxW="md"
-            >
-              <Text fontWeight="medium">
-                {decodeURIComponent(details || "Failed to create session")}
-              </Text>
+            >            <Text fontWeight="medium">
+              {decodeURIComponent(details || t("validation.sessionCreateFailed"))}
+            </Text>
             </Box>
           )}
         </VStack>

@@ -12,7 +12,11 @@ const locales = [
   { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
 ];
 
-export default function LanguageSwitcher() {
+type LanguageSwitcherProps = {
+  keepDrawerOpen?: boolean;
+};
+
+export default function LanguageSwitcher({ keepDrawerOpen = false }: LanguageSwitcherProps) {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -28,6 +32,14 @@ export default function LanguageSwitcher() {
       router.replace(newPathname);
     });
     setIsOpen(false);
+    
+    // Nếu keepDrawerOpen là true, sau khi navigation xong, mở lại drawer
+    if (keepDrawerOpen) {
+      setTimeout(() => {
+        // Dispatch custom event để mở lại drawer
+        window.dispatchEvent(new CustomEvent('reopenDrawer'));
+      }, 500);
+    }
   };
 
   return (

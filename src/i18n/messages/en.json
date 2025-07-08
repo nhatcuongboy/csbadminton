@@ -17,13 +17,18 @@
     "success": "Success",
     "back": "Back",
     "backToHome": "Back to Home",
+    "backToDashboard": "Back to Dashboard",
     "next": "Next",
     "submit": "Submit",
     "close": "Close",
     "yes": "Yes",
     "no": "No",
     "required": "Required",
-    "optional": "Optional"
+    "optional": "Optional",
+    "language": "Language",
+    "settings": "Settings",
+    "about": "About",
+    "navigation": "Navigation"
   },
   "session": {
     "title": "Badminton Session",
@@ -40,6 +45,37 @@
     "courtNumber": "Court Number",
     "courtName": "Court Name",
     "courtNamePlaceholder": "Enter court name (optional)",
+    "createNewSession": "Create New Session",
+    "setUpYourBadmintonSession": "Set up your badminton session",
+    "startYourBadmintonJourney": "Start Your Badminton Journey",
+    "configureYourSessionSettingsBelow": "Configure your session settings below to create the perfect badminton experience",
+    "sessionNamePlaceholder": "Enter session name (e.g., 'Monday Night Badminton')",
+    "sessionNameDescription": "Choose a descriptive name for your session",
+    "sessionDuration": "Session Duration",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "calculatedFromCourtsConfig": "Calculated from courts configuration",
+    "automaticallyCalculated": "Automatically calculated from start/end time",
+    "whenTheSessionWillBegin": "When the session will begin",
+    "whenTheSessionWillEnd": "When the session will end",
+    "endTimeMustBeAfterStartTime": "End time must be after start time",
+    "maxPlayersDescription": "Maximum players allowed per court (4-12)",
+    "requirePlayerInformation": "Require Player Information",
+    "collectPlayerInformation": "Collect player information",
+    "enableToGatherPlayerDetails": "Enable to gather player details when they join",
+    "courtsConfiguration": "Courts Configuration",
+    "addOrRemoveCourtsToCustomize": "Add or remove courts to customize your session",
+    "court": "Court",
+    "remove": "Remove",
+    "addAnotherCourt": "Add Another Court",
+    "creatingSession": "Creating Session...",
+    "proTipsForYourSession": "Pro Tips for Your Session",
+    "optimalCourtRotation": "Set up court rotation every 15-20 minutes for optimal game flow",
+    "sessionDurationTip": "2-3 hours is ideal for most recreational badminton sessions",
+    "playerInfoHelps": "Player information helps with skill-based matching and communication",
+    "needHelp": "Need help?",
+    "sessionSetupGuide": "Session Setup Guide",
+    "forBestPractices": "for best practices",
     "validation": {
       "sessionNameRequired": "Session name is required",
       "sessionNameMinLength": "Session name must be at least 3 characters",
@@ -50,7 +86,16 @@
       "courtNumberRequired": "Court number is required",
       "courtNumberMin": "Court number must be at least 1",
       "courtNumberUnique": "Court numbers must be unique",
-      "atLeastOneCourt": "At least one court is required"
+      "atLeastOneCourt": "At least one court is required",
+      "sessionCreateFailed": "Failed to create session",
+      "sessionCreatedSuccessfully": "Session created successfully!",
+      "unknownError": "Unknown error occurred",
+      "allCourtsMustHaveValidNumber": "All courts must have a valid court number (≥ 1)",
+      "sessionIdNotProvided": "Session ID not provided",
+      "loadSessionFailed": "An error occurred while loading session data",
+      "tryAgainOrContactSupport": "Please try again or contact support if the problem persists.",
+      "sessionNotFound": "Session not found",
+      "sessionNotFoundDescription": "The session you're looking for might have been deleted or doesn't exist."
     }
   },
   "court": {
@@ -94,10 +139,55 @@
   },
   "pages": {
     "home": {
-      "title": "Badminton Court Management",
-      "description": "Manage your badminton sessions and courts efficiently",
-      "hostButton": "Host a Session",
-      "joinButton": "Join a Session"
+      "title": "Badminton Session Manager",
+      "description": "Manage your badminton sessions, track player rotation, and optimize court usage",
+      "hostButton": "Host Mode",
+      "joinButton": "Join as Player",
+      "sectionTitle": "Effortless Badminton",
+      "sectionTitleHighlight": "Session Management",
+      "sectionDescription": "Our intuitive platform helps you organize badminton sessions with ease. Easily track players, manage courts, and ensure everyone gets fair play time with our smart rotation system.",
+      "getStarted": "Get Started",
+      "exploreFeatures": "Explore Features",
+      "keyFeatures": "Key Features",
+      "gettingStarted": "Getting Started",
+      "copyright": "All rights reserved.",
+      "features": {
+        "sessionManagement": {
+          "title": "Session Management",
+          "description": "Create and configure custom badminton sessions with flexible settings for courts, duration and player requirements",
+          "buttonText": "Create Session"
+        },
+        "playerTracking": {
+          "title": "Player Tracking",
+          "description": "Advanced tracking for player wait times, match history, and automated fair rotation system for all participants",
+          "buttonText": "Manage Players"
+        },
+        "sessionHistory": {
+          "title": "Session History",
+          "description": "Comprehensive statistics and session history with insights to improve future play organization and player experience",
+          "buttonText": "View History"
+        }
+      },
+      "guides": {
+        "hosts": {
+          "title": "For Hosts",
+          "buttonText": "Host a Session",
+          "step1": "Create a new session with your preferred settings",
+          "step2": "Add players or let them join with their player number",
+          "step3": "Start the session when ready",
+          "step4": "Manage court rotations and player assignments",
+          "step5": "End the session to generate statistics"
+        },
+        "players": {
+          "title": "For Players",
+          "buttonText": "Join a Session",
+          "step1": "Get your player number from the host",
+          "step2": "Enter your number to join the session",
+          "step3": "Fill in your information if required",
+          "step4": "Follow the queue and court assignments",
+          "step5": "Enjoy your badminton session!"
+        }
+      }
     },
     "host": {
       "title": "Host Session",
@@ -200,9 +290,11 @@
         "footer": "Please keep this page open to maintain your place in the queue",
         "errors": {
           "missingPlayerId": "Player ID is missing",
+          "missingPlayerIdDescription": "No player ID was provided in the URL. Please join a session first.",
           "loadFailed": "Failed to load player status",
+          "generalErrorDescription": "There was an error loading your player information. Please try again.",
           "playerNotFound": "Player Not Found",
-          "playerNotFoundDescription": "We couldn't find your player information.",
+          "playerNotFoundDescription": "We couldn't find your player information. You may need to rejoin the session.",
           "returnToJoin": "Return to Join Page"
         }
       }

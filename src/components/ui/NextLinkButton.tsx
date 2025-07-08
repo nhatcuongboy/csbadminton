@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { Link } from "../../i18n/config";
 import { Button, ButtonProps } from "./chakra-compat";
 
 interface NextLinkButtonProps extends Omit<ButtonProps, 'href'> {
