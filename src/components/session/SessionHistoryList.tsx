@@ -39,10 +39,10 @@ const formatTime = (dateString: string | Date): string => {
 
 const formatTimeRange = (startTime?: Date, endTime?: Date): string => {
   if (!startTime) return "Time not recorded";
-  
+
   const start = formatTime(startTime);
   if (!endTime) return `${start} - End time not recorded`;
-  
+
   const end = formatTime(endTime);
   return `${start} - ${end}`;
 };
@@ -98,23 +98,23 @@ const HistorySessionCard = ({ session }: { session: HistorySession }) => {
           </Flex>
           <Flex align="center">
             <Icon as={Users} boxSize={5} mr={2} color="gray.500" />
-            <Text>
-              {session.totalPlayers} players participated
-            </Text>
+            <Text>{session.totalPlayers} players participated</Text>
           </Flex>
         </Stack>
 
         <Box borderTopWidth="1px" pt={4} mt={2}>
           <Text color="gray.600" _dark={{ color: "gray.400" }}>
-            {session.matchesPlayed > 0 
+            {session.matchesPlayed > 0
               ? `${session.matchesPlayed} matches played`
-              : "No matches recorded"
-            }
+              : "No matches recorded"}
           </Text>
         </Box>
 
         <Flex mt={4} justify="flex-end">
-          <NextLinkButton href={`/host/sessions/${session.id}`} variant="outline">
+          <NextLinkButton
+            href={`/host/sessions/${session.id}`}
+            variant="outline"
+          >
             View Details
           </NextLinkButton>
         </Flex>
@@ -133,7 +133,7 @@ export default function SessionHistoryList() {
       try {
         setLoading(true);
         const allSessions = await SessionService.getAllSessions();
-        
+
         // Filter only completed sessions
         const completedSessions = allSessions.filter(
           (session: Session) => session.status === "FINISHED"
@@ -142,22 +142,28 @@ export default function SessionHistoryList() {
         // Transform to UI format with matches count
         const historySessionsPromises = completedSessions.map(
           async (session: Session): Promise<HistorySession> => {
-            const maxPlayers = session.numberOfCourts * session.maxPlayersPerCourt;
-            
+            const maxPlayers =
+              session.numberOfCourts * session.maxPlayersPerCourt;
+
             // Get matches count for this session
             let matchesPlayed = 0;
             try {
-              const matches = await SessionService.getSessionMatches(session.id);
+              const matches = await SessionService.getSessionMatches(
+                session.id
+              );
               matchesPlayed = matches.length;
             } catch (error) {
-              console.warn(`Failed to get matches for session ${session.id}:`, error);
+              console.warn(
+                `Failed to get matches for session ${session.id}:`,
+                error
+              );
               matchesPlayed = 0;
             }
 
             return {
               id: session.id,
               title: session.name,
-              date: session.startTime 
+              date: session.startTime
                 ? formatDate(session.startTime)
                 : formatDate(session.createdAt),
               time: formatTimeRange(session.startTime, session.endTime),
@@ -223,7 +229,8 @@ export default function SessionHistoryList() {
           No Session History
         </Heading>
         <Text color="gray.500">
-          You haven't completed any sessions yet. Host and complete sessions to see your history here!
+          You haven't completed any sessions yet. Host and complete sessions to
+          see your history here!
         </Text>
       </Box>
     );

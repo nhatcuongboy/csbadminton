@@ -36,7 +36,7 @@ export default function HostSessionsPage() {
             borderColor="gray.200"
             _dark={{ borderColor: "gray.700" }}
           >
-            <Flex mb={8}>
+            <Flex>
               <Box
                 flex={1}
                 p={4}

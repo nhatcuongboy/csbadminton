@@ -142,7 +142,21 @@ export const TabsComp: React.FC<TabsProps> = ({
 
   return (
     <Box>
-      <Box display="flex" mb={4} borderBottom="1px solid" borderColor="gray.200">
+      <Box 
+        display="flex" 
+        mb={4} 
+        borderBottom="1px solid" 
+        borderColor="gray.200"
+        overflowX="auto"
+        overflowY="hidden"
+        css={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
+        }}
+      >
         {React.Children.map(tabs, (child, idx) => {
           if (!React.isValidElement(child)) return null;
           return React.cloneElement(child as React.ReactElement<TabProps>, {
@@ -169,12 +183,15 @@ export const Tab = ({ children, ...props }: TabProps) => {
       as="button" 
       px="4" 
       py="2" 
+      minW="fit-content"
+      whiteSpace="nowrap"
       fontWeight={isSelected ? "bold" : "medium"}
       color={isSelected ? "blue.500" : "gray.500"}
       borderBottom="2px solid"
       borderColor={isSelected ? "blue.500" : "transparent"}
       transition="all 0.2s"
       _hover={{ color: isSelected ? "blue.600" : "gray.700" }}
+      fontSize="sm"
       {...props}
     >
       {children}

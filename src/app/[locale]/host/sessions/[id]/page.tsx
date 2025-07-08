@@ -35,9 +35,9 @@ export default function SessionDetailPage({
         // Transform API data format to match what SessionDetailContent expects
         const formattedSession = {
           ...sessionData,
-          // Chuyển đổi định dạng date
-          startTime: sessionData.startTime ? sessionData.startTime.toString() : null,
-          endTime: sessionData.endTime ? sessionData.endTime.toString() : null,
+          // Ensure dates are proper Date objects for formatting
+          startTime: sessionData.startTime ? new Date(sessionData.startTime) : null,
+          endTime: sessionData.endTime ? new Date(sessionData.endTime) : null,
           // Đảm bảo các mảng tồn tại
           courts: sessionData.courts || [],
           players: sessionData.players || [],

@@ -7,6 +7,8 @@ import {
   Flex,
   Grid,
   Heading,
+  Input,
+  Select,
   //   Tab,
   //   TabList,
   //   TabPanel,
@@ -21,6 +23,7 @@ import {
   TabPanel,
   TabPanels,
 } from "@/components/ui/chakra-compat";
+import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { useCallback, useEffect, useState } from "react";
 
 // Import compatibility components
@@ -42,6 +45,7 @@ import {
   VStack,
 } from "@/components/ui/chakra-compat";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
+import TopBar from "@/components/ui/TopBar";
 import {
   formatDuration,
   formatTime,
@@ -53,13 +57,20 @@ import BadmintonCourt from "@/components/court/BadmintonCourt";
 import {
   ArrowLeft,
   Clock,
+  Edit,
   Play,
   Plus,
   RefreshCw,
+  Save,
   Shuffle,
   Square,
+  Trash2,
   Users,
 } from "lucide-react";
+import CourtsTab from "@/components/session/CourtsTab";
+import PlayersTab from "@/components/session/PlayersTab";
+import ManageTab from "@/components/session/ManageTab";
+import SettingsTab from "@/components/session/SettingsTab";
 
 // Types for session data and related entities
 interface Player {
@@ -141,6 +152,24 @@ export default function SessionDetailContent({
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [matchMode, setMatchMode] = useState<"auto" | "manual">("auto");
   const [showMatchCreation, setShowMatchCreation] = useState<boolean>(false);
+  const [playerFilter, setPlayerFilter] = useState<
+    "ALL" | "PLAYING" | "WAITING"
+  >("ALL");
+
+  // Player management states
+  const [editingPlayers, setEditingPlayers] = useState<{
+    [key: string]: Player;
+  }>({});
+  const [newPlayers, setNewPlayers] = useState<
+    Array<{
+      playerNumber: number;
+      name: string;
+      gender: string;
+      level: string;
+    }>
+  >([]);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
   const toast = useToast();
   const playerModalDisclosure = useDisclosure();
   const courtModalDisclosure = useDisclosure();
@@ -324,11 +353,11 @@ export default function SessionDetailContent({
   const mapSessionStatusToUI = (status: string) => {
     switch (status) {
       case "PREPARING":
-        return "Start Session";
+        return "Start";
       case "IN_PROGRESS":
-        return "End Session";
+        return "End";
       case "FINISHED":
-        return "Session Ended";
+        return "Ended";
       default:
         return "Unknown Status";
     }
@@ -661,871 +690,469 @@ export default function SessionDetailContent({
     }
   };
 
+  // Player management functions
+  const addNewPlayerRow = () => {
+    const nextPlayerNumber =
+      Math.max(...session.players.map((p) => p.playerNumber), 0) + 1;
+    setNewPlayers([
+      ...newPlayers,
+      {
+        playerNumber: nextPlayerNumber,
+        name: "",
+        gender: "MALE",
+        level: "BEGINNER",
+      },
+    ]);
+  };
+
+  const removeNewPlayerRow = (index: number) => {
+    setNewPlayers(newPlayers.filter((_, i) => i !== index));
+  };
+
+  const updateNewPlayer = (index: number, field: string, value: string) => {
+    setNewPlayers((prev) =>
+      prev.map((player, i) =>
+        i === index ? { ...player, [field]: value } : player
+      )
+    );
+  };
+
+  const startEditingPlayer = (player: Player) => {
+    setEditingPlayers((prev) => ({
+      ...prev,
+      [player.id]: { ...player },
+    }));
+  };
+
+  const cancelEditingPlayer = (playerId: string) => {
+    setEditingPlayers((prev) => {
+      const newState = { ...prev };
+      delete newState[playerId];
+      return newState;
+    });
+  };
+
+  const updateEditingPlayer = (
+    playerId: string,
+    field: string,
+    value: string
+  ) => {
+    setEditingPlayers((prev) => ({
+      ...prev,
+      [playerId]: {
+        ...prev[playerId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const savePlayerChanges = async () => {
+    try {
+      setIsSaving(true);
+
+      // Prepare data for API
+      const playersToUpdate = Object.values(editingPlayers);
+      const playersToCreate = newPlayers.filter((p) => p.name.trim() !== "");
+
+      const requests = [];
+
+      // Update existing players
+      if (playersToUpdate.length > 0) {
+        requests.push(
+          fetch(`/api/sessions/${session.id}/players/bulk-update`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ players: playersToUpdate }),
+          })
+        );
+      }
+
+      // Create new players
+      if (playersToCreate.length > 0) {
+        requests.push(
+          fetch(`/api/sessions/${session.id}/players/bulk-create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ players: playersToCreate }),
+          })
+        );
+      }
+
+      const results = await Promise.all(requests);
+      const responses = await Promise.all(results.map((r) => r.json()));
+
+      const hasErrors = responses.some((r) => !r.success);
+
+      if (hasErrors) {
+        throw new Error("Some updates failed");
+      }
+
+      // Clear editing states
+      setEditingPlayers({});
+      setNewPlayers([]);
+
+      // Refresh session data
+      await refreshSessionData();
+
+      toast.toast({
+        title: "Players updated successfully",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error saving player changes:", error);
+      toast.toast({
+        title: "Failed to save player changes",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveIndividualPlayer = async (playerId: string) => {
+    try {
+      setIsSaving(true);
+
+      const playerToUpdate = editingPlayers[playerId];
+      if (!playerToUpdate) {
+        throw new Error("No player data to update");
+      }
+
+      const response = await fetch(
+        `/api/sessions/${session.id}/players/${playerId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(playerToUpdate),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Failed to update player");
+      }
+
+      // Remove from editing state
+      setEditingPlayers((prev) => {
+        const newState = { ...prev };
+        delete newState[playerId];
+        return newState;
+      });
+
+      // Refresh session data
+      await refreshSessionData();
+
+      toast.toast({
+        title: "Player updated successfully",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error updating player:", error);
+      toast.toast({
+        title: "Failed to update player",
+        description: error instanceof Error ? error.message : "Unknown error",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deletePlayer = async (playerId: string) => {
+    try {
+      const response = await fetch(
+        `/api/sessions/${session.id}/players/${playerId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        await refreshSessionData();
+        toast.toast({
+          title: "Player deleted successfully",
+          status: "success",
+          duration: 3000,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting player:", error);
+      toast.toast({
+        title: "Failed to delete player",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
   return (
-    <Container maxW="7xl" py={8}>
-      {/* Header with back button */}
-      <Flex alignItems="center" justify="space-between" mb={8}>
-        <Flex alignItems="center">
-          <NextLinkButton
-            href="/host"
-            variant="outline"
-            size="sm"
-            mr={4}
-            borderRadius="full"
-            transition="all 0.2s"
-            _hover={{
-              bg: "blue.50",
-              borderColor: "blue.300",
-              transform: "translateY(-2px)",
-              boxShadow: "sm",
-            }}
+    <>
+      <TopBar title={session.name} showBackButton={true} backHref="/host" />
+      <Container maxW="7xl" py={8} pt={20}>
+        {/* Session Status Cards */}
+        <Grid
+          templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+          gap={6}
+          mb={8}
+        >
+          <Box
+            p={6}
+            bg="white"
+            _dark={{ bg: "gray.800" }}
+            borderRadius="lg"
+            boxShadow="md"
+            borderWidth="1px"
           >
-            <Flex alignItems="center">
-              <Box as={ArrowLeft} boxSize={4} mr={2} />
-              Back
-            </Flex>
-          </NextLinkButton>
-          <Heading size="lg">{session.name}</Heading>
-        </Flex>
-
-        <Button
-          colorScheme={mapSessionStatusToColor(session.status)}
-          onClick={toggleSessionStatus}
-          disabled={session.status === "FINISHED"}
-        >
-          <Flex alignItems="center">
-            <Box
-              as={session.status === "IN_PROGRESS" ? Square : Play}
-              boxSize={4}
-              mr={2}
-            />
-            {mapSessionStatusToUI(session.status)}
-          </Flex>
-        </Button>
-      </Flex>
-
-      {/* Session Status Cards */}
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-        gap={6}
-        mb={8}
-      >
-        <Box
-          p={6}
-          bg="white"
-          _dark={{ bg: "gray.800" }}
-          borderRadius="lg"
-          boxShadow="md"
-          borderWidth="1px"
-        >
-          <Flex align="center" mb={2}>
-            <Box as={Clock} boxSize={5} color="blue.500" mr={2} />
-            <Heading size="md">Session Time</Heading>
-          </Flex>
-          <Text fontSize="lg">
-            {session.status === "PREPARING"
-              ? "Not started yet"
-              : session.status === "IN_PROGRESS"
-              ? `Started ${formatTime(session.startTime!)}`
-              : `Ended (Duration: ${formatDuration(
-                  session.startTime!,
-                  session.endTime!
-                )})`}
-          </Text>
-        </Box>
-
-        <Box
-          p={6}
-          bg="white"
-          _dark={{ bg: "gray.800" }}
-          borderRadius="lg"
-          boxShadow="md"
-          borderWidth="1px"
-        >
-          <Flex align="center" mb={2}>
-            <Box as={Users} boxSize={5} color="blue.500" mr={2} />
-            <Heading size="md">Players</Heading>
-          </Flex>
-          <Text fontSize="lg">{session.players.length} total players</Text>
-          <Text fontSize="sm" color="gray.500">
-            {session.players.filter((p) => p.status === "PLAYING").length}{" "}
-            playing /
-            {session.players.filter((p) => p.status === "WAITING").length}{" "}
-            waiting
-          </Text>
-        </Box>
-
-        <Box
-          p={6}
-          bg="white"
-          _dark={{ bg: "gray.800" }}
-          borderRadius="lg"
-          boxShadow="md"
-          borderWidth="1px"
-        >
-          <Flex align="center" mb={2} justifyContent="space-between">
-            <Flex>
-              <Box as={RefreshCw} boxSize={5} color="blue.500" mr={2} />
-              <Heading size="md">Updates</Heading>
-            </Flex>
-            {session.status === "IN_PROGRESS" && (
-              <IconButton
-                aria-label="Refresh"
-                icon={<Box as={RefreshCw} boxSize={4} />}
+            <Flex align="center" justify="space-between" mb={2}>
+              <Flex align="center">
+                <Box as={Clock} boxSize={5} color="blue.500" mr={2} />
+                <Heading size="md">Session Time</Heading>
+              </Flex>
+              <Button
+                colorScheme={mapSessionStatusToColor(session.status)}
+                onClick={toggleSessionStatus}
+                disabled={session.status === "FINISHED"}
                 size="sm"
-                isLoading={isRefreshing}
-                onClick={refreshSessionData}
-              />
-            )}
-          </Flex>
-          <Text fontSize="lg">
-            {session.status === "IN_PROGRESS"
-              ? `Auto-refresh: ${refreshInterval}s`
-              : "Auto-refresh disabled"}
-          </Text>
-          <Text fontSize="sm" color="gray.500">
-            Last updated: {lastRefreshed.toLocaleTimeString()}
-          </Text>
-        </Box>
-      </Grid>
-
-      {/* Main tabs content */}
-      <Box
-        p={6}
-        bg="white"
-        _dark={{ bg: "gray.800" }}
-        borderRadius="lg"
-        boxShadow="md"
-        borderWidth="1px"
-      >
-        <Tabs
-          index={activeTab}
-          onChange={(index: number) => setActiveTab(index)}
-        >
-          <Tab flex="1" textAlign="center">
-            Active Courts ({activeCourts.length})
-          </Tab>
-          <Tab flex="1" textAlign="center">
-            Match History ({completedMatches.length})
-          </Tab>
-          <Tab flex="1" textAlign="center">
-            All Players ({session.players.length})
-          </Tab>
-          <Tab flex="1" textAlign="center">
-            Bulk Add Players
-          </Tab>
-          <Tab flex="1" textAlign="center">
-            Management
-          </Tab>
-
-          <TabPanels>
-            {/* Tab 1: Active Courts */}
-            <TabPanel>
-              <Flex justifyContent="space-between" mb={4}>
-                <Heading size="md">Active Courts</Heading>
-
-                {session.status === "IN_PROGRESS" && (
-                  <HStack spacing={2}>
-                    <Button
-                      size="sm"
-                      leftIcon={<Box as={Plus} boxSize={4} />}
-                      onClick={() => {
-                        if (!showMatchCreation) {
-                          setShowMatchCreation(true);
-                          setMatchMode("manual");
-                          setSelectedPlayers([]);
-                        } else {
-                          cancelMatchCreation();
-                        }
-                      }}
-                      colorScheme={showMatchCreation ? "red" : "blue"}
-                      variant={showMatchCreation ? "outline" : "solid"}
-                    >
-                      {showMatchCreation ? "Cancel" : "New Match"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      leftIcon={<Box as={Shuffle} boxSize={4} />}
-                      onClick={autoAssignPlayers}
-                    >
-                      Auto Assign
-                    </Button>
-                  </HStack>
-                )}
-              </Flex>
-
-              {session.status !== "IN_PROGRESS" && (
-                <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
-                  {session.status === "PREPARING"
-                    ? "Start the session to begin matches"
-                    : "Session has ended"}
+              >
+                <Flex alignItems="center">
+                  <Box
+                    as={session.status === "IN_PROGRESS" ? Square : Play}
+                    boxSize={4}
+                    mr={2}
+                  />
+                  {mapSessionStatusToUI(session.status)}
+                </Flex>
+              </Button>
+            </Flex>
+            <VStack align="start" spacing={2}>
+              {session.status === "PREPARING" ? (
+                <Text fontSize="lg" color="gray.500">
+                  Not started yet
                 </Text>
-              )}
-
-              {session.status === "IN_PROGRESS" &&
-                activeCourts.length === 0 && (
-                  <Text
-                    fontSize="lg"
-                    color="gray.500"
-                    textAlign="center"
-                    mt={4}
-                  >
-                    No active courts. Create a new match to start playing.
+              ) : session.status === "IN_PROGRESS" ? (
+                <>
+                  <Text fontWeight="medium">
+                    Start Time: {formatTime(session.startTime!)}
                   </Text>
-                )}
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mt={4}>
-                {session.courts.map((court) => {
-                  const currentMatch = getCurrentMatch(court.id);
-                  const isActive = court.status === "IN_USE";
-
-                  return (
-                    <Card key={court.id} variant="outline">
-                      <CardHeader
-                        bg={isActive ? "green.50" : "gray.50"}
-                        p={4}
-                        borderBottom="1px"
-                        borderColor={isActive ? "green.200" : "gray.200"}
-                      >
-                        <Flex
-                          justifyContent="space-between"
-                          alignItems="center"
-                        >
-                          <Heading
-                            size="md"
-                            color={isActive ? "green.700" : "gray.700"}
-                          >
-                            Court {court.courtNumber}
-                          </Heading>
-                          <HStack spacing={2}>
-                            {currentMatch && (
-                              <Badge
-                                colorScheme="blue"
-                                variant="solid"
-                                display="flex"
-                                alignItems="center"
-                                gap={1}
-                              >
-                                <Clock size={12} />
-                                {calculateElapsedTime(currentMatch.startTime)}
-                              </Badge>
-                            )}
-                            <Badge
-                              colorScheme={isActive ? "green" : "gray"}
-                              variant={isActive ? "solid" : "outline"}
-                            >
-                              {isActive ? "IN USE" : "EMPTY"}
-                            </Badge>
-                          </HStack>
-                        </Flex>
-                      </CardHeader>
-                      <CardBody p={4}>
-                        {isActive && court.currentPlayers.length > 0 ? (
-                          <VStack spacing={4}>
-                            {/* Court Visual */}
-                            <BadmintonCourt
-                              players={court.currentPlayers}
-                              isActive={isActive}
-                              elapsedTime={
-                                currentMatch
-                                  ? formatCourtElapsedTime(
-                                      currentMatch.startTime
-                                    )
-                                  : "Playing..."
-                              }
-                              courtName={getCourtDisplayName(
-                                court.courtName,
-                                court.courtNumber
-                              )}
-                              width="100%"
-                              height="180px"
-                              showTimeInCenter={true}
-                            />
-
-                            {/* Player details below court */}
-                            <VStack spacing={2} width="100%">
-                              {/* <Text
-                                fontSize="sm"
-                                fontWeight="medium"
-                                color="gray.700"
-                              >
-                                Current Players
-                              </Text> */}
-                              {/* <SimpleGrid columns={2} spacing={2} width="100%">
-                                {court.currentPlayers.map((player) => (
-                                  <Box
-                                    key={player.id}
-                                    p={2}
-                                    bg="gray.50"
-                                    borderRadius="md"
-                                    textAlign="center"
-                                  >
-                                    <Text fontSize="xs" fontWeight="bold">
-                                      #{player.playerNumber}
-                                    </Text>
-                                    <Text
-                                      fontSize="xs"
-                                      overflow="hidden"
-                                      textOverflow="ellipsis"
-                                      whiteSpace="nowrap"
-                                    >
-                                      {player.name ||
-                                        `Player ${player.playerNumber}`}
-                                    </Text>
-                                    <Text fontSize="xs" color="gray.500">
-                                      {player.level}{" "}
-                                      {player.gender === "MALE" ? "♂" : "♀"}
-                                    </Text>
-                                  </Box>
-                                ))}
-                              </SimpleGrid> */}
-
-                              {session.status === "IN_PROGRESS" && (
-                                <Button
-                                  width="full"
-                                  colorScheme="red"
-                                  size="sm"
-                                  leftIcon={<Box as={Square} boxSize={4} />}
-                                  onClick={() =>
-                                    endMatch(court.currentMatchId!)
-                                  }
-                                >
-                                  End Match
-                                </Button>
-                              )}
-                            </VStack>
-                          </VStack>
-                        ) : (
-                          <VStack
-                            spacing={4}
-                            align="center"
-                            justify="center"
-                            minH="200px"
-                          >
-                            {/* Empty court visual */}
-                            <BadmintonCourt
-                              players={[]}
-                              isActive={false}
-                              courtName={getCourtDisplayName(
-                                court.courtName,
-                                court.courtNumber
-                              )}
-                              width="100%"
-                              //   height="120px"
-                              height="180px"
-                              showTimeInCenter={false}
-                            />
-
-                            {session.status === "IN_PROGRESS" && (
-                              <VStack spacing={2}>
-                                <Button
-                                  colorScheme="green"
-                                  leftIcon={<Box as={Shuffle} boxSize={4} />}
-                                  onClick={() =>
-                                    autoAssignPlayersToSpecificCourt(court.id)
-                                  }
-                                  size="sm"
-                                  width="full"
-                                >
-                                  Auto Assign Match
-                                </Button>
-                                <Button
-                                  colorScheme="blue"
-                                  leftIcon={<Box as={Plus} boxSize={4} />}
-                                  onClick={() =>
-                                    startManualMatchCreation(court.id)
-                                  }
-                                  size="sm"
-                                  width="full"
-                                  variant="outline"
-                                >
-                                  Manual Selection
-                                </Button>
-                              </VStack>
-                            )}
-                          </VStack>
-                        )}
-                      </CardBody>
-                    </Card>
-                  );
-                })}
-              </SimpleGrid>
-
-              {/* Waiting Players Section */}
-              {waitingPlayers.length > 0 && (
-                <Box mt={8}>
-                  <Flex
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={4}
-                  >
-                    <Heading size="md">
-                      Waiting Players ({waitingPlayers.length})
-                    </Heading>
-                    <Badge
-                      colorScheme="orange"
-                      px={3}
-                      py={1}
-                      borderRadius="full"
-                    >
-                      Ready to play
-                    </Badge>
-                  </Flex>
-
-                  <SimpleGrid columns={{ base: 2, md: 4, lg: 6 }} spacing={4}>
-                    {waitingPlayers.map((player, index) => {
-                      // Calculate background opacity based on queue position (first player has highest opacity)
-                      const bgOpacity = Math.max(0.1, 1 - index * 0.15);
-                      const borderOpacity = Math.max(0.3, 1 - index * 0.1);
-
-                      return (
-                        <Card
-                          key={player.id}
-                          variant="outline"
-                          size="sm"
-                          cursor={
-                            session.status === "IN_PROGRESS"
-                              ? "pointer"
-                              : "default"
-                          }
-                          transition="all 0.2s"
-                          borderRadius="md" // More angular corners
-                          borderWidth="2px"
-                          borderColor={
-                            showMatchCreation &&
-                            selectedPlayers.includes(player.id)
-                              ? "blue.400"
-                              : `rgba(251, 146, 60, ${borderOpacity})`
-                          } // Orange color
-                          bg={
-                            showMatchCreation &&
-                            selectedPlayers.includes(player.id)
-                              ? "blue.100"
-                              : `rgba(251, 146, 60, ${bgOpacity})`
-                          } // Orange color
-                          _hover={
-                            session.status === "IN_PROGRESS"
-                              ? {
-                                  transform: "translateY(-2px)",
-                                  boxShadow: "lg",
-                                  borderColor: "orange.400",
-                                  bg: "orange.50",
-                                }
-                              : {}
-                          }
-                          onClick={() => {
-                            if (
-                              session.status === "IN_PROGRESS" &&
-                              showMatchCreation &&
-                              matchMode === "manual"
-                            ) {
-                              togglePlayerSelection(player.id);
-                            }
-                          }}
-                        >
-                          <CardBody p={3} position="relative">
-                            {/* Priority indicator */}
-                            <Box
-                              position="absolute"
-                              top={1}
-                              right={1}
-                              w={2}
-                              h={2}
-                              borderRadius="full"
-                              bg={
-                                index === 0
-                                  ? "red.400"
-                                  : index === 1
-                                  ? "orange.400"
-                                  : index === 2
-                                  ? "yellow.400"
-                                  : "gray.300"
-                              }
-                            />
-
-                            <VStack spacing={2} align="start">
-                              <Flex
-                                justifyContent="space-between"
-                                width="100%"
-                                alignItems="start"
-                              >
-                                <Text
-                                  fontWeight="bold"
-                                  color="orange.700"
-                                  fontSize="md"
-                                >
-                                  #{player.playerNumber}
-                                </Text>
-                                <Badge
-                                  colorScheme={
-                                    player.currentWaitTime > 15
-                                      ? "red"
-                                      : player.currentWaitTime > 5
-                                      ? "yellow"
-                                      : "green"
-                                  }
-                                  variant="solid"
-                                  fontSize="xs"
-                                  borderRadius="md"
-                                >
-                                  {formatWaitTime(player.currentWaitTime)}
-                                </Badge>
-                              </Flex>
-
-                              <Text
-                                fontSize="sm"
-                                fontWeight="semibold"
-                                overflow="hidden"
-                                textOverflow="ellipsis"
-                                whiteSpace="nowrap"
-                                color="gray.800"
-                                title={
-                                  player.name || `Player ${player.playerNumber}`
-                                }
-                              >
-                                {player.name || `Player ${player.playerNumber}`}
-                              </Text>
-
-                              <Flex
-                                justifyContent="space-between"
-                                width="100%"
-                                alignItems="center"
-                              >
-                                <Badge
-                                  variant="outline"
-                                  colorScheme="orange"
-                                  fontSize="xs"
-                                  borderRadius="sm"
-                                >
-                                  {player.level || "N/A"}
-                                </Badge>
-                                <Text fontSize="lg" color="gray.600">
-                                  {player.gender === "MALE"
-                                    ? "♂"
-                                    : player.gender === "FEMALE"
-                                    ? "♀"
-                                    : ""}
-                                </Text>
-                              </Flex>
-
-                              <Text
-                                fontSize="xs"
-                                color="gray.600"
-                                fontWeight="medium"
-                              >
-                                {player.matchesPlayed} matches • Position{" "}
-                                {index + 1}
-                              </Text>
-                            </VStack>
-                          </CardBody>
-                        </Card>
-                      );
-                    })}
-                  </SimpleGrid>
-
-                  {session.status === "IN_PROGRESS" && !showMatchCreation && (
-                    <Text
-                      fontSize="sm"
-                      color="gray.500"
-                      textAlign="center"
-                      mt={4}
-                    >
-                      Use "Manual Selection" on any court to select players for
-                      a match
+                  <Text fontSize="sm" color="blue.600">
+                    Status: In Progress
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text fontWeight="medium">
+                    Start Time: {formatTime(session.startTime!)}
+                  </Text>
+                  {session.endTime && (
+                    <Text fontWeight="medium">
+                      End Time: {formatTime(session.endTime)}
                     </Text>
                   )}
-                </Box>
-              )}
-
-              {/* Manual Match Creation Interface */}
-              {showMatchCreation && matchMode === "manual" && selectedCourt && (
-                <Box
-                  mt={8}
-                  p={6}
-                  bg="blue.50"
-                  borderRadius="lg"
-                  borderWidth="1px"
-                  borderColor="blue.200"
-                >
-                  <Flex
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={4}
-                  >
-                    <Heading size="md" color="blue.700">
-                      Create Match - Court{" "}
-                      {
-                        session.courts.find((c) => c.id === selectedCourt)
-                          ?.courtNumber
-                      }
-                    </Heading>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={cancelMatchCreation}
-                      color="gray.500"
-                    >
-                      Cancel
-                    </Button>
-                  </Flex>
-
-                  <Text fontSize="sm" color="blue.600" mb={4}>
-                    Select exactly 4 players from the waiting queue above.
-                    Selected players are highlighted in blue.
-                  </Text>
-
-                  <Flex
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={4}
-                  >
-                    <Text fontSize="sm" fontWeight="medium">
-                      Selected Players: {selectedPlayers.length}/4
+                  {session.startTime && session.endTime && (
+                    <Text fontSize="sm" color="gray.600">
+                      Duration:{" "}
+                      {formatDuration(session.startTime, session.endTime)}
                     </Text>
-                    {selectedPlayers.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedPlayers([])}
-                        colorScheme="gray"
-                      >
-                        Clear Selection
-                      </Button>
-                    )}
-                  </Flex>
-
-                  {selectedPlayers.length > 0 && (
-                    <Box mb={4}>
-                      <Text fontSize="sm" fontWeight="medium" mb={2}>
-                        Selected:
-                      </Text>
-                      <Flex wrap="wrap" gap={2}>
-                        {selectedPlayers.map((playerId) => {
-                          const player = waitingPlayers.find(
-                            (p) => p.id === playerId
-                          );
-                          return player ? (
-                            <Badge
-                              key={playerId}
-                              colorScheme="blue"
-                              px={2}
-                              py={1}
-                              borderRadius="md"
-                              display="flex"
-                              alignItems="center"
-                              gap={1}
-                            >
-                              #{player.playerNumber}{" "}
-                              {player.name || `Player ${player.playerNumber}`}
-                              <Box
-                                as="button"
-                                ml={1}
-                                onClick={() => togglePlayerSelection(playerId)}
-                                _hover={{ bg: "blue.600" }}
-                                borderRadius="full"
-                                w={4}
-                                h={4}
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                fontSize="xs"
-                              >
-                                ×
-                              </Box>
-                            </Badge>
-                          ) : null;
-                        })}
-                      </Flex>
-                    </Box>
                   )}
-
-                  <Flex gap={2} justifyContent="flex-end">
-                    <Button
-                      colorScheme="blue"
-                      onClick={confirmManualMatch}
-                      disabled={selectedPlayers.length !== 4}
-                      leftIcon={<Box as={Play} boxSize={4} />}
-                    >
-                      Start Match ({selectedPlayers.length}/4)
-                    </Button>
-                  </Flex>
-                </Box>
+                </>
               )}
-            </TabPanel>
+            </VStack>
+          </Box>
 
-            {/* Tab 3: Match History */}
-            <TabPanel>
-              <Heading size="md" mb={4}>
-                Match History
-              </Heading>
+          <Box
+            p={6}
+            bg="white"
+            _dark={{ bg: "gray.800" }}
+            borderRadius="lg"
+            boxShadow="md"
+            borderWidth="1px"
+          >
+            <Flex align="center" mb={2}>
+              <Box as={Users} boxSize={5} color="blue.500" mr={2} />
+              <Heading size="md">Players</Heading>
+            </Flex>
+            <Text fontSize="lg">{session.players.length} total players</Text>
+            <Text fontSize="sm" color="gray.500">
+              {session.players.filter((p) => p.status === "PLAYING").length}{" "}
+              playing /
+              {session.players.filter((p) => p.status === "WAITING").length}{" "}
+              waiting
+            </Text>
+          </Box>
 
-              {completedMatches.length === 0 ? (
-                <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
-                  No completed matches yet
-                </Text>
-              ) : (
-                completedMatches.map((match) => {
-                  const court = session.courts.find(
-                    (c) => c.id === match.courtId
-                  );
-                  const matchDuration = match.endTime
-                    ? formatDuration(match.startTime, match.endTime)
-                    : "In progress";
-
-                  return (
-                    <Card key={match.id} mb={4} variant="outline">
-                      <CardHeader bg="gray.50" p={4}>
-                        <Flex
-                          justifyContent="space-between"
-                          alignItems="center"
-                        >
-                          <Heading size="sm">
-                            Court {court?.courtNumber} -{" "}
-                            {formatTime(match.startTime)}
-                          </Heading>
-                          <Text fontSize="sm" color="gray.500">
-                            Duration: {matchDuration}
-                          </Text>
-                        </Flex>
-                      </CardHeader>
-                      <CardBody p={4}>
-                        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={2}>
-                          {match.players
-                            .sort((a, b) => a.position - b.position)
-                            .map((matchPlayer) => (
-                              <Box
-                                key={matchPlayer.id}
-                                p={2}
-                                bg="gray.50"
-                                borderRadius="md"
-                              >
-                                <Text fontWeight="bold">
-                                  #{matchPlayer.player.playerNumber}
-                                </Text>
-                                <Text>
-                                  {matchPlayer.player.name ||
-                                    `Player ${matchPlayer.player.playerNumber}`}
-                                </Text>
-                                <Text fontSize="sm" color="gray.500">
-                                  {matchPlayer.player.level}
-                                  {matchPlayer.player.gender === "MALE"
-                                    ? "♂"
-                                    : "♀"}
-                                </Text>
-                              </Box>
-                            ))}
-                        </SimpleGrid>
-                      </CardBody>
-                    </Card>
-                  );
-                })
-              )}
-            </TabPanel>
-
-            {/* Tab 4: All Players */}
-            <TabPanel>
-              <Flex justifyContent="space-between" mb={4}>
-                <Heading size="md">All Players</Heading>
-
-                {session.status === "IN_PROGRESS" && (
-                  <Button
-                    size="sm"
-                    leftIcon={<Box as={Plus} boxSize={4} />}
-                    onClick={playerModalDisclosure.onOpen}
-                  >
-                    Add Player
-                  </Button>
-                )}
+          <Box
+            p={6}
+            bg="white"
+            _dark={{ bg: "gray.800" }}
+            borderRadius="lg"
+            boxShadow="md"
+            borderWidth="1px"
+          >
+            <Flex align="center" mb={2} justifyContent="space-between">
+              <Flex>
+                <Box as={RefreshCw} boxSize={5} color="blue.500" mr={2} />
+                <Heading size="md">Updates</Heading>
               </Flex>
-
-              {session.players.length === 0 ? (
-                <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
-                  No players have joined this session
-                </Text>
-              ) : (
-                <Table variant="simple" mt={4}>
-                  <Thead>
-                    <Tr>
-                      <Th>#</Th>
-                      <Th>Name</Th>
-                      <Th>Status</Th>
-                      <Th>Wait Time</Th>
-                      <Th>Matches</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {session.players
-                      .sort((a, b) => a.playerNumber - b.playerNumber)
-                      .map((player) => (
-                        <Tr key={player.id}>
-                          <Td>{player.playerNumber}</Td>
-                          <Td>
-                            <VStack align="start" spacing={0}>
-                              <Text fontWeight="medium">
-                                {player.name || `Player ${player.playerNumber}`}
-                              </Text>
-                              <Text fontSize="sm" color="gray.500">
-                                {player.level}{" "}
-                                {player.gender === "MALE" ? "♂" : "♀"}
-                              </Text>
-                            </VStack>
-                          </Td>
-                          <Td>
-                            <Badge
-                              colorScheme={
-                                player.status === "PLAYING"
-                                  ? "blue"
-                                  : player.status === "WAITING"
-                                  ? "yellow"
-                                  : "gray"
-                              }
-                            >
-                              {player.status}
-                            </Badge>
-                          </Td>
-                          <Td>{formatWaitTime(player.totalWaitTime)}</Td>
-                          <Td>{player.matchesPlayed}</Td>
-                        </Tr>
-                      ))}
-                  </Tbody>
-                </Table>
-              )}
-            </TabPanel>
-
-            {/* Tab 5: Bulk Add Players */}
-            <TabPanel>
-              <Box mb={4}>
-                <Heading size="md" mb={4}>
-                  Bulk Add Players
-                </Heading>
-                <Text mb={4}>
-                  Use this form to add multiple players to the session at once.
-                  You can either enter players manually or import from CSV.
-                </Text>
-                <BulkPlayersForm
-                  sessionId={session.id}
-                  onSuccess={refreshSessionData}
+              {session.status === "IN_PROGRESS" && (
+                <IconButton
+                  aria-label="Refresh"
+                  icon={<Box as={RefreshCw} boxSize={4} />}
+                  size="sm"
+                  isLoading={isRefreshing}
+                  onClick={refreshSessionData}
                 />
-              </Box>
-            </TabPanel>
+              )}
+            </Flex>
+            <Text fontSize="lg">
+              {session.status === "IN_PROGRESS"
+                ? `Auto-refresh: ${refreshInterval}s`
+                : "Auto-refresh disabled"}
+            </Text>
+            <Text fontSize="sm" color="gray.500">
+              Last updated: {lastRefreshed.toLocaleTimeString()}
+            </Text>
+          </Box>
+        </Grid>
 
-            {/* Tab 6: Management */}
-            <TabPanel>
-              <SessionManagement
-                sessionId={session.id}
-                session={
-                  {
-                    ...session,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  } as any
-                }
-                onSessionUpdate={() => refreshSessionData()}
-              />
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
-      </Box>
-    </Container>
+        {/* Bottom Navigation Bar for Tabs */}
+        <Box minH="60vh" pb="80px">
+          {activeTab === 0 && (
+            <CourtsTab
+              session={session}
+              activeCourts={activeCourts}
+              showMatchCreation={showMatchCreation}
+              setShowMatchCreation={setShowMatchCreation}
+              matchMode={matchMode}
+              setMatchMode={setMatchMode}
+              selectedPlayers={selectedPlayers}
+              setSelectedPlayers={setSelectedPlayers}
+              selectedCourt={selectedCourt}
+              setSelectedCourt={setSelectedCourt}
+              waitingPlayers={waitingPlayers}
+              getCurrentMatch={getCurrentMatch}
+              formatCourtElapsedTime={formatCourtElapsedTime}
+              getCourtDisplayName={getCourtDisplayName}
+              cancelMatchCreation={cancelMatchCreation}
+              confirmManualMatch={confirmManualMatch}
+              togglePlayerSelection={togglePlayerSelection}
+              autoAssignPlayers={autoAssignPlayers}
+              endMatch={endMatch}
+              autoAssignPlayersToSpecificCourt={
+                autoAssignPlayersToSpecificCourt
+              }
+              startManualMatchCreation={startManualMatchCreation}
+            />
+          )}
+          {activeTab === 1 && (
+            <PlayersTab
+              sessionPlayers={session.players}
+              playerFilter={playerFilter}
+              setPlayerFilter={setPlayerFilter}
+              formatWaitTime={formatWaitTime}
+            />
+          )}
+          {activeTab === 2 && (
+            <ManageTab
+              session={session}
+              newPlayers={newPlayers}
+              editingPlayers={editingPlayers}
+              isSaving={isSaving}
+              addNewPlayerRow={addNewPlayerRow}
+              removeNewPlayerRow={removeNewPlayerRow}
+              updateNewPlayer={updateNewPlayer}
+              startEditingPlayer={startEditingPlayer}
+              cancelEditingPlayer={cancelEditingPlayer}
+              updateEditingPlayer={updateEditingPlayer}
+              savePlayerChanges={savePlayerChanges}
+              saveIndividualPlayer={saveIndividualPlayer}
+              deletePlayer={deletePlayer}
+            />
+          )}
+          {activeTab === 3 && <SettingsTab session={session} />}
+        </Box>
+
+        {/* Bottom Navigation Bar */}
+        <Box
+          position="fixed"
+          left={0}
+          right={0}
+          bottom={0}
+          zIndex={100}
+          bg="white"
+          borderTopWidth="1px"
+          boxShadow="md"
+          display="flex"
+          justifyContent="space-around"
+          alignItems="center"
+          height="64px"
+        >
+          <Box
+            as="button"
+            flex={1}
+            py={2}
+            onClick={() => setActiveTab(0)}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            color={activeTab === 0 ? "blue.500" : "gray.500"}
+            fontWeight={activeTab === 0 ? "bold" : "normal"}
+          >
+            <Box as={Users} boxSize={6} mb={1} />
+            Courts
+          </Box>
+          <Box
+            as="button"
+            flex={1}
+            py={2}
+            onClick={() => setActiveTab(1)}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            color={activeTab === 1 ? "blue.500" : "gray.500"}
+            fontWeight={activeTab === 1 ? "bold" : "normal"}
+          >
+            <Box as={Users} boxSize={6} mb={1} />
+            Players
+          </Box>
+          <Box
+            as="button"
+            flex={1}
+            py={2}
+            onClick={() => setActiveTab(2)}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            color={activeTab === 2 ? "blue.500" : "gray.500"}
+            fontWeight={activeTab === 2 ? "bold" : "normal"}
+          >
+            <Box as={RefreshCw} boxSize={6} mb={1} />
+            Manage
+          </Box>
+          <Box
+            as="button"
+            flex={1}
+            py={2}
+            onClick={() => setActiveTab(3)}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            color={activeTab === 3 ? "blue.500" : "gray.500"}
+            fontWeight={activeTab === 3 ? "bold" : "normal"}
+          >
+            <Box as={/* icon for settings */ RefreshCw} boxSize={6} mb={1} />
+            Settings
+          </Box>
+        </Box>
+      </Container>
+    </>
   );
 }
