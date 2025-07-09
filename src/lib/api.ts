@@ -55,6 +55,18 @@ export interface Session {
   };
 }
 
+// Level enum
+export enum Level {
+  Y_MINUS = "Y_MINUS",
+  Y = "Y",
+  Y_PLUS = "Y_PLUS",
+  TBY = "TBY",
+  TB_MINUS = "TB_MINUS",
+  TB = "TB",
+  TB_PLUS = "TB_PLUS",
+  K = "K",
+}
+
 // Player types
 export interface Player {
   id: string;
@@ -63,7 +75,8 @@ export interface Player {
   playerNumber: number;
   name?: string;
   gender?: "MALE" | "FEMALE";
-  level?: "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS";
+  level?: Level;
+  levelDescription?: string;
   currentWaitTime: number;
   totalWaitTime: number;
   matchesPlayed: number;
@@ -72,6 +85,7 @@ export interface Player {
   currentCourt?: Court;
   preFilledByHost: boolean;
   confirmedByPlayer: boolean;
+  requireConfirmInfo: boolean;
   phone?: string;
 }
 
@@ -124,7 +138,6 @@ export const SessionService = {
   // Create session
   createSession: async (data: CreateSessionRequest): Promise<Session> => {
     const response = await api.post<ApiResponse<Session>>("/sessions", data);
-    toast.success("Session created successfully");
     return response.data.data!;
   },
 
@@ -164,6 +177,16 @@ export const SessionService = {
       ApiResponse<{ session: Session; statistics: any }>
     >(`/sessions/${id}/end`);
     toast.success("Session ended successfully");
+    return response.data.data!;
+  },
+
+  // Update session status
+  updateSessionStatus: async (id: string, status: string): Promise<Session> => {
+    const response = await api.patch<ApiResponse<Session>>(
+      `/sessions/${id}/status`,
+      { status }
+    );
+    toast.success("Session status updated successfully");
     return response.data.data!;
   },
 
@@ -209,8 +232,10 @@ export interface BulkPlayerData {
   playerNumber: number;
   name?: string;
   gender?: "MALE" | "FEMALE";
-  level?: "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS";
+  level?: Level;
+  levelDescription?: string;
   phone?: string;
+  requireConfirmInfo?: boolean;
 }
 
 export interface BulkPlayersResponse {
@@ -312,6 +337,44 @@ export const PlayerService = {
     });
     return response.data.data!;
   },
+
+  // Update player by session and player ID
+  updatePlayerBySession: async (
+    sessionId: string,
+    playerId: string,
+    data: Partial<Player>
+  ): Promise<Player> => {
+    const response = await api.patch<ApiResponse<Player>>(
+      `/sessions/${sessionId}/players/${playerId}`,
+      data
+    );
+    toast.success("Player updated successfully");
+    return response.data.data!;
+  },
+
+  // Delete player by session and player ID
+  deletePlayerBySession: async (
+    sessionId: string,
+    playerId: string
+  ): Promise<void> => {
+    await api.delete<ApiResponse<null>>(
+      `/sessions/${sessionId}/players/${playerId}`
+    );
+    toast.success("Player deleted successfully");
+  },
+
+  // Bulk update players
+  bulkUpdatePlayers: async (
+    sessionId: string,
+    players: Partial<Player>[]
+  ): Promise<{ updatedPlayers: Player[] }> => {
+    const response = await api.patch<ApiResponse<{ updatedPlayers: Player[] }>>(
+      `/sessions/${sessionId}/players/bulk-update`,
+      { players }
+    );
+    toast.success("Players updated successfully");
+    return response.data.data!;
+  },
 };
 
 // Court service
@@ -320,6 +383,14 @@ export const CourtService = {
   getCourt: async (id: string): Promise<Court> => {
     const response = await api.get<ApiResponse<Court>>(`/courts/${id}`);
     return response.data.data!;
+  },
+
+  // Get suggested players for court (auto-assign preview)
+  getSuggestedPlayersForCourt: async (courtId: string): Promise<Player[]> => {
+    const response = await api.get<ApiResponse<Player[]>>(
+      `/courts/${courtId}/suggested-players`
+    );
+    return response.data.data || [];
   },
 
   // Select players for court

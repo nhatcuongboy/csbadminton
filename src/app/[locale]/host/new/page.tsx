@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import NextLinkButton from "@/components/ui/NextLinkButton";
+import TopBar from "@/components/ui/TopBar";
+import { SessionService } from "@/lib/api";
 import {
   Box,
   Button,
@@ -10,31 +12,24 @@ import {
   GridItem,
   Heading,
   Input,
+  Stack,
   Text,
   VStack,
-  HStack,
-  Stack,
 } from "@chakra-ui/react";
 import {
-  ArrowLeft,
-  Save,
-  Users,
-  Clock,
-  Trophy,
-  Settings,
   Calendar,
-  Plus,
+  Clock,
   Minus,
+  Plus,
+  Save,
+  Trophy,
+  Users,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { SessionService } from "@/lib/api";
-import NextLinkButton from "@/components/ui/NextLinkButton";
-import { toast } from "react-hot-toast";
-import { useState, useEffect, useMemo, Suspense } from "react";
 import { useTranslations } from "next-intl";
-import { Link as IntlLink } from "@/i18n/config";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import TopBar from "@/components/ui/TopBar";
+import Link from "next/link";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 
 // Helper function to format date for datetime-local input
 function formatDateTimeLocal(date: Date): string {
@@ -59,6 +54,8 @@ export default function NewSessionPage() {
 function NewSessionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
+  const locale = params.locale as string;
   const [isLoading, setIsLoading] = useState(false);
   const [courts, setCourts] = useState([{ courtNumber: 1, courtName: "" }]);
 
@@ -164,9 +161,9 @@ function NewSessionPageContent() {
       // Show success message
       toast.success(t("validation.sessionCreatedSuccessfully"));
 
-      // Redirect to host page after short delay
+      // Redirect to session detail page for management
       setTimeout(() => {
-        router.push("/host");
+        router.push(`/${locale}/host/sessions/${session.id}`);
       }, 500);
     } catch (error) {
       console.error("Error creating session:", error);
@@ -191,8 +188,15 @@ function NewSessionPageContent() {
 
   const handleRemoveCourt = (courtNumber: number) => {
     if (courts.length > 1) {
-      const newCourts = courts.filter((c) => c.courtNumber !== courtNumber);
-      setCourts(newCourts);
+      // Re-index court numbers after removal to maintain sequential order
+      const filteredCourts = courts.filter(
+        (c) => c.courtNumber !== courtNumber
+      );
+      const reindexedCourts = filteredCourts.map((court, index) => ({
+        ...court,
+        courtNumber: index + 1,
+      }));
+      setCourts(reindexedCourts);
     }
   };
 
@@ -203,11 +207,29 @@ function NewSessionPageContent() {
     value: string | number
   ) => {
     const newCourts = [...courts];
-    newCourts[index] = {
-      ...newCourts[index],
-      [field]: value,
-    };
-    setCourts(newCourts);
+
+    if (field === "courtNumber") {
+      const newNumber = typeof value === "string" ? parseInt(value) : value;
+      // Validate new number is positive and not duplicate
+      if (newNumber > 0) {
+        const isDuplicate = courts.some(
+          (court, i) => i !== index && court.courtNumber === newNumber
+        );
+        if (!isDuplicate) {
+          newCourts[index] = {
+            ...newCourts[index],
+            courtNumber: newNumber,
+          };
+          setCourts(newCourts);
+        }
+      }
+    } else {
+      newCourts[index] = {
+        ...newCourts[index],
+        courtName: value as string,
+      };
+      setCourts(newCourts);
+    }
   };
 
   // Validate courts
@@ -228,15 +250,52 @@ function NewSessionPageContent() {
     return null;
   };
 
+  // Get court validation errors
+  const getCourtErrors = () => {
+    const errors: Record<number, string> = {};
+    const courtNumbers = courts.map((c) => c.courtNumber);
+
+    courts.forEach((court, index) => {
+      if (!court.courtNumber || court.courtNumber < 1) {
+        errors[index] = t("validation.courtNumberRequired");
+      } else {
+        const duplicateIndex = courtNumbers.findIndex(
+          (num, i) => i !== index && num === court.courtNumber
+        );
+        if (duplicateIndex !== -1) {
+          errors[index] = t("validation.courtNumberDuplicate");
+        }
+      }
+    });
+
+    return errors;
+  };
+
+  const courtErrors = getCourtErrors();
+
+  // Auto-reorder courts function
+  const handleReorderCourts = () => {
+    const reorderedCourts = courts.map((court, index) => ({
+      ...court,
+      courtNumber: index + 1,
+    }));
+    setCourts(reorderedCourts);
+  };
+
+  // Check if courts need reordering
+  const needsReordering = courts.some(
+    (court, index) => court.courtNumber !== index + 1
+  );
+
   return (
     <Box minH="100vh" bgGradient="linear(to-br, blue.50, white, green.50)">
       {/* Top Bar */}
-      <TopBar showBackButton={true} backHref="/host" title="New Session" />
+      <TopBar showBackButton={true} backHref={`/host`} title="New Session" />
 
       <Container maxW="4xl" py={8} px={4} pt={24}>
         {/* Hero Section */}
         <VStack mb={8} textAlign="center">
-          <Flex
+          {/* <Flex
             align="center"
             justify="center"
             w={20}
@@ -253,7 +312,7 @@ function NewSessionPageContent() {
           </Heading>
           <Text color="gray.600" maxW="2xl" mx="auto">
             {t("configureYourSessionSettingsBelow")}
-          </Text>
+          </Text> */}
 
           {/* Error Alert */}
           {error && (
@@ -267,9 +326,13 @@ function NewSessionPageContent() {
               borderColor="red.200"
               w="full"
               maxW="md"
-            >            <Text fontWeight="medium">
-              {decodeURIComponent(details || t("validation.sessionCreateFailed"))}
-            </Text>
+            >
+              {" "}
+              <Text fontWeight="medium">
+                {decodeURIComponent(
+                  details || t("validation.sessionCreateFailed")
+                )}
+              </Text>
             </Box>
           )}
         </VStack>
@@ -316,69 +379,6 @@ function NewSessionPageContent() {
                     {t("sessionNameDescription")}
                   </Text>
                 </Box>
-
-                {/* Display Information Grid */}
-                <Grid templateColumns={{ md: "repeat(2, 1fr)" }} gap={8}>
-                  {/* Number of Courts (calculated) */}
-                  <GridItem>
-                    <Flex align="center" mb={3}>
-                      <Settings
-                        size={16}
-                        color="#38A169"
-                        style={{ marginRight: "8px" }}
-                      />
-                      <Text fontWeight="semibold" color="gray.700">
-                        {t("numberOfCourts")}
-                      </Text>
-                    </Flex>
-                    <Input
-                      id="numberOfCourts"
-                      name="numberOfCourts"
-                      type="number"
-                      value={numberOfCourts}
-                      disabled
-                      size="lg"
-                      borderWidth={2}
-                      borderColor="gray.200"
-                      _focus={{ borderColor: "green.500" }}
-                      transition="all 0.2s"
-                      bg="gray.100"
-                    />
-                    <Text fontSize="xs" color="gray.500" mt={2}>
-                      {t("calculatedFromCourtsConfig")}
-                    </Text>
-                  </GridItem>
-
-                  {/* Session Duration */}
-                  <GridItem>
-                    <Flex align="center" mb={3}>
-                      <Clock
-                        size={16}
-                        color="#805AD5"
-                        style={{ marginRight: "8px" }}
-                      />
-                      <Text fontWeight="semibold" color="gray.700">
-                        {t("sessionDuration")}
-                      </Text>
-                    </Flex>
-                    <Input
-                      id="sessionDuration"
-                      name="sessionDuration"
-                      type="number"
-                      value={sessionDuration}
-                      disabled
-                      size="lg"
-                      borderWidth={2}
-                      borderColor="gray.200"
-                      _focus={{ borderColor: "purple.500" }}
-                      transition="all 0.2s"
-                      bg="gray.100"
-                    />
-                    <Text fontSize="xs" color="gray.500" mt={2}>
-                      {t("automaticallyCalculated")}
-                    </Text>
-                  </GridItem>
-                </Grid>
 
                 {/* Time Controls Grid */}
                 <Grid templateColumns={{ md: "repeat(2, 1fr)" }} gap={8}>
@@ -484,59 +484,52 @@ function NewSessionPageContent() {
                     </Text>
                   </GridItem>
 
-                  {/* Require Player Information */}
+                  {/* Session Duration */}
                   <GridItem>
                     <Flex align="center" mb={3}>
-                      <Users
+                      <Clock
                         size={16}
-                        color="#38A169"
+                        color="#805AD5"
                         style={{ marginRight: "8px" }}
                       />
                       <Text fontWeight="semibold" color="gray.700">
-                        {t("requirePlayerInformation")}
+                        {t("sessionDuration")}
                       </Text>
                     </Flex>
-                    <HStack
-                      gap={3}
-                      p={4}
+                    <Input
+                      id="sessionDuration"
+                      name="sessionDuration"
+                      type="number"
+                      value={sessionDuration}
+                      disabled
+                      size="lg"
                       borderWidth={2}
                       borderColor="gray.200"
-                      borderRadius="md"
-                      minH="66px"
-                      align="center"
-                    >
-                      <input
-                        type="checkbox"
-                        id="requirePlayerInfo"
-                        name="requirePlayerInfo"
-                        defaultChecked
-                        style={{
-                          transform: "scale(1.5)",
-                          accentColor: "#38A169",
-                        }}
-                      />
-                      <Box>
-                        <Text fontWeight="medium" color="gray.700">
-                          {t("collectPlayerInformation")}
-                        </Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          {t("enableToGatherPlayerDetails")}
-                        </Text>
-                      </Box>
-                    </HStack>
+                      _focus={{ borderColor: "purple.500" }}
+                      transition="all 0.2s"
+                      bg="gray.100"
+                    />
+                    <Text fontSize="xs" color="gray.500" mt={2}>
+                      {t("automaticallyCalculated")}
+                    </Text>
                   </GridItem>
                 </Grid>
 
                 {/* Courts Configuration Section */}
                 <Box>
-                  <Flex align="center" mb={3}>
-                    <Users
-                      size={16}
-                      color="#2B6CB0"
-                      style={{ marginRight: "8px" }}
-                    />
-                    <Text fontWeight="semibold" color="gray.700">
-                      {t("courtsConfiguration")} *
+                  <Flex align="center" justify="space-between" mb={3}>
+                    <Flex align="center">
+                      <Users
+                        size={16}
+                        color="#2B6CB0"
+                        style={{ marginRight: "8px" }}
+                      />
+                      <Text fontWeight="semibold" color="gray.700">
+                        {t("courtsConfiguration")} *
+                      </Text>
+                    </Flex>
+                    <Text fontSize="sm" color="blue.600" fontWeight="medium">
+                      {courts.length} {courts.length === 1 ? "Court" : "Courts"}
                     </Text>
                   </Flex>
                   <Text fontSize="xs" color="gray.500" mb={4}>
@@ -545,117 +538,283 @@ function NewSessionPageContent() {
 
                   <Box
                     bg="gray.50"
-                    p={4}
-                    borderRadius="md"
+                    p={6}
+                    borderRadius="lg"
                     borderWidth={1}
                     borderColor="gray.200"
                   >
-                    {/* Render courts dynamically */}
-                    {courts.map((court, index) => (
+                    <Stack gap={4}>
+                      {/* Render courts dynamically */}
+                      {courts.map((court, index) => {
+                        const hasError = courtErrors[index];
+                        return (
+                          <Box
+                            key={`court-${index}`}
+                            p={5}
+                            borderWidth={2}
+                            borderColor={hasError ? "red.300" : "gray.200"}
+                            borderRadius="lg"
+                            bg="white"
+                            shadow="sm"
+                            transition="all 0.2s"
+                            _hover={{
+                              shadow: "md",
+                              borderColor: hasError ? "red.400" : "blue.200",
+                            }}
+                          >
+                            <Flex align="center" justify="space-between" mb={4}>
+                              <Flex align="center">
+                                <Box
+                                  w={8}
+                                  h={8}
+                                  bg={hasError ? "red.100" : "blue.100"}
+                                  color={hasError ? "red.600" : "blue.600"}
+                                  borderRadius="full"
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="center"
+                                  mr={3}
+                                  fontWeight="bold"
+                                  fontSize="sm"
+                                >
+                                  {court.courtNumber}
+                                </Box>
+                                <Text
+                                  fontSize="lg"
+                                  fontWeight="bold"
+                                  color={hasError ? "red.600" : "blue.600"}
+                                >
+                                  {t("court")} {court.courtNumber}
+                                </Text>
+                              </Flex>
+                              {courts.length > 1 && (
+                                <Button
+                                  size="sm"
+                                  colorScheme="red"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleRemoveCourt(court.courtNumber)
+                                  }
+                                  _hover={{ bg: "red.50" }}
+                                >
+                                  <Minus
+                                    size={14}
+                                    style={{ marginRight: "4px" }}
+                                  />
+                                  {t("remove")}
+                                </Button>
+                              )}
+                            </Flex>
+
+                            {hasError && (
+                              <Box
+                                mb={3}
+                                p={2}
+                                bg="red.50"
+                                borderRadius="md"
+                                borderWidth={1}
+                                borderColor="red.200"
+                              >
+                                <Text
+                                  fontSize="xs"
+                                  color="red.600"
+                                  fontWeight="medium"
+                                >
+                                  ⚠️ {hasError}
+                                </Text>
+                              </Box>
+                            )}
+
+                            <Grid
+                              templateColumns={{
+                                base: "1fr",
+                                md: "1fr 2fr",
+                              }}
+                              gap={4}
+                            >
+                              {/* Court Number */}
+                              <GridItem>
+                                <Text
+                                  fontWeight="medium"
+                                  color="gray.700"
+                                  mb={2}
+                                >
+                                  {t("courtNumber")} *
+                                </Text>
+                                <Input
+                                  type="number"
+                                  value={court.courtNumber}
+                                  onChange={(e) =>
+                                    handleCourtChange(
+                                      index,
+                                      "courtNumber",
+                                      parseInt(e.target.value) || 0
+                                    )
+                                  }
+                                  size="lg"
+                                  borderWidth={2}
+                                  borderColor={
+                                    hasError ? "red.300" : "gray.200"
+                                  }
+                                  _focus={{
+                                    borderColor: hasError
+                                      ? "red.500"
+                                      : "blue.500",
+                                    boxShadow: hasError
+                                      ? "0 0 0 1px #E53E3E"
+                                      : "0 0 0 1px #3182CE",
+                                  }}
+                                  transition="all 0.2s"
+                                  min={1}
+                                  required
+                                  bg={hasError ? "red.50" : "white"}
+                                />
+                              </GridItem>
+
+                              {/* Court Name */}
+                              <GridItem>
+                                <Text
+                                  fontWeight="medium"
+                                  color="gray.700"
+                                  mb={2}
+                                >
+                                  {t("courtName")}
+                                  <Text
+                                    as="span"
+                                    fontSize="xs"
+                                    color="gray.500"
+                                    ml={1}
+                                  >
+                                    (Optional)
+                                  </Text>
+                                </Text>
+                                <Input
+                                  type="text"
+                                  value={court.courtName}
+                                  onChange={(e) =>
+                                    handleCourtChange(
+                                      index,
+                                      "courtName",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder={`e.g., Court A, VIP Court, ${t(
+                                    "courtNamePlaceholder"
+                                  )}`}
+                                  size="lg"
+                                  borderWidth={2}
+                                  borderColor="gray.200"
+                                  _focus={{ borderColor: "blue.500" }}
+                                  transition="all 0.2s"
+                                />
+                                <Text fontSize="xs" color="gray.500" mt={1}>
+                                  Custom name to help identify this court
+                                </Text>
+                              </GridItem>
+                            </Grid>
+                          </Box>
+                        );
+                      })}
+
+                      {/* Add Court Button */}
                       <Box
-                        key={court.courtNumber}
                         p={4}
-                        mb={4}
                         borderWidth={2}
-                        borderColor="gray.200"
-                        borderRadius="md"
-                        bg="white"
-                        shadow="sm"
+                        borderColor="green.200"
+                        borderStyle="dashed"
+                        borderRadius="lg"
+                        bg="green.50"
+                        transition="all 0.2s"
+                        _hover={{
+                          borderColor: "green.300",
+                          bg: "green.100",
+                        }}
                       >
-                        <Flex align="center" mb={2}>
+                        <Button
+                          size="lg"
+                          colorScheme="green"
+                          variant="ghost"
+                          width="full"
+                          onClick={() => handleAddCourt()}
+                          _hover={{ bg: "green.100" }}
+                        >
+                          <Plus size={16} style={{ marginRight: "8px" }} />
+                          {t("addAnotherCourt")}
+                        </Button>
+                        <Text
+                          fontSize="xs"
+                          color="green.600"
+                          textAlign="center"
+                          mt={2}
+                        >
+                          Add more courts to accommodate more players
+                        </Text>
+                      </Box>
+                    </Stack>
+                  </Box>
+
+                  {/* Courts Summary */}
+                  {courts.length > 0 && (
+                    <Box
+                      mt={4}
+                      p={4}
+                      bg="blue.50"
+                      borderRadius="md"
+                      borderWidth={1}
+                      borderColor="blue.200"
+                    >
+                      <Flex align="center" justify="space-between" mb={2}>
+                        <Box>
+                          <Text
+                            fontSize="sm"
+                            fontWeight="medium"
+                            color="blue.800"
+                          >
+                            Session Summary
+                          </Text>
+                          <Text fontSize="xs" color="blue.600">
+                            {courts.length} courts • Max {courts.length * 4}{" "}
+                            players simultaneously
+                          </Text>
+                        </Box>
+                        <Box textAlign="right">
                           <Text
                             fontSize="lg"
                             fontWeight="bold"
                             color="blue.600"
-                            mr={4}
                           >
-                            {t("court")} {court.courtNumber}
+                            {courts.length}
                           </Text>
-                          {courts.length > 1 && (
-                            <Button
-                              size="sm"
-                              colorScheme="red"
-                              variant="outline"
-                              onClick={() =>
-                                handleRemoveCourt(court.courtNumber)
-                              }
-                            >
-                              <Minus size={12} style={{ marginRight: "4px" }} />
-                              {t("remove")}
-                            </Button>
-                          )}
-                        </Flex>
-                        <Grid
-                          templateColumns={{
-                            base: "1fr",
-                            md: "repeat(2, 1fr)",
-                          }}
-                          gap={4}
+                          <Text fontSize="xs" color="blue.500">
+                            {courts.length === 1 ? "Court" : "Courts"}
+                          </Text>
+                        </Box>
+                      </Flex>
+
+                      {needsReordering && (
+                        <Box
+                          mt={3}
+                          pt={3}
+                          borderTopWidth={1}
+                          borderTopColor="blue.200"
                         >
-                          {/* Court Number */}
-                          <GridItem>
-                            <Text fontWeight="medium" color="gray.700" mb={2}>
-                              {t("courtNumber")} *
+                          <Flex align="center" justify="space-between">
+                            <Text fontSize="xs" color="blue.600">
+                              Court numbers are not sequential
                             </Text>
-                            <Input
-                              type="number"
-                              value={court.courtNumber}
-                              onChange={(e) =>
-                                handleCourtChange(
-                                  index,
-                                  "courtNumber",
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                              size="lg"
-                              borderWidth={2}
-                              borderColor="gray.200"
-                              _focus={{ borderColor: "blue.500" }}
-                              transition="all 0.2s"
-                              min={1}
-                              required
-                            />
-                          </GridItem>
-
-                          {/* Court Name */}
-                          <GridItem>
-                            <Text fontWeight="medium" color="gray.700" mb={2}>
-                              {t("courtName")}
-                            </Text>
-                            <Input
-                              type="text"
-                              value={court.courtName}
-                              onChange={(e) =>
-                                handleCourtChange(
-                                  index,
-                                  "courtName",
-                                  e.target.value
-                                )
-                              }
-                              placeholder={t("courtNamePlaceholder")}
-                              size="lg"
-                              borderWidth={2}
-                              borderColor="gray.200"
-                              _focus={{ borderColor: "blue.500" }}
-                              transition="all 0.2s"
-                            />
-                          </GridItem>
-                        </Grid>
-                      </Box>
-                    ))}
-
-                    {/* Add Court Button */}
-                    <Button
-                      size="lg"
-                      colorScheme="green"
-                      variant="outline"
-                      width="full"
-                      onClick={() => handleAddCourt()}
-                    >
-                      <Plus size={16} style={{ marginRight: "8px" }} />
-                      {t("addAnotherCourt")}
-                    </Button>
-                  </Box>
+                            <Button
+                              size="xs"
+                              colorScheme="blue"
+                              variant="outline"
+                              onClick={handleReorderCourts}
+                            >
+                              Auto-reorder (1, 2, 3...)
+                            </Button>
+                          </Flex>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
                 </Box>
               </Stack>
             </Box>
@@ -663,7 +822,7 @@ function NewSessionPageContent() {
             <Box bg="gray.50" p={8}>
               <Flex w="full" justify="space-between">
                 <NextLinkButton
-                  href="/host"
+                  href={`/${locale}/host`}
                   variant="outline"
                   px={8}
                   py={3}

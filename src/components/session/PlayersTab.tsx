@@ -1,13 +1,14 @@
 import React from "react";
 import { VStack, Flex, Heading, HStack, Button, Text } from "@chakra-ui/react";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
+import { Level } from "@/lib/api";
 
 interface Player {
   id: string;
   playerNumber: number;
-  name: string;
+  name?: string; // Optional to match API
   gender?: string;
-  level?: string;
+  level?: Level;
   status: string;
   currentWaitTime: number;
   totalWaitTime: number;

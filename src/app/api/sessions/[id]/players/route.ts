@@ -89,10 +89,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<S
       name,
       gender,
       level,
+      levelDescription,
       phone,
       userId,
       preFilledByHost,
       confirmedByPlayer,
+      requireConfirmInfo,
     } = body;
 
     // Validate player number
@@ -120,10 +122,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<S
         name: name || null,
         gender: gender || null,
         level: level || null,
+        levelDescription: levelDescription || null,
         phone: phone || null,
         userId: userId || null,
         preFilledByHost: preFilledByHost || false,
         confirmedByPlayer: confirmedByPlayer || false,
+        requireConfirmInfo: requireConfirmInfo || false,
         status: "WAITING",
       },
     });

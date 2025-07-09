@@ -25,6 +25,13 @@ import {
 } from "@/components/ui/chakra-compat";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { useCallback, useEffect, useState } from "react";
+import {
+  SessionService,
+  CourtService,
+  MatchService,
+  PlayerService,
+  Level,
+} from "@/lib/api";
 
 // Import compatibility components
 import {
@@ -78,7 +85,7 @@ interface Player {
   playerNumber: number;
   name: string;
   gender?: string;
-  level?: string;
+  level?: Level;
   status: string;
   currentWaitTime: number;
   totalWaitTime: number;
@@ -86,6 +93,8 @@ interface Player {
   currentCourtId?: string;
   preFilledByHost: boolean;
   confirmedByPlayer: boolean;
+  levelDescription?: string;
+  requireConfirmInfo?: boolean;
 }
 
 interface Court {
@@ -143,7 +152,7 @@ export default function SessionDetailContent({
   sessionData: SessionData;
 }) {
   const [session, setSession] = useState<SessionData>(sessionData);
-  const [refreshInterval, setRefreshInterval] = useState<number>(30);
+  const [refreshInterval, setRefreshInterval] = useState<number>(60);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -165,10 +174,14 @@ export default function SessionDetailContent({
       playerNumber: number;
       name: string;
       gender: string;
-      level: string;
+      level: Level;
+      phone?: string;
+      levelDescription?: string;
+      requireConfirmInfo?: boolean;
     }>
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isToggleStatusLoading, setIsToggleStatusLoading] = useState<boolean>(false);
 
   const toast = useToast();
   const playerModalDisclosure = useDisclosure();
@@ -215,11 +228,11 @@ export default function SessionDetailContent({
     const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
     if (elapsedMinutes === 0) {
-      return "< 1 phút";
+      return "< 1 minute";
     } else if (elapsedMinutes === 1) {
-      return "1 phút";
+      return "1 minute";
     } else {
-      return `${elapsedMinutes} phút`;
+      return `${elapsedMinutes} minutes`;
     }
   };
 
@@ -247,22 +260,31 @@ export default function SessionDetailContent({
   const refreshSessionData = useCallback(async () => {
     try {
       setIsRefreshing(true);
-      const response = await fetch(`/api/sessions/${session.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-store",
+      // Get session and matches to match SessionData shape
+      const data = await SessionService.getSession(session.id);
+      // Fetch matches if not present (api.ts Session type may not include matches)
+      let matches: any = [];
+      try {
+        matches = await SessionService.getSessionMatches(session.id);
+      } catch {}
+      // Convert startTime/endTime to string for SessionData
+      setSession({
+        ...data,
+        players: (data.players || []).map((p: any) => ({
+          ...p,
+          name: p.name || "",
+        })),
+        courts: (data.courts || []).map((c: any) => ({
+          ...c,
+          currentPlayers: c.currentPlayers || [],
+        })),
+        startTime: data.startTime
+          ? new Date(data.startTime).toISOString()
+          : null,
+        endTime: data.endTime ? new Date(data.endTime).toISOString() : null,
+        matches: matches || [],
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setSession(result.data);
-        setLastRefreshed(new Date());
-      } else {
-        console.error("Failed to refresh session data:", result.message);
-      }
+      setLastRefreshed(new Date());
     } catch (error) {
       console.error("Error refreshing session data:", error);
     } finally {
@@ -295,6 +317,7 @@ export default function SessionDetailContent({
   // Toggle session status (Start/End session)
   const toggleSessionStatus = async () => {
     try {
+      setIsToggleStatusLoading(true);
       // Xác định trạng thái tiếp theo
       let nextStatus = session.status;
       if (session.status === "PREPARING") {
@@ -306,39 +329,29 @@ export default function SessionDetailContent({
       }
 
       // Gọi API cập nhật trạng thái
-      const response = await fetch(`/api/sessions/${session.id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: nextStatus }),
+      const updatedSession = await SessionService.updateSessionStatus(
+        session.id,
+        nextStatus
+      );
+
+      // Cập nhật state với dữ liệu mới từ server
+      setSession((prev) => ({
+        ...prev,
+        status: updatedSession.status,
+        startTime: updatedSession.startTime
+          ? new Date(updatedSession.startTime).toISOString()
+          : null,
+        endTime: updatedSession.endTime
+          ? new Date(updatedSession.endTime).toISOString()
+          : null,
+      }));
+
+      toast.toast({
+        title:
+          nextStatus === "IN_PROGRESS" ? "Session started" : "Session ended",
+        status: "success",
+        duration: 3000,
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Cập nhật state với dữ liệu mới từ server
-        setSession((prev) => ({
-          ...prev,
-          status: result.data.status,
-          startTime: result.data.startTime,
-          endTime: result.data.endTime,
-        }));
-
-        toast.toast({
-          title:
-            nextStatus === "IN_PROGRESS" ? "Session started" : "Session ended",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        console.error("Failed to update session status:", result.message);
-        toast.toast({
-          title: "Failed to update session status",
-          status: "error",
-          duration: 3000,
-        });
-      }
     } catch (error) {
       console.error("Error updating session status:", error);
       toast.toast({
@@ -346,6 +359,8 @@ export default function SessionDetailContent({
         status: "error",
         duration: 3000,
       });
+    } finally {
+      setIsToggleStatusLoading(false);
     }
   };
 
@@ -401,41 +416,23 @@ export default function SessionDetailContent({
     }
 
     try {
-      const response = await fetch(`/api/sessions/${session.id}/matches`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          courtId: selectedCourt,
-          playerIds: selectedPlayers,
-        }),
+      await MatchService.createMatch(session.id, {
+        courtId: selectedCourt,
+        playerIds: selectedPlayers,
       });
 
-      const result = await response.json();
+      // Clear selections and refresh data
+      setSelectedPlayers([]);
+      setSelectedCourt(null);
+      await refreshSessionData();
 
-      if (result.success) {
-        // Clear selections and refresh data
-        setSelectedPlayers([]);
-        setSelectedCourt(null);
-        await refreshSessionData();
+      toast.toast({
+        title: "Match started successfully",
+        status: "success",
+        duration: 3000,
+      });
 
-        toast.toast({
-          title: "Match started successfully",
-          status: "success",
-          duration: 3000,
-        });
-
-        matchModalDisclosure.onClose();
-      } else {
-        console.error("Failed to start match:", result.message);
-        toast.toast({
-          title: "Failed to start match",
-          description: result.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
+      matchModalDisclosure.onClose();
     } catch (error) {
       console.error("Error starting match:", error);
       toast.toast({
@@ -449,35 +446,14 @@ export default function SessionDetailContent({
   // End a match
   const endMatch = async (matchId: string) => {
     try {
-      const response = await fetch(
-        `/api/sessions/${session.id}/matches/${matchId}/end`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await MatchService.endMatch(session.id, matchId);
+      await refreshSessionData();
 
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshSessionData();
-
-        toast.toast({
-          title: "Match ended successfully",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        console.error("Failed to end match:", result.message);
-        toast.toast({
-          title: "Failed to end match",
-          description: result.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
+      toast.toast({
+        title: "Match ended successfully",
+        status: "success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error ending match:", error);
       toast.toast({
@@ -506,60 +482,19 @@ export default function SessionDetailContent({
       const selectedPlayerIds = waitingPlayers.slice(0, 4).map((p) => p.id);
 
       // First, assign players to the court
-      const selectResponse = await fetch(
-        `/api/courts/${courtId}/select-players`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            playerIds: selectedPlayerIds,
-          }),
-        }
-      );
-
-      const selectResult = await selectResponse.json();
-
-      if (!selectResult.success) {
-        console.error("Failed to select players:", selectResult.message);
-        toast.toast({
-          title: "Failed to select players",
-          description: selectResult.message,
-          status: "error",
-          duration: 3000,
-        });
-        return;
-      }
+      await CourtService.selectPlayers(courtId, selectedPlayerIds);
 
       // Then, start the match
-      const startResponse = await fetch(`/api/courts/${courtId}/start-match`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      await CourtService.startMatch(courtId);
+
+      await refreshSessionData();
+
+      toast.toast({
+        title: "Match started successfully",
+        description: "4 players have been auto-assigned to the court",
+        status: "success",
+        duration: 3000,
       });
-
-      const startResult = await startResponse.json();
-
-      if (startResult.success) {
-        await refreshSessionData();
-
-        toast.toast({
-          title: "Match started successfully",
-          description: "4 players have been auto-assigned to the court",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        console.error("Failed to start match:", startResult.message);
-        toast.toast({
-          title: "Failed to start match",
-          description: startResult.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
     } catch (error) {
       console.error("Error auto-assigning players:", error);
       toast.toast({
@@ -573,32 +508,14 @@ export default function SessionDetailContent({
   // Auto-assign players to empty courts
   const autoAssignPlayers = async () => {
     try {
-      const response = await fetch(`/api/sessions/${session.id}/auto-assign`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      await MatchService.autoAssignPlayers(session.id);
+      await refreshSessionData();
+
+      toast.toast({
+        title: "Players auto-assigned successfully",
+        status: "success",
+        duration: 3000,
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshSessionData();
-
-        toast.toast({
-          title: "Players auto-assigned successfully",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        console.error("Failed to auto-assign players:", result.message);
-        toast.toast({
-          title: "Failed to auto-assign players",
-          description: result.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
     } catch (error) {
       console.error("Error auto-assigning players:", error);
       toast.toast({
@@ -648,38 +565,20 @@ export default function SessionDetailContent({
     }
 
     try {
-      const response = await fetch(`/api/sessions/${session.id}/matches`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          courtId: selectedCourt,
-          playerIds: selectedPlayers,
-        }),
+      await MatchService.createMatch(session.id, {
+        courtId: selectedCourt,
+        playerIds: selectedPlayers,
       });
 
-      const result = await response.json();
+      // Clear selections and refresh data
+      cancelMatchCreation();
+      await refreshSessionData();
 
-      if (result.success) {
-        // Clear selections and refresh data
-        cancelMatchCreation();
-        await refreshSessionData();
-
-        toast.toast({
-          title: "Match started successfully",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        console.error("Failed to start match:", result.message);
-        toast.toast({
-          title: "Failed to start match",
-          description: result.message,
-          status: "error",
-          duration: 3000,
-        });
-      }
+      toast.toast({
+        title: "Match started successfully",
+        status: "success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error starting match:", error);
       toast.toast({
@@ -692,15 +591,29 @@ export default function SessionDetailContent({
 
   // Player management functions
   const addNewPlayerRow = () => {
+    // Find the highest player number from both existing players and new players being added
+    const existingMaxPlayerNumber = Math.max(
+      0,
+      ...session.players.map((p) => p.playerNumber || 0)
+    );
+
+    const newPlayerMaxNumber =
+      newPlayers.length > 0
+        ? Math.max(...newPlayers.map((p) => p.playerNumber || 0))
+        : 0;
+
     const nextPlayerNumber =
-      Math.max(...session.players.map((p) => p.playerNumber), 0) + 1;
+      Math.max(existingMaxPlayerNumber, newPlayerMaxNumber) + 1;
+
     setNewPlayers([
       ...newPlayers,
       {
         playerNumber: nextPlayerNumber,
         name: "",
         gender: "MALE",
-        level: "BEGINNER",
+        level: Level.Y,
+        levelDescription: "",
+        requireConfirmInfo: false,
       },
     ]);
   };
@@ -709,7 +622,11 @@ export default function SessionDetailContent({
     setNewPlayers(newPlayers.filter((_, i) => i !== index));
   };
 
-  const updateNewPlayer = (index: number, field: string, value: string) => {
+  const updateNewPlayer = (
+    index: number,
+    field: string,
+    value: string | boolean
+  ) => {
     setNewPlayers((prev) =>
       prev.map((player, i) =>
         i === index ? { ...player, [field]: value } : player
@@ -735,7 +652,7 @@ export default function SessionDetailContent({
   const updateEditingPlayer = (
     playerId: string,
     field: string,
-    value: string
+    value: string | boolean
   ) => {
     setEditingPlayers((prev) => ({
       ...prev,
@@ -754,37 +671,21 @@ export default function SessionDetailContent({
       const playersToUpdate = Object.values(editingPlayers);
       const playersToCreate = newPlayers.filter((p) => p.name.trim() !== "");
 
-      const requests = [];
-
       // Update existing players
       if (playersToUpdate.length > 0) {
-        requests.push(
-          fetch(`/api/sessions/${session.id}/players/bulk-update`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ players: playersToUpdate }),
-          })
+        await PlayerService.bulkUpdatePlayers(
+          session.id,
+          playersToUpdate as any
         );
       }
 
       // Create new players
       if (playersToCreate.length > 0) {
-        requests.push(
-          fetch(`/api/sessions/${session.id}/players/bulk-create`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ players: playersToCreate }),
-          })
+        // Include levelDescription and requireConfirmInfo fields when sending to API
+        await PlayerService.createBulkPlayers(
+          session.id,
+          playersToCreate as any
         );
-      }
-
-      const results = await Promise.all(requests);
-      const responses = await Promise.all(results.map((r) => r.json()));
-
-      const hasErrors = responses.some((r) => !r.success);
-
-      if (hasErrors) {
-        throw new Error("Some updates failed");
       }
 
       // Clear editing states
@@ -793,12 +694,6 @@ export default function SessionDetailContent({
 
       // Refresh session data
       await refreshSessionData();
-
-      toast.toast({
-        title: "Players updated successfully",
-        status: "success",
-        duration: 3000,
-      });
     } catch (error) {
       console.error("Error saving player changes:", error);
       toast.toast({
@@ -820,20 +715,11 @@ export default function SessionDetailContent({
         throw new Error("No player data to update");
       }
 
-      const response = await fetch(
-        `/api/sessions/${session.id}/players/${playerId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(playerToUpdate),
-        }
+      await PlayerService.updatePlayerBySession(
+        session.id,
+        playerId,
+        playerToUpdate as any
       );
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || "Failed to update player");
-      }
 
       // Remove from editing state
       setEditingPlayers((prev) => {
@@ -844,12 +730,6 @@ export default function SessionDetailContent({
 
       // Refresh session data
       await refreshSessionData();
-
-      toast.toast({
-        title: "Player updated successfully",
-        status: "success",
-        duration: 3000,
-      });
     } catch (error) {
       console.error("Error updating player:", error);
       toast.toast({
@@ -865,25 +745,8 @@ export default function SessionDetailContent({
 
   const deletePlayer = async (playerId: string) => {
     try {
-      const response = await fetch(
-        `/api/sessions/${session.id}/players/${playerId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        await refreshSessionData();
-        toast.toast({
-          title: "Player deleted successfully",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        throw new Error(result.message);
-      }
+      await PlayerService.deletePlayerBySession(session.id, playerId);
+      await refreshSessionData();
     } catch (error) {
       console.error("Error deleting player:", error);
       toast.toast({
@@ -896,130 +759,209 @@ export default function SessionDetailContent({
 
   return (
     <>
-      <TopBar title={session.name} showBackButton={true} backHref="/host" />
-      <Container maxW="7xl" py={8} pt={20}>
+      <TopBar
+        title={session.name}
+        showBackButton={true}
+        backHref="/host/sessions"
+      />
+      <Container maxW="7xl" py={20}>
         {/* Session Status Cards */}
-        <Grid
-          templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-          gap={6}
-          mb={8}
-        >
+        <Grid templateColumns="repeat(3, 1fr)" gap={{ base: 2, md: 6 }} mb={8}>
           <Box
-            p={6}
+            p={{ base: 3, md: 6 }}
             bg="white"
             _dark={{ bg: "gray.800" }}
             borderRadius="lg"
             boxShadow="md"
             borderWidth="1px"
           >
-            <Flex align="center" justify="space-between" mb={2}>
+            <Flex
+              align="center"
+              justify="space-between"
+              mb={{ base: 1, md: 2 }}
+            >
               <Flex align="center">
-                <Box as={Clock} boxSize={5} color="blue.500" mr={2} />
-                <Heading size="md">Session Time</Heading>
+                <Box
+                  as={Clock}
+                  boxSize={{ base: 4, md: 5 }}
+                  color="blue.500"
+                  mr={{ base: 1, md: 2 }}
+                />
+                <Heading
+                  size={{ base: "sm", md: "md" }}
+                  display={{ base: "none", md: "block" }}
+                >
+                  Session Time
+                </Heading>
+                <Heading size="xs" display={{ base: "block", md: "none" }}>
+                  Status
+                </Heading>
               </Flex>
               <Button
                 colorScheme={mapSessionStatusToColor(session.status)}
                 onClick={toggleSessionStatus}
                 disabled={session.status === "FINISHED"}
-                size="sm"
+                loading={isToggleStatusLoading}
+                size={{ base: "xs", md: "sm" }}
               >
                 <Flex alignItems="center">
                   <Box
                     as={session.status === "IN_PROGRESS" ? Square : Play}
-                    boxSize={4}
-                    mr={2}
+                    boxSize={{ base: 3, md: 4 }}
+                    mr={{ base: 1, md: 2 }}
                   />
-                  {mapSessionStatusToUI(session.status)}
+                  <Text display={{ base: "none", md: "block" }}>
+                    {mapSessionStatusToUI(session.status)}
+                  </Text>
                 </Flex>
               </Button>
             </Flex>
-            <VStack align="start" spacing={2}>
-              {session.status === "PREPARING" ? (
-                <Text fontSize="lg" color="gray.500">
-                  Not started yet
-                </Text>
-              ) : session.status === "IN_PROGRESS" ? (
-                <>
-                  <Text fontWeight="medium">
-                    Start Time: {formatTime(session.startTime!)}
+            <Box display={{ base: "none", md: "block" }}>
+              <VStack align="start" spacing={2}>
+                {session.status === "PREPARING" ? (
+                  <Text fontSize="lg" color="gray.500">
+                    Not started yet
                   </Text>
-                  <Text fontSize="sm" color="blue.600">
-                    Status: In Progress
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text fontWeight="medium">
-                    Start Time: {formatTime(session.startTime!)}
-                  </Text>
-                  {session.endTime && (
+                ) : session.status === "IN_PROGRESS" ? (
+                  <>
                     <Text fontWeight="medium">
-                      End Time: {formatTime(session.endTime)}
+                      Start Time: {formatTime(session.startTime!)}
                     </Text>
-                  )}
-                  {session.startTime && session.endTime && (
-                    <Text fontSize="sm" color="gray.600">
-                      Duration:{" "}
-                      {formatDuration(session.startTime, session.endTime)}
+                    <Text fontSize="sm" color="blue.600">
+                      Status: In Progress
                     </Text>
-                  )}
-                </>
-              )}
-            </VStack>
+                  </>
+                ) : (
+                  <>
+                    <Text fontWeight="medium">
+                      Start Time: {formatTime(session.startTime!)}
+                    </Text>
+                    {session.endTime && (
+                      <Text fontWeight="medium">
+                        End Time: {formatTime(session.endTime)}
+                      </Text>
+                    )}
+                    {session.startTime && session.endTime && (
+                      <Text fontSize="sm" color="gray.600">
+                        Duration:{" "}
+                        {formatDuration(session.startTime, session.endTime)}
+                      </Text>
+                    )}
+                  </>
+                )}
+              </VStack>
+            </Box>
+            {/* Mobile simplified view */}
+            <Box display={{ base: "block", md: "none" }}>
+              <Text fontSize="xs" color="blue.600">
+                {session.status === "PREPARING"
+                  ? "Not started"
+                  : session.status === "IN_PROGRESS"
+                  ? "In Progress"
+                  : "Finished"}
+              </Text>
+            </Box>
           </Box>
 
           <Box
-            p={6}
+            p={{ base: 3, md: 6 }}
             bg="white"
             _dark={{ bg: "gray.800" }}
             borderRadius="lg"
             boxShadow="md"
             borderWidth="1px"
           >
-            <Flex align="center" mb={2}>
-              <Box as={Users} boxSize={5} color="blue.500" mr={2} />
-              <Heading size="md">Players</Heading>
+            <Flex align="center" mb={{ base: 1, md: 2 }}>
+              <Box
+                as={Users}
+                boxSize={{ base: 4, md: 5 }}
+                color="blue.500"
+                mr={{ base: 1, md: 2 }}
+              />
+              <Heading size={{ base: "xs", md: "md" }}>Players</Heading>
             </Flex>
-            <Text fontSize="lg">{session.players.length} total players</Text>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize={{ base: "sm", md: "lg" }}>
+              {session.players.length} total
+            </Text>
+            <Text
+              fontSize={{ base: "xs", md: "sm" }}
+              color="gray.500"
+              display={{ base: "none", md: "block" }}
+            >
               {session.players.filter((p) => p.status === "PLAYING").length}{" "}
-              playing /
+              playing /{" "}
               {session.players.filter((p) => p.status === "WAITING").length}{" "}
               waiting
+            </Text>
+            {/* Mobile simplified view */}
+            <Text
+              fontSize="xs"
+              color="gray.500"
+              display={{ base: "block", md: "none" }}
+            >
+              {session.players.filter((p) => p.status === "PLAYING").length}P/{" "}
+              {session.players.filter((p) => p.status === "WAITING").length}W
             </Text>
           </Box>
 
           <Box
-            p={6}
+            p={{ base: 3, md: 6 }}
             bg="white"
             _dark={{ bg: "gray.800" }}
             borderRadius="lg"
             boxShadow="md"
             borderWidth="1px"
           >
-            <Flex align="center" mb={2} justifyContent="space-between">
-              <Flex>
-                <Box as={RefreshCw} boxSize={5} color="blue.500" mr={2} />
-                <Heading size="md">Updates</Heading>
+            <Flex
+              align="center"
+              mb={{ base: 1, md: 2 }}
+              justifyContent="space-between"
+            >
+              <Flex align="center">
+                <Box
+                  as={RefreshCw}
+                  boxSize={{ base: 4, md: 5 }}
+                  color="blue.500"
+                  mr={{ base: 1, md: 2 }}
+                />
+                <Heading
+                  size={{ base: "xs", md: "md" }}
+                  display={{ base: "none", md: "block" }}
+                >
+                  Updates
+                </Heading>
+                <Heading size="xs" display={{ base: "block", md: "none" }}>
+                  Refresh
+                </Heading>
               </Flex>
               {session.status === "IN_PROGRESS" && (
                 <IconButton
                   aria-label="Refresh"
-                  icon={<Box as={RefreshCw} boxSize={4} />}
-                  size="sm"
+                  icon={<Box as={RefreshCw} boxSize={{ base: 3, md: 4 }} />}
+                  size={{ base: "xs", md: "sm" }}
                   isLoading={isRefreshing}
                   onClick={refreshSessionData}
                 />
               )}
             </Flex>
-            <Text fontSize="lg">
-              {session.status === "IN_PROGRESS"
-                ? `Auto-refresh: ${refreshInterval}s`
-                : "Auto-refresh disabled"}
-            </Text>
-            <Text fontSize="sm" color="gray.500">
-              Last updated: {lastRefreshed.toLocaleTimeString()}
-            </Text>
+            <Box display={{ base: "none", md: "block" }}>
+              <Text fontSize="lg">
+                {session.status === "IN_PROGRESS"
+                  ? `Auto-refresh: ${refreshInterval}s`
+                  : "Auto-refresh disabled"}
+              </Text>
+              <Text fontSize="sm" color="gray.500">
+                Last updated: {lastRefreshed.toLocaleTimeString()}
+              </Text>
+            </Box>
+            {/* Mobile simplified view */}
+            <Box display={{ base: "block", md: "none" }}>
+              <Text fontSize="xs" color="gray.500">
+                {session.status === "IN_PROGRESS"
+                  ? `${refreshInterval}s`
+                  : "Off"}
+              </Text>
+            </Box>
           </Box>
         </Grid>
 
@@ -1050,6 +992,7 @@ export default function SessionDetailContent({
                 autoAssignPlayersToSpecificCourt
               }
               startManualMatchCreation={startManualMatchCreation}
+              onDataRefresh={refreshSessionData}
             />
           )}
           {activeTab === 1 && (

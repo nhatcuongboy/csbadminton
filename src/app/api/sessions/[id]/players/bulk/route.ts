@@ -10,8 +10,10 @@ interface BulkPlayerData {
   playerNumber: number;
   name?: string;
   gender?: "MALE" | "FEMALE";
-  level?: "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS";
+  level?: "Y_MINUS" | "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS" | "K";
+  levelDescription?: string;
   phone?: string;
+  requireConfirmInfo?: boolean;
 }
 
 // POST /api/sessions/[id]/players/bulk - Tạo đồng loạt nhiều player
@@ -90,7 +92,7 @@ export async function POST(
       // Validate level
       if (
         playerData.level &&
-        !["Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS"].includes(
+        !["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"].includes(
           playerData.level
         )
       ) {
@@ -136,9 +138,11 @@ export async function POST(
           name: playerData.name || null,
           gender: playerData.gender || null,
           level: playerData.level || null,
+          levelDescription: playerData.levelDescription || null,
           phone: playerData.phone || null,
           preFilledByHost: true, // Đánh dấu là host đã pre-fill
           confirmedByPlayer: false, // Player chưa confirm
+          requireConfirmInfo: playerData.requireConfirmInfo || false,
           status: "WAITING",
         },
       });

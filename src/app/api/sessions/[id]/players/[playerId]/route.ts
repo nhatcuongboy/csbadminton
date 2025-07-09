@@ -2,18 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 
 interface RouteParams {
-  params: {
-    id: string;
-    playerId: string;
-  };
+  id: string;
+  playerId: string;
 }
 
 // PATCH - Update individual player
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<RouteParams> }) {
   try {
-    const { id: sessionId, playerId } = params;
+    const { id: sessionId, playerId } = await params;
     const body = await request.json();
-    const { name, gender, level } = body;
+    const { name, gender, level, levelDescription, requireConfirmInfo } = body;
 
     // Validate input
     if (!name || !gender || !level) {
@@ -57,6 +55,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         name: name.trim(),
         gender,
         level,
+        levelDescription: levelDescription || null,
+        requireConfirmInfo: requireConfirmInfo || false,
       },
     });
 
@@ -75,9 +75,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Delete individual player
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<RouteParams> }) {
   try {
-    const { id: sessionId, playerId } = params;
+    const { id: sessionId, playerId } = await params;
 
     // Check if session exists
     const session = await prisma.session.findUnique({

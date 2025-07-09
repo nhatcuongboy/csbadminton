@@ -1,4 +1,4 @@
-import { PlayerService, BulkPlayerData } from "@/lib/api";
+import { PlayerService, BulkPlayerData, Level } from "@/lib/api";
 
 // Ví dụ về cách sử dụng Bulk Players API
 
@@ -21,14 +21,16 @@ export async function createExampleBulkPlayers(sessionId: string) {
         playerNumber: bulkInfo.availablePlayerNumbers[0] || 1,
         name: "Nguyễn Văn A",
         gender: "MALE",
-        level: "TB",
+        level: Level.TB,
+        levelDescription: "Đánh TB, smash tốt",
         phone: "0123456789",
       },
       {
         playerNumber: bulkInfo.availablePlayerNumbers[1] || 2,
         name: "Trần Thị B",
         gender: "FEMALE",
-        level: "TB_PLUS",
+        level: Level.TB_PLUS,
+        levelDescription: "Đánh giải B",
         phone: "0987654321",
       },
       {
@@ -38,7 +40,7 @@ export async function createExampleBulkPlayers(sessionId: string) {
       {
         playerNumber: bulkInfo.availablePlayerNumbers[3] || 4,
         name: "Lê Văn C",
-        level: "Y",
+        level: Level.Y,
       },
     ];
 
@@ -84,6 +86,14 @@ export function parseCSVToBulkPlayers(csvData: string): BulkPlayerData[] {
         case 'level':
           player.level = value.toUpperCase() as any;
           break;
+        case 'leveldescription':
+        case 'level description':
+          player.levelDescription = value;
+          break;
+        case 'requireconfirminfo':
+        case 'require confirm info':
+          player.requireConfirmInfo = value.toLowerCase() === 'true' || value.toLowerCase() === 'yes';
+          break;
         case 'phone':
           player.phone = value;
           break;
@@ -124,7 +134,7 @@ export function validateBulkPlayerData(
     }
 
     // Validate level if provided
-    if (player.level && !["Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS"].includes(player.level)) {
+    if (player.level && !["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"].includes(player.level)) {
       errors.push(`Player ${index + 1}: invalid level "${player.level}"`);
     }
   });
@@ -136,8 +146,8 @@ export function validateBulkPlayerData(
 }
 
 // Example CSV format
-export const EXAMPLE_CSV = `playerNumber,name,gender,level,phone
-1,Nguyễn Văn A,MALE,TB,0123456789
-2,Trần Thị B,FEMALE,TB_PLUS,0987654321
-3,Lê Văn C,MALE,Y,0111222333
-4,Phạm Thị D,FEMALE,TBY,0444555666`;
+export const EXAMPLE_CSV = `playerNumber,name,gender,level,levelDescription,requireConfirmInfo,phone
+1,Nguyễn Văn A,MALE,TB,"Đánh TB, smash tốt",true,0123456789
+2,Trần Thị B,FEMALE,TB_PLUS,"Đánh giải B, 5 năm kinh nghiệm",false,0987654321
+3,Lê Văn C,MALE,Y,"Mới chơi, đánh tự học",true,0111222333
+4,Phạm Thị D,FEMALE,TBY,"Có năng khiếu, đánh nhanh",false,0444555666`;

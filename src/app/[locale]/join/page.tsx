@@ -23,7 +23,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/chakra-compat";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import { SessionService, type Session } from "@/lib/api";
+import { SessionService, PlayerService, type Session } from "@/lib/api";
 import { useTranslations } from "next-intl";
 import TopBar from "@/components/ui/TopBar";
 import { useRouter } from "@/i18n/config";
@@ -32,7 +32,7 @@ export default function JoinPage() {
   const t = useTranslations("pages.join");
   const common = useTranslations("common");
   const router = useRouter();
-  
+
   const [sessionId, setSessionId] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,10 +83,8 @@ export default function JoinPage() {
       const sessionData = await SessionService.getSession(selectedId);
       setSelectedSession(sessionData);
       const players = sessionData.players || [];
-      const availablePlayers = players.filter(
-        (p) => p.preFilledByHost && !p.confirmedByPlayer
-      );
-      setExistingPlayers(availablePlayers);
+      // Show all players, not just pre-filled ones
+      setExistingPlayers(players);
     } catch (error) {
       console.error("Error fetching session details:", error);
       toast.error("Failed to load session details");
@@ -111,7 +109,7 @@ export default function JoinPage() {
     setSelectedPlayer(player || null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!sessionId || !playerNumber || !selectedPlayer) {
@@ -122,7 +120,22 @@ export default function JoinPage() {
     setIsSubmitting(true);
 
     try {
-      router.push(`/join/confirm?sessionId=${sessionId}&playerNumber=${playerNumber}&playerId=${selectedPlayer.id}`);
+      // Check if player requires confirmation info
+      if (selectedPlayer.requireConfirmInfo) {
+        // Navigate to confirm page if player info is required
+        router.push(
+          `/join/confirm?sessionId=${sessionId}&playerNumber=${playerNumber}&playerId=${selectedPlayer.id}`
+        );
+      } else {
+        // If no confirmation required, directly confirm the player and go to status page
+        // Automatically confirm the player without additional info
+        await PlayerService.confirmPlayer(selectedPlayer.id, {
+          confirmedByPlayer: true,
+        });
+        
+        // Navigate directly to status page
+        router.push(`/join/status?playerId=${selectedPlayer.id}`);
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Something went wrong. Please try again.");
@@ -161,7 +174,7 @@ export default function JoinPage() {
             opacity={0.2}
             zIndex={0}
           />
-          
+
           <Box
             bg="blue.50"
             _dark={{ bg: "blue.900" }}
@@ -189,7 +202,9 @@ export default function JoinPage() {
                       <Box as={Hash} boxSize={4} color="blue.500" mr={2} />
                       <Text fontWeight="medium">
                         Select Session
-                        <Box as="span" color="red.500">*</Box>
+                        <Box as="span" color="red.500">
+                          *
+                        </Box>
                       </Text>
                     </Flex>
                   </Box>
@@ -243,7 +258,9 @@ export default function JoinPage() {
                       <Box as={Users} boxSize={4} color="blue.500" mr={2} />
                       <Text fontWeight="medium">
                         Player Number
-                        <Box as="span" color="red.500">*</Box>
+                        <Box as="span" color="red.500">
+                          *
+                        </Box>
                       </Text>
                     </Flex>
                   </Box>
@@ -269,9 +286,15 @@ export default function JoinPage() {
                           >
                             <option value="">Select your player number</option>
                             {existingPlayers.map((player) => (
-                              <option key={player.id} value={player.playerNumber}>
+                              <option
+                                key={player.id}
+                                value={player.playerNumber}
+                              >
                                 Player #{player.playerNumber}{" "}
                                 {player.name ? `(${player.name})` : ""}
+                                {player.confirmedByPlayer
+                                  ? " - Already joined"
+                                  : ""}
                               </option>
                             ))}
                           </select>
@@ -283,8 +306,8 @@ export default function JoinPage() {
                             borderRadius="md"
                           >
                             <Text>
-                              No pre-filled players available in this session.
-                              Please ask the host to add you first.
+                              No players available in this session. Please ask
+                              the host to add players first.
                             </Text>
                           </Box>
                         )
@@ -297,10 +320,19 @@ export default function JoinPage() {
                           borderRadius="md"
                         />
                       )}
-                      
+
                       {/* Player info preview */}
                       {selectedPlayer && (
-                        <Box mt={3} p={3} bg="blue.50" borderRadius="md">
+                        <Box
+                          mt={3}
+                          p={3}
+                          bg={
+                            selectedPlayer.confirmedByPlayer
+                              ? "yellow.50"
+                              : "blue.50"
+                          }
+                          borderRadius="md"
+                        >
                           <Text fontWeight="medium" mb={1}>
                             Player Information:
                           </Text>
@@ -337,13 +369,52 @@ export default function JoinPage() {
                                 Phone: <strong>{selectedPlayer.phone}</strong>
                               </Text>
                             )}
+                            <Text>
+                              Status:{" "}
+                              <strong
+                                color={
+                                  selectedPlayer.confirmedByPlayer
+                                    ? "orange.600"
+                                    : "green.600"
+                                }
+                              >
+                                {selectedPlayer.confirmedByPlayer
+                                  ? "Already joined"
+                                  : "Available"}
+                              </strong>
+                            </Text>
+                            {selectedPlayer.requireConfirmInfo && (
+                              <Text>
+                                Info Required:{" "}
+                                <strong color="blue.600">
+                                  Yes (will go to confirmation page)
+                                </strong>
+                              </Text>
+                            )}
+                            {!selectedPlayer.requireConfirmInfo && (
+                              <Text>
+                                Info Required:{" "}
+                                <strong color="gray.600">
+                                  No (will join directly)
+                                </strong>
+                              </Text>
+                            )}
                           </Stack>
+                          {selectedPlayer.confirmedByPlayer && (
+                            <Box mt={2} p={2} bg="orange.100" borderRadius="md">
+                              <Text fontSize="xs" color="orange.700">
+                                ⚠️ This player has already joined the session.
+                                You can still continue to access their status.
+                              </Text>
+                            </Box>
+                          )}
                         </Box>
                       )}
                     </>
                   )}
                   <Text fontSize="sm" color="gray.500" mt={2}>
-                    Select your player number from the list of pre-filled players
+                    Select your player number from the list of players in this
+                    session
                   </Text>
                 </Box>
 
@@ -357,8 +428,11 @@ export default function JoinPage() {
                   disabled={!sessionId || !playerNumber || isSubmitting}
                 >
                   <Flex align="center" justify="center" width="100%">
-                    {isSubmitting ? "Connecting..." : "Continue"}
-                    {!isSubmitting && <Box as={ArrowRight} ml={2} boxSize={5} />}
+                    {isSubmitting ? "Processing..." : 
+                     selectedPlayer?.requireConfirmInfo ? "Continue to Confirm" : "Join Now"}
+                    {!isSubmitting && (
+                      <Box as={ArrowRight} ml={2} boxSize={5} />
+                    )}
                   </Flex>
                 </Button>
               </Stack>

@@ -152,7 +152,7 @@ export default function BulkPlayersForm({
         return;
       }
 
-      const validLevels = ["Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS"];
+      const validLevels = ["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"];
       const invalidLevel = players.some(
         (p) => p.level && !validLevels.includes(p.level)
       );
@@ -263,7 +263,7 @@ export default function BulkPlayersForm({
         (p) => p.gender && !["MALE", "FEMALE"].includes(p.gender)
       );
 
-      const validLevels = ["Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS"];
+      const validLevels = ["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"];
       const invalidLevel = parsedPlayers.some(
         (p) => p.level && !validLevels.includes(p.level)
       );
@@ -390,7 +390,9 @@ export default function BulkPlayersForm({
                 <Th>Name</Th>
                 <Th width="120px">Gender</Th>
                 <Th width="120px">Level</Th>
+                <Th>Level Description</Th>
                 <Th width="140px">Phone</Th>
+                <Th width="120px">Confirm Info</Th>
                 <Th width="100px">Actions</Th>
               </Tr>
             </Thead>
@@ -461,13 +463,32 @@ export default function BulkPlayersForm({
                       }}
                     >
                       <option value="">Select</option>
+                      <option value="Y_MINUS">Y-</option>
                       <option value="Y">Y</option>
                       <option value="Y_PLUS">Y+</option>
                       <option value="TBY">TBY</option>
                       <option value="TB_MINUS">TB-</option>
                       <option value="TB">TB</option>
                       <option value="TB_PLUS">TB+</option>
+                      <option value="K">K</option>
                     </select>
+                  </Td>
+                  <Td>
+                    <textarea
+                      value={player.levelDescription || ""}
+                      onChange={(e) =>
+                        updatePlayer(index, "levelDescription", e.target.value)
+                      }
+                      placeholder="Skill description..."
+                      style={{
+                        width: "100%",
+                        padding: "4px",
+                        borderRadius: "4px",
+                        border: "1px solid #e2e8f0",
+                        height: "36px",
+                        resize: "vertical",
+                      }}
+                    />
                   </Td>
                   <Td>
                     <input
@@ -483,6 +504,23 @@ export default function BulkPlayersForm({
                         border: "1px solid #e2e8f0",
                       }}
                     />
+                  </Td>
+                  <Td>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={player.requireConfirmInfo || false}
+                        onChange={(e) =>
+                          updatePlayer(index, "requireConfirmInfo", e.target.checked)
+                        }
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          marginRight: "8px"
+                        }}
+                      />
+                      <span>Required</span>
+                    </div>
                   </Td>
                   <Td>
                     <Button
@@ -571,8 +609,8 @@ export default function BulkPlayersForm({
             <strong>Valid gender values:</strong> MALE, FEMALE
           </Text>
           <Text fontSize="xs" color="gray.600">
-            <strong>Valid level values:</strong> Y, Y_PLUS, TBY, TB_MINUS, TB,
-            TB_PLUS
+            <strong>Valid level values:</strong> Y_MINUS, Y, Y_PLUS, TBY, TB_MINUS, TB,
+            TB_PLUS, K
           </Text>
         </Box>
       </Box> */}

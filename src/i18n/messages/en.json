@@ -96,7 +96,32 @@
       "tryAgainOrContactSupport": "Please try again or contact support if the problem persists.",
       "sessionNotFound": "Session not found",
       "sessionNotFoundDescription": "The session you're looking for might have been deleted or doesn't exist."
-    }
+    },
+    "addPlayers": "Add Players",
+    "addPlayersToSession": "Add Players to Session",
+    "addPlayersOptional": "Adding players is optional.",
+    "youCanSkipAndAddLater": "You can skip this step and add players later.",
+    "addNewPlayers": "Add New Players",
+    "addPlayer": "Add Player",
+    "maxPlayers": "Max Players",
+    "availableSlots": "Available Slots",
+    "currentPlayers": "Current Players",
+    "playerNumber": "Player Number",
+    "playerName": "Player Name",
+    "enterPlayerName": "Enter player name",
+    "gender": "Gender",
+    "selectGender": "Select Gender",
+    "male": "Male",
+    "female": "Female",
+    "level": "Level",
+    "selectLevel": "Select Level",
+    "phone": "Phone",
+    "enterPhoneNumber": "Enter phone number",
+    "removePlayer": "Remove Player",
+    "noPlayersAdded": "No players added yet. Click 'Add Player' to get started.",
+    "skipAddPlayers": "Skip & Continue",
+    "saveAndContinue": "Save & Continue",
+    "savingPlayers": "Saving players..."
   },
   "court": {
     "title": "Court",
@@ -274,7 +299,7 @@
         "court": {
           "title": "Court {number}",
           "elapsed": "{time} elapsed",
-          "playerHighlight": "You are highlighted in blue on the court above",
+          "playerHighlight": "You are highlighted in yellow on the court above",
           "playingWith": "Playing with:"
         },
         "stats": {

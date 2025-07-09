@@ -17,7 +17,7 @@ import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { ArrowLeft, Check, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/chakra-compat";
-import { PlayerService, SessionService, type Player, type Session } from "@/lib/api";
+import { PlayerService, SessionService, type Player, type Session, Level } from "@/lib/api";
 import { useTranslations } from "next-intl";
 import TopBar from "@/components/ui/TopBar";
 
@@ -36,7 +36,8 @@ function ConfirmPageContent() {
   const [formData, setFormData] = useState({
     name: "",
     gender: "" as "" | "MALE" | "FEMALE",
-    level: "" as "" | "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS",
+    level: "" as "" | Level,
+    levelDescription: "",
     phone: "",
   });
 
@@ -64,6 +65,7 @@ function ConfirmPageContent() {
             name: playerData.name || "",
             gender: playerData.gender || "",
             level: playerData.level || "",
+            levelDescription: playerData.levelDescription || "",
             phone: playerData.phone || "",
           });
         } else {
@@ -80,6 +82,7 @@ function ConfirmPageContent() {
               name: foundPlayer.name || "",
               gender: foundPlayer.gender || "",
               level: foundPlayer.level || "",
+              levelDescription: foundPlayer.levelDescription || "",
               phone: foundPlayer.phone || "",
             });
           } else {
@@ -127,7 +130,8 @@ function ConfirmPageContent() {
       const playerData: Partial<Player> = {
         name: formData.name,
         gender: formData.gender as "MALE" | "FEMALE",
-        level: formData.level as "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS",
+        level: formData.level as Level,
+        levelDescription: formData.levelDescription || undefined,
         phone: formData.phone || undefined,
         confirmedByPlayer: true,
       };
@@ -197,6 +201,22 @@ function ConfirmPageContent() {
                   <Text fontWeight="medium" mb={2}>
                     Player #{player?.playerNumber}
                   </Text>
+                  
+                  {!player?.requireConfirmInfo && (
+                    <Box mb={4} p={3} bg="yellow.50" borderRadius="md" borderWidth="1px" borderColor="yellow.200">
+                      <Text fontSize="sm" color="yellow.800">
+                        ℹ️ This session doesn't require detailed information. Your current details are shown below for confirmation only.
+                      </Text>
+                    </Box>
+                  )}
+                  
+                  {player?.requireConfirmInfo && (
+                    <Box mb={4} p={3} bg="blue.50" borderRadius="md" borderWidth="1px" borderColor="blue.200">
+                      <Text fontSize="sm" color="blue.800">
+                        📝 Please fill in your details to complete your registration.
+                      </Text>
+                    </Box>
+                  )}
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
                       Full Name <Box as="span" color="red.500">*</Box>
@@ -208,6 +228,8 @@ function ConfirmPageContent() {
                       placeholder="Enter your name"
                       size="lg"
                       required
+                      disabled={!player?.requireConfirmInfo}
+                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
                     />
                   </Box>
 
@@ -221,13 +243,15 @@ function ConfirmPageContent() {
                         onChange={handleInputChange}
                         name="gender"
                         required
+                        disabled={!player?.requireConfirmInfo}
                         style={{
                           width: "100%",
                           padding: "12px",
                           borderRadius: "8px",
                           borderWidth: "1px",
                           borderColor: "#CBD5E0",
-                          height: "48px"
+                          height: "48px",
+                          opacity: !player?.requireConfirmInfo ? 0.6 : 1,
                         }}
                       >
                         <option value="">Select Gender</option>
@@ -245,25 +269,44 @@ function ConfirmPageContent() {
                         onChange={handleInputChange}
                         name="level"
                         required
+                        disabled={!player?.requireConfirmInfo}
                         style={{
                           width: "100%",
                           padding: "12px",
                           borderRadius: "8px",
                           borderWidth: "1px",
                           borderColor: "#CBD5E0",
-                          height: "48px"
+                          height: "48px",
+                          opacity: !player?.requireConfirmInfo ? 0.6 : 1,
                         }}
                       >
                         <option value="">Select Level</option>
-                        <option value="Y">Y (Weak)</option>
-                        <option value="Y_PLUS">Y+ (Weak+)</option>
-                        <option value="TBY">TBY (Medium-weak)</option>
-                        <option value="TB_MINUS">TB- (Medium-)</option>
-                        <option value="TB">TB (Medium)</option>
-                        <option value="TB_PLUS">TB+ (Medium+)</option>
+                        <option value={Level.Y_MINUS}>Y- (Beginner)</option>
+                        <option value={Level.Y}>Y (Weak)</option>
+                        <option value={Level.Y_PLUS}>Y+ (Weak+)</option>
+                        <option value={Level.TBY}>TBY (Medium-weak)</option>
+                        <option value={Level.TB_MINUS}>TB- (Medium-)</option>
+                        <option value={Level.TB}>TB (Medium)</option>
+                        <option value={Level.TB_PLUS}>TB+ (Medium+)</option>
+                        <option value={Level.K}>K (Advanced)</option>
                       </select>
                     </Box>
                   </Flex>
+
+                  <Box mb={4}>
+                    <Text fontWeight="medium" mb={1} fontSize="sm">
+                      Level Description (Optional)
+                    </Text>
+                    <Input
+                      value={formData.levelDescription}
+                      onChange={handleInputChange}
+                      name="levelDescription"
+                      placeholder="Describe your playing style or experience"
+                      size="lg"
+                      disabled={!player?.requireConfirmInfo}
+                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
+                    />
+                  </Box>
 
                   <Box>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
@@ -275,6 +318,8 @@ function ConfirmPageContent() {
                       name="phone"
                       placeholder="+84 xxx xxx xxx"
                       size="lg"
+                      disabled={!player?.requireConfirmInfo}
+                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
                     />
                   </Box>
                 </Box>
@@ -286,11 +331,15 @@ function ConfirmPageContent() {
                   width="full"
                   mt={4}
                   loading={isSubmitting}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (!player?.requireConfirmInfo && player?.confirmedByPlayer)}
                 >
                   <Flex align="center" justify="center" width="100%">
-                    {isSubmitting ? "Processing..." : "Confirm & Join"}
-                    {!isSubmitting && <Box as={Check} ml={2} boxSize={5} />}
+                    {isSubmitting ? "Processing..." : 
+                     (!player?.requireConfirmInfo && player?.confirmedByPlayer) ? "Already Confirmed" :
+                     "Confirm & Join"}
+                    {!isSubmitting && !(!player?.requireConfirmInfo && player?.confirmedByPlayer) && (
+                      <Box as={Check} ml={2} boxSize={5} />
+                    )}
                   </Flex>
                 </Button>
               </Stack>

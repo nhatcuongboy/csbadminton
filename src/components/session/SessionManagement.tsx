@@ -48,7 +48,7 @@ export default function SessionManagement({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // milliseconds
+  const [refreshInterval, setRefreshInterval] = useState(60000); // milliseconds
   const [autoAssignStrategy, setAutoAssignStrategy] = useState<
     "fairness" | "speed" | "level_balance"
   >("fairness");

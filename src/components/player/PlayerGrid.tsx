@@ -2,13 +2,14 @@
 
 import { Box, Badge, Flex, Text, VStack } from "@chakra-ui/react";
 import { Card, CardBody, SimpleGrid } from "@/components/ui/chakra-compat";
+import { Level } from "@/lib/api";
 
 interface Player {
   id: string;
   playerNumber: number;
-  name: string;
+  name?: string; // Optional to match API
   gender?: string;
-  level?: string;
+  level?: Level;
   status: string;
   currentWaitTime: number;
   totalWaitTime: number;
@@ -22,12 +23,18 @@ interface PlayerGridProps {
   players: Player[];
   playerFilter: "ALL" | "PLAYING" | "WAITING";
   formatWaitTime: (waitTimeInMinutes: number) => string;
+  selectedPlayers?: string[];
+  onPlayerToggle?: (playerId: string) => void;
+  selectionMode?: boolean;
 }
 
 export const PlayerGrid = ({
   players,
   playerFilter,
   formatWaitTime,
+  selectedPlayers = [],
+  onPlayerToggle,
+  selectionMode = false,
 }: PlayerGridProps) => {
   // Sort players by player number
   const sortedPlayers = [...players].sort(
@@ -39,7 +46,14 @@ export const PlayerGrid = ({
       {sortedPlayers.map((player, index) => {
         // Color scheme based on status and filter
         let bgColor, borderColor, colorScheme;
-        if (
+        const isSelected = selectionMode && selectedPlayers.includes(player.id);
+
+        if (isSelected) {
+          // Blue color for selected players
+          bgColor = "rgba(59, 130, 246, 0.3)";
+          borderColor = "rgba(59, 130, 246, 0.8)";
+          colorScheme = "blue";
+        } else if (
           playerFilter === "WAITING" ||
           (playerFilter === "ALL" && player.status === "WAITING")
         ) {
@@ -84,6 +98,15 @@ export const PlayerGrid = ({
             transition="all 0.2s"
             minH="140px"
             position="relative"
+            cursor={selectionMode ? "pointer" : "default"}
+            onClick={
+              selectionMode ? () => onPlayerToggle?.(player.id) : undefined
+            }
+            _hover={
+              selectionMode
+                ? { transform: "scale(1.02)", boxShadow: "lg" }
+                : undefined
+            }
           >
             <CardBody p={3} position="relative">
               {/* Priority indicator (top right) */}
@@ -96,6 +119,27 @@ export const PlayerGrid = ({
                 borderRadius="full"
                 bg={priorityColor}
               />
+
+              {/* Selection indicator (top left) */}
+              {selectionMode && isSelected && (
+                <Box
+                  position="absolute"
+                  top={1}
+                  left={1}
+                  w={4}
+                  h={4}
+                  borderRadius="full"
+                  bg="blue.500"
+                  color="white"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontSize="xs"
+                  fontWeight="bold"
+                >
+                  ✓
+                </Box>
+              )}
 
               <VStack gap={2} align="start">
                 <Flex
