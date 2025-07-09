@@ -44,7 +44,10 @@ interface AutoAssignMatchModalProps {
   isLoading: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  getCourtDisplayName: (courtName: string | undefined, courtNumber: number) => string;
+  getCourtDisplayName: (
+    courtName: string | undefined,
+    courtNumber: number
+  ) => string;
 }
 
 const AutoAssignMatchModal: React.FC<AutoAssignMatchModalProps> = ({
@@ -110,11 +113,8 @@ const AutoAssignMatchModal: React.FC<AutoAssignMatchModalProps> = ({
           <Box mb={4}>
             <BadmintonCourt
               players={suggestedPlayers.map((player, index) => ({
-                id: player.id,
-                playerNumber: player.playerNumber,
-                name: player.name,
-                gender: player.gender,
-                level: player.level,
+                ...player, // Include all properties from the original player
+                pairNumber: index < 2 ? 1 : 2, // Assign pair numbers based on index
                 isCurrentPlayer: false,
               }))}
               isActive={true}

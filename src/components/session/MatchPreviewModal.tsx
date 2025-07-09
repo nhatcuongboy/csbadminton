@@ -98,11 +98,8 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
           <Box mb={4}>
             <BadmintonCourt
               players={selectedPlayers.map((player, index) => ({
-                id: player.id,
-                playerNumber: player.playerNumber,
-                name: player.name,
-                gender: player.gender,
-                level: player.level,
+                ...player, // Include all properties from the original player
+                pairNumber: index < 2 ? 1 : 2, // Assign pair numbers based on index
                 isCurrentPlayer: false,
               }))}
               isActive={true}
