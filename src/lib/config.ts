@@ -1,8 +1,8 @@
 "use client";
 
-// Cấu hình mặc định cho ứng dụng
+// Default configuration for the application
 const config = {
-  // Host mặc định để tạo session
+  // Default host for creating sessions
   defaultHostId: "cmcnle8kp00000qy1ob8hnnt0",
   defaultHostName: "Nhat Cuong",
   defaultHostEmail: "nhatcuongboy@gmail.com",

@@ -6,7 +6,7 @@ interface SessionParams {
   id: string;
 }
 
-// POST /api/sessions/[id]/end - Kết thúc session
+// POST /api/sessions/[id]/end - End the session
 export async function POST(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
     const { id } = await params;

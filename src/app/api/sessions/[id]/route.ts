@@ -7,7 +7,7 @@ interface SessionParams {
   id: string;
 }
 
-// GET /api/sessions/[id] - Lấy thông tin chi tiết session
+// GET /api/sessions/[id] - Retrieve detailed session information
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<SessionParams> }
@@ -93,7 +93,7 @@ export async function GET(
   }
 }
 
-// PUT /api/sessions/[id] - Cập nhật session
+// PUT /api/sessions/[id] - Update session
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<SessionParams> }
@@ -198,7 +198,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/sessions/[id] - Xóa session
+// DELETE /api/sessions/[id] - Delete session
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<SessionParams> }

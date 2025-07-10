@@ -1,6 +1,6 @@
 "use client";
 
-// Hàm format date từ ISO string sang định dạng đẹp hơn
+// Function to format date from ISO string to a more readable format
 export function formatDate(dateString: string | Date): string {
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN", {
@@ -11,7 +11,7 @@ export function formatDate(dateString: string | Date): string {
   });
 }
 
-// Hàm format time từ ISO string sang định dạng đẹp hơn
+// Function to format time from ISO string to a more readable format
 export function formatTime(dateString: string | Date): string {
   const date = new Date(dateString);
   return date.toLocaleTimeString("vi-VN", {
@@ -20,7 +20,7 @@ export function formatTime(dateString: string | Date): string {
   });
 }
 
-// Hàm tính duration giữa hai thời điểm
+// Function to calculate duration between two timestamps
 export function formatDuration(start: string, end: string): string {
   const startTime = new Date(start).getTime();
   const endTime = new Date(end).getTime();
@@ -28,7 +28,7 @@ export function formatDuration(start: string, end: string): string {
   return `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`;
 }
 
-// Hàm map SessionStatus từ database sang status cho UI
+// Function to map SessionStatus from database to UI status
 export function mapSessionStatus(
   status: string
 ): "upcoming" | "in-progress" | "completed" {
@@ -44,7 +44,7 @@ export function mapSessionStatus(
   }
 }
 
-// Hàm tạo court name mặc định (client-side)
+// Function to create a default court name (client-side)
 export function getCourtDisplayName(
   courtName?: string,
   courtNumber?: number
@@ -55,5 +55,5 @@ export function getCourtDisplayName(
   if (courtNumber) {
     return `Sân ${courtNumber}`;
   }
-  return "Sân";
+  return "Court";
 }

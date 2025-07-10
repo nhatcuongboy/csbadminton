@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/chakra-compat";
 import { CourtService } from "@/lib/api";
 import { Player, Court, Match, MatchPlayer } from "@/types/session";
+import { useTranslations } from "next-intl";
 
 interface CourtsTabProps {
   session: any;
@@ -51,6 +52,7 @@ interface CourtsTabProps {
   autoAssignPlayersToSpecificCourt?: (courtId: string) => void;
   startManualMatchCreation?: (courtId: string) => void;
   onDataRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const CourtsTab: React.FC<
@@ -84,10 +86,14 @@ const CourtsTab: React.FC<
   autoAssignPlayersToSpecificCourt,
   startManualMatchCreation,
   onDataRefresh,
+  isRefreshing = false,
 }) => {
+  const t = useTranslations("SessionDetail");
   const [loadingEndMatchId, setLoadingEndMatchId] = React.useState<
     string | null
   >(null);
+  const [loadingStartMatchCourtId, setLoadingStartMatchCourtId] =
+    React.useState<string | null>(null);
   const toast = useToast();
 
   // Auto-assign modal state
@@ -96,7 +102,8 @@ const CourtsTab: React.FC<
     React.useState<Court | null>(null);
   const [suggestedPlayers, setSuggestedPlayers] = React.useState<Player[]>([]);
   const [loadingAutoAssign, setLoadingAutoAssign] = React.useState(false);
-  const [confirmingAutoAssign, setConfirmingAutoAssign] = React.useState(false);
+  const [loadingConfirmAutoAssign, setLoadingConfirmAutoAssign] =
+    React.useState(false);
 
   // Manual selection modal state
   const [manualSelectModalOpen, setManualSelectModalOpen] =
@@ -121,8 +128,8 @@ const CourtsTab: React.FC<
     } catch (error) {
       console.error("Error getting suggested players:", error);
       toast.toast({
-        title: "Error getting suggested players",
-        description: "Please try again later",
+        title: t("courtsTab.errorGettingSuggestedPlayers"),
+        description: t("courtsTab.pleaseRetryLater"),
         status: "error",
         duration: 3000,
       });
@@ -131,17 +138,15 @@ const CourtsTab: React.FC<
     }
   };
 
-  // Confirm auto-assign and start match
+  // Confirm auto-assign and select players only
   const handleConfirmAutoAssign = async () => {
     if (!selectedAutoAssignCourt) return;
 
     try {
-      setConfirmingAutoAssign(true);
-      // First select the suggested players
+      setLoadingConfirmAutoAssign(true);
+      // Only select the suggested players
       const playerIds = suggestedPlayers.map((p) => p.id);
       await CourtService.selectPlayers(selectedAutoAssignCourt.id, playerIds);
-      // Then start the match
-      await CourtService.startMatch(selectedAutoAssignCourt.id);
       // Close modal and reset state
       setAutoAssignModalOpen(false);
       setSelectedAutoAssignCourt(null);
@@ -151,21 +156,21 @@ const CourtsTab: React.FC<
         onDataRefresh();
       }
       toast.toast({
-        title: "Match started successfully",
-        description: "Players have been assigned to the court",
+        title: t("courtsTab.playersAssignedToCourt"),
+        description: t("courtsTab.pleaseStartMatchManually"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error confirming auto-assign:", error);
       toast.toast({
-        title: "Error starting match",
-        description: "Please try again later",
+        title: t("courtsTab.errorAssigningPlayers"),
+        description: t("courtsTab.pleaseRetryLater"),
         status: "error",
         duration: 3000,
       });
     } finally {
-      setConfirmingAutoAssign(false);
+      setLoadingConfirmAutoAssign(false);
     }
   };
 
@@ -236,16 +241,16 @@ const CourtsTab: React.FC<
         onDataRefresh();
       }
       toast.toast({
-        title: "Match started successfully",
-        description: "Players have been assigned to the court",
+        title: t("courtsTab.matchStartedSuccessfully"),
+        description: t("courtsTab.playersAssignedToCourt"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error confirming manual match:", error);
       toast.toast({
-        title: "Error starting match",
-        description: "Please try again later",
+        title: t("courtsTab.errorStartingMatch"),
+        description: t("courtsTab.pleaseRetryLater"),
         status: "error",
         duration: 3000,
       });
@@ -264,7 +269,7 @@ const CourtsTab: React.FC<
   return (
     <>
       <Flex justifyContent="space-between" mb={4}>
-        <Heading size="md">Active Courts</Heading>
+        <Heading size="md">{t("courtsTab.activeCourts")}</Heading>
         {session.status === "IN_PROGRESS" && (
           <HStack gap={2}>
             {/* <CompatButton size="sm" onClick={autoAssignPlayers}>
@@ -277,8 +282,8 @@ const CourtsTab: React.FC<
       {session.status !== "IN_PROGRESS" && mode === "manage" && (
         <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
           {session.status === "PREPARING"
-            ? "Start the session to begin matches"
-            : "Session has ended"}
+            ? t("courtsTab.startSessionToBeginMatches")
+            : t("courtsTab.sessionHasEnded")}
         </Text>
       )}
       {/* {session.status === "IN_PROGRESS" && activeCourts.length === 0 && (
@@ -303,7 +308,7 @@ const CourtsTab: React.FC<
                     size="md"
                     color={isActive ? "green.700" : "gray.700"}
                   >
-                    Court {court.courtNumber}
+                    {t("courtsTab.courtNumber", { number: court.courtNumber })}
                   </Heading>
                   <HStack gap={2}>
                     {currentMatch && (
@@ -324,7 +329,11 @@ const CourtsTab: React.FC<
                       colorScheme={isActive ? "green" : "gray"}
                       variant={isActive ? "solid" : "outline"}
                     >
-                      {isActive ? "IN USE" : "EMPTY"}
+                      {isActive
+                        ? currentMatch
+                          ? t("courtsTab.inUse")
+                          : t("courtsTab.ready")
+                        : t("courtsTab.empty")}
                     </Badge>
                   </HStack>
                 </Flex>
@@ -338,7 +347,7 @@ const CourtsTab: React.FC<
                       elapsedTime={
                         currentMatch
                           ? formatCourtElapsedTime(currentMatch.startTime)
-                          : "Playing..."
+                          : t("courtsTab.playing")
                       }
                       courtName={getCourtDisplayName(
                         court.courtName,
@@ -347,7 +356,39 @@ const CourtsTab: React.FC<
                       width="100%"
                       //   height="180px"
                       showTimeInCenter={true}
+                      isLoading={isRefreshing}
+                      status={currentMatch ? "playing" : "ready"}
                     />
+                    {/* Show Start Match button if court is IN_USE but no match has started */}
+                    {session.status === "IN_PROGRESS" &&
+                      mode === "manage" &&
+                      !currentMatch &&
+                      court.currentPlayers.length === 4 && (
+                        <CompatButton
+                          size="sm"
+                          width={{ base: "100%", md: "auto" }}
+                          colorScheme="green"
+                          loading={loadingStartMatchCourtId === court.id}
+                          onClick={async () => {
+                            setLoadingStartMatchCourtId(court.id);
+                            try {
+                              await CourtService.startMatch(court.id);
+                              if (onDataRefresh) onDataRefresh();
+                              toast.toast({
+                                title: t("courtsTab.matchStartedSuccessfully"),
+                                description: t("courtsTab.matchHasStarted"),
+                                status: "success",
+                                duration: 3000,
+                              });
+                            } finally {
+                              setLoadingStartMatchCourtId(null);
+                            }
+                          }}
+                        >
+                          <Box as={Play} boxSize={4} mr={1} />
+                          {t("startMatch")}
+                        </CompatButton>
+                      )}
                     <VStack gap={2} width="100%">
                       {session.status === "IN_PROGRESS" &&
                         endMatch &&
@@ -355,7 +396,7 @@ const CourtsTab: React.FC<
                         mode === "manage" && (
                           <CompatButton
                             size="sm"
-                            width="full"
+                            width={{ base: "100%", md: "auto" }}
                             colorScheme="red"
                             onClick={async () => {
                               if (!court.currentMatchId) return;
@@ -369,7 +410,7 @@ const CourtsTab: React.FC<
                             loading={loadingEndMatchId === court.currentMatchId}
                           >
                             <Box as={Square} boxSize={4} mr={1} />
-                            End Match
+                            {t("courtsTab.endMatch")}
                           </CompatButton>
                         )}
                     </VStack>
@@ -386,6 +427,7 @@ const CourtsTab: React.FC<
                       width="100%"
                       //   height="180px"
                       showTimeInCenter={false}
+                      isLoading={isRefreshing}
                     />
                     {session.status === "IN_PROGRESS" && mode === "manage" ? (
                       <VStack gap={2}>
@@ -394,10 +436,13 @@ const CourtsTab: React.FC<
                           onClick={() => handleAutoAssignClick(court)}
                           size="sm"
                           width="full"
-                          loading={loadingAutoAssign}
+                          // loading={
+                          //   selectedAutoAssignCourt?.id === court.id &&
+                          //   loadingAutoAssign
+                          // }
                         >
                           <Box as={Shuffle} boxSize={4} mr={1} />
-                          Auto Assign Match
+                          {t("courtsTab.autoAssignMatch")}
                         </CompatButton>
                         {startManualMatchCreation && (
                           <CompatButton
@@ -408,7 +453,7 @@ const CourtsTab: React.FC<
                             variant="outline"
                           >
                             <Box as={Plus} boxSize={4} mr={1} />
-                            Manual Selection
+                            {t("courtsTab.manualSelection")}
                           </CompatButton>
                         )}
                       </VStack>
@@ -419,7 +464,7 @@ const CourtsTab: React.FC<
                         textAlign="center"
                         mt={2}
                       >
-                        Court available for play
+                        {t("courtsTab.courtAvailableForPlay")}
                       </Text>
                     ) : null}
                   </VStack>
@@ -435,16 +480,18 @@ const CourtsTab: React.FC<
         isOpen={autoAssignModalOpen}
         court={selectedAutoAssignCourt}
         selectedPlayers={suggestedPlayers}
-        isLoading={confirmingAutoAssign}
+        isLoading={loadingConfirmAutoAssign}
         onConfirm={handleConfirmAutoAssign}
         onCancel={handleCancelAutoAssign}
         getCourtDisplayName={getCourtDisplayName}
         title={
           selectedAutoAssignCourt
-            ? `Auto Assign Match - Court ${selectedAutoAssignCourt.courtNumber}`
+            ? t("courtsTab.autoAssignMatchTitle", {
+                courtNumber: selectedAutoAssignCourt.courtNumber,
+              })
             : undefined
         }
-        description="The following players will be assigned to this court:"
+        description={t("courtsTab.autoAssignMatchDescription")}
       />
 
       {/* Manual Selection Modal */}
@@ -480,10 +527,12 @@ const CourtsTab: React.FC<
         getCourtDisplayName={getCourtDisplayName}
         title={
           selectedManualCourt
-            ? `Manual Match Preview - Court ${selectedManualCourt.courtNumber}`
+            ? t("courtsTab.manualMatchPreviewTitle", {
+                courtNumber: selectedManualCourt.courtNumber,
+              })
             : undefined
         }
-        description="Review the selected players before starting the match:"
+        description={t("courtsTab.manualMatchPreviewDescription")}
       />
     </>
   );

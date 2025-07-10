@@ -150,11 +150,13 @@ enum PlayerStatus {
   WAITING
   PLAYING
   FINISHED
+  READY
 }
 
 enum CourtStatus {
   EMPTY
   IN_USE
+  READY
 }
 
 enum MatchStatus {

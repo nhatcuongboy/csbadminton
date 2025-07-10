@@ -1,27 +1,27 @@
 // Server-side utilities for sessions
-// Không có "use client" directive để có thể sử dụng trong API routes
+// No "use client" directive to allow usage in API routes
 
-// Hàm tạo court name từ số thứ tự
+// Function to create court name from order number
 export function generateCourtName(courtNumber: number): string {
   const courtNames = [
-    "Sân A",
-    "Sân B", 
-    "Sân C",
-    "Sân D",
-    "Sân E",
-    "Sân F",
-    "Sân G",
-    "Sân H",
+    "Court A",
+    "Court B", 
+    "Court C",
+    "Court D",
+    "Court E",
+    "Court F",
+    "Court G",
+    "Court H",
   ];
 
   if (courtNumber <= courtNames.length) {
     return courtNames[courtNumber - 1];
   }
 
-  return `Sân ${courtNumber}`;
+  return `Court ${courtNumber}`;
 }
 
-// Hàm tạo court name mặc định
+// Function to create a default court name
 export function getCourtDisplayName(
   courtName?: string,
   courtNumber?: number
@@ -30,12 +30,12 @@ export function getCourtDisplayName(
     return courtName;
   }
   if (courtNumber) {
-    return `Sân ${courtNumber}`;
+    return `Court ${courtNumber}`;
   }
-  return "Sân";
+  return "Court";
 }
 
-// Hàm map SessionStatus từ database sang status cho UI
+// Function to map SessionStatus from database to UI status
 export function mapSessionStatus(
   status: string
 ): "upcoming" | "in-progress" | "completed" {
@@ -51,7 +51,7 @@ export function mapSessionStatus(
   }
 }
 
-// Hàm format date từ ISO string sang định dạng đẹp hơn
+// Function to format date from ISO string to a more readable format
 export function formatDate(dateString: string | Date): string {
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN", {
@@ -62,7 +62,7 @@ export function formatDate(dateString: string | Date): string {
   });
 }
 
-// Hàm format time từ ISO string sang định dạng đẹp hơn
+// Function to format time from ISO string to a more readable format
 export function formatTime(dateString: string | Date): string {
   const date = new Date(dateString);
   return date.toLocaleTimeString("vi-VN", {
@@ -71,7 +71,7 @@ export function formatTime(dateString: string | Date): string {
   });
 }
 
-// Hàm tính duration giữa hai thời điểm
+// Function to calculate duration between two timestamps
 export function formatDuration(start: string, end: string): string {
   const startTime = new Date(start).getTime();
   const endTime = new Date(end).getTime();

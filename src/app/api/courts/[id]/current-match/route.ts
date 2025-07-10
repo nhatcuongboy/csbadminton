@@ -6,7 +6,7 @@ interface CourtParams {
   id: string;
 }
 
-// GET /api/courts/[id]/current-match - Lấy thông tin trận đấu hiện tại trên sân
+// GET /api/courts/[id]/current-match - Retrieve current match information on the court
 export async function GET(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
   try {
     const { id } = await params;

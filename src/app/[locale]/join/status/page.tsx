@@ -398,10 +398,10 @@ function StatusPageContent() {
                           />
                         </Center>
                         <Heading size="sm" fontWeight="medium">
-                          {t("status.waiting.title")}
+                          {t("waiting.title")}
                         </Heading>
                         <Text fontSize="sm" color="gray.500">
-                          {t("status.waiting.description")}
+                          {t("waiting.description")}
                         </Text>
                       </>
                     ) : player.status === "PLAYING" ? (
@@ -413,10 +413,10 @@ function StatusPageContent() {
                           />
                         </Center>
                         <Heading size="sm" fontWeight="medium">
-                          {t("status.playing.title")}
+                          {t("playing.title")}
                         </Heading>
                         <Text fontSize="sm" color="gray.500">
-                          {t("status.playing.description", {
+                          {t("playing.description", {
                             courtNumber:
                               player.currentCourt?.courtNumber || "Unknown",
                           })}
@@ -431,10 +431,10 @@ function StatusPageContent() {
                           />
                         </Center>
                         <Heading size="sm" fontWeight="medium">
-                          {t("status.finished.title")}
+                          {t("finished.title")}
                         </Heading>
                         <Text fontSize="sm" color="gray.500">
-                          {t("status.finished.description")}
+                          {t("finished.description")}
                         </Text>
                       </>
                     )}

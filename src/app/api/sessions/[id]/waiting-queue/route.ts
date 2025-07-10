@@ -6,7 +6,7 @@ interface SessionParams {
   id: string;
 }
 
-// GET /api/sessions/[id]/waiting-queue - Lấy danh sách người chơi đang đợi theo thứ tự
+// GET /api/sessions/[id]/waiting-queue - Retrieve the list of players waiting in order
 export async function GET(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
     const { id } = await params;

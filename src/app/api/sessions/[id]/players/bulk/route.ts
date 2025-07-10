@@ -16,7 +16,7 @@ interface BulkPlayerData {
   requireConfirmInfo?: boolean;
 }
 
-// POST /api/sessions/[id]/players/bulk - Tạo đồng loạt nhiều player
+// POST /api/sessions/[id]/players/bulk - Create multiple players in bulk
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<SessionParams> }
@@ -26,7 +26,7 @@ export async function POST(
     const body = await request.json();
 
     if (!Array.isArray(body)) {
-      return errorResponse("Body phải là một mảng các player data", 400);
+      return errorResponse("Body must be an array of player data", 400);
     }
 
     const playersData: BulkPlayerData[] = body;
@@ -40,7 +40,7 @@ export async function POST(
     });
 
     if (!session) {
-      return errorResponse("Session không tồn tại", 404);
+      return errorResponse("Session does not exist", 404);
     }
 
     // Calculate max players allowed
@@ -57,7 +57,7 @@ export async function POST(
         typeof playerData.playerNumber !== "number"
       ) {
         errors.push(
-          `Player ${index + 1}: playerNumber là bắt buộc và phải là số`
+          `Player ${index + 1}: playerNumber is required and must be a number`
         );
         continue;
       }
@@ -65,7 +65,7 @@ export async function POST(
       // Validate playerNumber range
       if (playerData.playerNumber < 1 || playerData.playerNumber > maxPlayers) {
         errors.push(
-          `Player ${index + 1}: playerNumber phải từ 1 đến ${maxPlayers}`
+          `Player ${index + 1}: playerNumber must be between 1 and ${maxPlayers}`
         );
         continue;
       }
@@ -75,7 +75,7 @@ export async function POST(
         errors.push(
           `Player ${index + 1}: playerNumber ${
             playerData.playerNumber
-          } đã tồn tại trong request`
+          } already exists in the request`
         );
         continue;
       }
@@ -86,7 +86,7 @@ export async function POST(
         playerData.gender &&
         !["MALE", "FEMALE"].includes(playerData.gender)
       ) {
-        errors.push(`Player ${index + 1}: gender phải là MALE hoặc FEMALE`);
+        errors.push(`Player ${index + 1}: gender must be MALE or FEMALE`);
       }
 
       // Validate level
@@ -96,17 +96,17 @@ export async function POST(
           playerData.level
         )
       ) {
-        errors.push(`Player ${index + 1}: level không hợp lệ`);
+        errors.push(`Player ${index + 1}: level is not valid`);
       }
 
       // Validate phone format (optional)
       if (playerData.phone && typeof playerData.phone !== "string") {
-        errors.push(`Player ${index + 1}: phone phải là chuỗi`);
+        errors.push(`Player ${index + 1}: phone must be a string`);
       }
     }
 
     if (errors.length > 0) {
-      return errorResponse(`Dữ liệu không hợp lệ: ${errors.join(", ")}`, 400);
+      return errorResponse(`Invalid data: ${errors.join(", ")}`, 400);
     }
 
     // Check for existing players with same playerNumber
@@ -124,7 +124,7 @@ export async function POST(
         .map((p: any) => p.playerNumber)
         .join(", ");
       return errorResponse(
-        `Các playerNumber sau đã tồn tại: ${conflictNumbers}`,
+        `The following playerNumbers already exist: ${conflictNumbers}`,
         409
       );
     }
@@ -140,8 +140,8 @@ export async function POST(
           level: playerData.level || null,
           levelDescription: playerData.levelDescription || null,
           phone: playerData.phone || null,
-          preFilledByHost: true, // Đánh dấu là host đã pre-fill
-          confirmedByPlayer: false, // Player chưa confirm
+          preFilledByHost: true, // Marked as pre-filled by host
+          confirmedByPlayer: false, // Player has not confirmed
           requireConfirmInfo: playerData.requireConfirmInfo || false,
           status: "WAITING",
         },
@@ -170,15 +170,15 @@ export async function POST(
     return successResponse({
       createdPlayers,
       session: updatedSession,
-      message: `Đã tạo thành công ${createdPlayers.length} player(s)`,
+      message: `Successfully created ${createdPlayers.length} player(s)`,
     });
   } catch (error) {
     console.error("Error creating bulk players:", error);
-    return errorResponse("Có lỗi xảy ra khi tạo players", 500);
+    return errorResponse("An error occurred while creating players", 500);
   }
 }
 
-// GET /api/sessions/[id]/players/bulk - Lấy thông tin về khả năng tạo bulk players
+// GET /api/sessions/[id]/players/bulk - Retrieve information about bulk player creation
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<SessionParams> }
@@ -224,6 +224,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error getting bulk players info:", error);
-    return errorResponse("Có lỗi xảy ra khi lấy thông tin", 500);
+    return errorResponse("An error occurred while retrieving information", 500);
   }
 }

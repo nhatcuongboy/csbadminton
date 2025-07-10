@@ -6,7 +6,7 @@ interface CourtParams {
   id: string;
 }
 
-// POST /api/courts/[id]/select-players - Host chọn người chơi vào sân
+// POST /api/courts/[id]/select-players - Host selects players for the court
 export async function POST(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
   try {
     const { id } = await params;
@@ -71,23 +71,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<C
 
     // All validations passed, prepare for transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Update each player's status and court
+      // Update each player's status to READY and assign them to the court
       for (const playerId of playerIds) {
         await tx.player.update({
           where: { id: playerId },
           data: {
-            status: "PLAYING",
+            status: "READY",
             currentCourtId: id,
-            currentWaitTime: 0, // Reset wait time when moving to court
           },
         });
       }
 
-      // Update court status
+      // Update court status to READY
       const updatedCourt = await tx.court.update({
         where: { id },
         data: {
-          status: "IN_USE",
+          status: "READY",
         },
         include: {
           currentPlayers: true,

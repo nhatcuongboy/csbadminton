@@ -6,7 +6,7 @@ interface CourtParams {
   id: string;
 }
 
-// POST /api/courts/[id]/end-match - Kết thúc trận đấu trên sân
+// POST /api/courts/[id]/end-match - End the match on the court
 export async function POST(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
   try {
     const { id } = await params;

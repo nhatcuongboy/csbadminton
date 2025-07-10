@@ -6,7 +6,7 @@ interface SessionParams {
   id: string;
 }
 
-// GET /api/sessions/[id]/players - Lấy danh sách người chơi trong session
+// GET /api/sessions/[id]/players - Retrieve list of players in the session
 export async function GET(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
     const { id } = await params;
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Se
   }
 }
 
-// POST /api/sessions/[id]/players - Tạo người chơi mới trong session
+// POST /api/sessions/[id]/players - Create a new player in the session
 export async function POST(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
   try {
     const { id } = await params;

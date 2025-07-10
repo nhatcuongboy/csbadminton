@@ -3,7 +3,7 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { generateCourtName } from "@/lib/server/sessions";
 import { NextRequest } from "next/server";
 
-// GET /api/sessions - Lấy danh sách tất cả sessions
+// GET /api/sessions - Retrieve list of all sessions
 export async function GET(request: NextRequest) {
   try {
     const sessions = await prisma.session.findMany({
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/sessions - Tạo session mới
+// POST /api/sessions - Create a new session
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const {
       name,
-      hostId = process.env.DEFAULT_HOST_ID, // Sử dụng biến môi trường
+      hostId = process.env.DEFAULT_HOST_ID, // Use environment variable
       numberOfCourts,
       sessionDuration,
       maxPlayersPerCourt,

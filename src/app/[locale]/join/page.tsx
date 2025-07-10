@@ -56,7 +56,7 @@ export default function JoinPage() {
         setSessions(availableSessions);
       } catch (error) {
         console.error("Error fetching sessions:", error);
-        toast.error("Failed to load available sessions");
+        toast.error(t("errors.failedToLoadSessions"));
       } finally {
         setLoadingSessions(false);
       }
@@ -87,7 +87,7 @@ export default function JoinPage() {
       setExistingPlayers(players);
     } catch (error) {
       console.error("Error fetching session details:", error);
-      toast.error("Failed to load session details");
+      toast.error(t("errors.failedToLoadSessionDetails"));
     } finally {
       setLoading(false);
     }
@@ -138,7 +138,7 @@ export default function JoinPage() {
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("errors.somethingWentWrong"));
       setIsSubmitting(false);
     }
   };
@@ -146,7 +146,7 @@ export default function JoinPage() {
   return (
     <Box minH="100vh">
       {/* Top Bar */}
-      <TopBar showBackButton={true} backHref="/" title="Join Session" />
+      <TopBar showBackButton={true} backHref="/" title={t("title")} />
 
       <Container maxW="md" py={12} pt={24}>
         <Box
@@ -186,10 +186,10 @@ export default function JoinPage() {
           >
             <Flex align="center" mb={2}>
               <Box as={LogIn} boxSize={5} color="blue.500" mr={2} />
-              <Heading size="md">Join Badminton Session</Heading>
+              <Heading size="md">{t("joinBadmintonSession")}</Heading>
             </Flex>
             <Text color="gray.500" fontSize="sm">
-              Choose your session and select your player information
+              {t("description")}
             </Text>
           </Box>
 
@@ -201,7 +201,7 @@ export default function JoinPage() {
                     <Flex align="center">
                       <Box as={Hash} boxSize={4} color="blue.500" mr={2} />
                       <Text fontWeight="medium">
-                        Select Session
+                        {t("selectSession")}
                         <Box as="span" color="red.500">
                           *
                         </Box>
@@ -225,16 +225,16 @@ export default function JoinPage() {
                       onChange={handleSessionChange}
                       required
                     >
-                      <option value="">Select available session</option>
+                      <option value="">{t("selectAvailableSession")}</option>
                       {sessions.length === 0 ? (
-                        <option disabled>No available sessions</option>
+                        <option disabled>{t("noAvailableSessions")}</option>
                       ) : (
                         sessions.map((session) => (
                           <option key={session.id} value={session.id}>
                             {session.name} (
                             {session.status === "PREPARING"
-                              ? "Upcoming"
-                              : "In Progress"}
+                              ? t("upcoming")
+                              : t("inProgress")}
                             )
                           </option>
                         ))
@@ -244,9 +244,11 @@ export default function JoinPage() {
                   {selectedSession && (
                     <Box mt={2} p={2} bg="blue.50" borderRadius="md">
                       <Text fontSize="sm" color="blue.600">
-                        Host: {selectedSession.host.name} | Courts:{" "}
-                        {selectedSession.numberOfCourts} | Players:{" "}
-                        {selectedSession.players?.length || 0}
+                        {t("sessionInfo", {
+                          host: selectedSession.host.name,
+                          courts: selectedSession.numberOfCourts,
+                          players: selectedSession.players?.length || 0
+                        })}
                       </Text>
                     </Box>
                   )}
@@ -257,7 +259,7 @@ export default function JoinPage() {
                     <Flex align="center">
                       <Box as={Users} boxSize={4} color="blue.500" mr={2} />
                       <Text fontWeight="medium">
-                        Player Number
+                        {t("playerNumber")}
                         <Box as="span" color="red.500">
                           *
                         </Box>
@@ -284,16 +286,16 @@ export default function JoinPage() {
                             onChange={handlePlayerChange}
                             required
                           >
-                            <option value="">Select your player number</option>
+                            <option value="">{t("selectYourPlayerNumber")}</option>
                             {existingPlayers.map((player) => (
                               <option
                                 key={player.id}
                                 value={player.playerNumber}
                               >
-                                Player #{player.playerNumber}{" "}
+                                {t("playerNumberFormat", { number: player.playerNumber })}{" "}
                                 {player.name ? `(${player.name})` : ""}
                                 {player.confirmedByPlayer
-                                  ? " - Already joined"
+                                  ? ` - ${t("alreadyJoined")}`
                                   : ""}
                               </option>
                             ))}
@@ -306,14 +308,13 @@ export default function JoinPage() {
                             borderRadius="md"
                           >
                             <Text>
-                              No players available in this session. Please ask
-                              the host to add players first.
+                              {t("noPlayersAvailable")}
                             </Text>
                           </Box>
                         )
                       ) : (
                         <Input
-                          placeholder="Please select a session first"
+                          placeholder={t("selectSessionFirst")}
                           disabled
                           borderColor="gray.300"
                           size="lg"
@@ -334,31 +335,31 @@ export default function JoinPage() {
                           borderRadius="md"
                         >
                           <Text fontWeight="medium" mb={1}>
-                            Player Information:
+                            {t("playerInformation")}
                           </Text>
                           <Stack gap={1} fontSize="sm">
                             <Text>
-                              Number:{" "}
+                              {t("number")}:{" "}
                               <strong>#{selectedPlayer.playerNumber}</strong>
                             </Text>
                             {selectedPlayer.name && (
                               <Text>
-                                Name: <strong>{selectedPlayer.name}</strong>
+                                {t("name")}: <strong>{selectedPlayer.name}</strong>
                               </Text>
                             )}
                             {selectedPlayer.gender && (
                               <Text>
-                                Gender:{" "}
+                                {t("gender")}:{" "}
                                 <strong>
                                   {selectedPlayer.gender === "MALE"
-                                    ? "Male"
-                                    : "Female"}
+                                    ? t("male")
+                                    : t("female")}
                                 </strong>
                               </Text>
                             )}
                             {selectedPlayer.level && (
                               <Text>
-                                Level:{" "}
+                                {t("level")}:{" "}
                                 <strong>
                                   {selectedPlayer.level.replace("_", " ")}
                                 </strong>
@@ -366,11 +367,11 @@ export default function JoinPage() {
                             )}
                             {selectedPlayer.phone && (
                               <Text>
-                                Phone: <strong>{selectedPlayer.phone}</strong>
+                                {t("phone")}: <strong>{selectedPlayer.phone}</strong>
                               </Text>
                             )}
                             <Text>
-                              Status:{" "}
+                              {t("status")}:{" "}
                               <strong
                                 color={
                                   selectedPlayer.confirmedByPlayer
@@ -379,23 +380,23 @@ export default function JoinPage() {
                                 }
                               >
                                 {selectedPlayer.confirmedByPlayer
-                                  ? "Already joined"
-                                  : "Available"}
+                                  ? t("alreadyJoined")
+                                  : t("available")}
                               </strong>
                             </Text>
                             {selectedPlayer.requireConfirmInfo && (
                               <Text>
-                                Info Required:{" "}
+                                {t("infoRequired")}:{" "}
                                 <strong color="blue.600">
-                                  Yes (will go to confirmation page)
+                                  {t("yesGoToConfirmation")}
                                 </strong>
                               </Text>
                             )}
                             {!selectedPlayer.requireConfirmInfo && (
                               <Text>
-                                Info Required:{" "}
+                                {t("infoRequired")}:{" "}
                                 <strong color="gray.600">
-                                  No (will join directly)
+                                  {t("noJoinDirectly")}
                                 </strong>
                               </Text>
                             )}
@@ -403,8 +404,7 @@ export default function JoinPage() {
                           {selectedPlayer.confirmedByPlayer && (
                             <Box mt={2} p={2} bg="orange.100" borderRadius="md">
                               <Text fontSize="xs" color="orange.700">
-                                ⚠️ This player has already joined the session.
-                                You can still continue to access their status.
+                                ⚠️ {t("playerAlreadyJoinedWarning")}
                               </Text>
                             </Box>
                           )}
@@ -413,8 +413,7 @@ export default function JoinPage() {
                     </>
                   )}
                   <Text fontSize="sm" color="gray.500" mt={2}>
-                    Select your player number from the list of players in this
-                    session
+                    {t("selectPlayerHelpText")}
                   </Text>
                 </Box>
 
@@ -428,8 +427,8 @@ export default function JoinPage() {
                   disabled={!sessionId || !playerNumber || isSubmitting}
                 >
                   <Flex align="center" justify="center" width="100%">
-                    {isSubmitting ? "Processing..." : 
-                     selectedPlayer?.requireConfirmInfo ? "Continue to Confirm" : "Join Now"}
+                    {isSubmitting ? t("processing") : 
+                     selectedPlayer?.requireConfirmInfo ? t("continueToConfirm") : t("joinNow")}
                     {!isSubmitting && (
                       <Box as={ArrowRight} ml={2} boxSize={5} />
                     )}
@@ -451,7 +450,7 @@ export default function JoinPage() {
           >
             <Flex direction="column" align="center">
               <Text fontSize="sm" color="gray.500" textAlign="center">
-                The host must add you to the session before you can join
+                {t("hostMustAddYou")}
               </Text>
               <Box
                 as={Activity}

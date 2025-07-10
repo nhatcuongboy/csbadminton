@@ -15,6 +15,7 @@ import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import MatchPreviewModal from "./MatchPreviewModal";
+import { useTranslations } from "next-intl";
 
 interface ManualSelectPlayersModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
   formatWaitTime,
   getCourtDisplayName = (name, number) => name || `Court ${number}`,
 }) => {
+  const t = useTranslations("SessionDetail");
   const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -137,7 +139,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             flexShrink={0}
           >
             <Heading size="md">
-              Manual Player Selection - Court {court.courtNumber}
+              {t("courtsTab.manualPlayerSelectionTitle", { courtNumber: court.courtNumber })}
             </Heading>
             <Box
               as="button"
@@ -155,7 +157,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             {/* Selected Players Summary */}
             <Box flex={{ base: "1", lg: "0 0 280px" }} minW="0">
               <Text fontSize="sm" fontWeight="medium" mb={3}>
-                Selected Players ({selectedPlayers.length}/4):
+                {t("courtsTab.selectedPlayersCount", { count: selectedPlayers.length })}
               </Text>
 
               {/* 2x2 Grid for Selected Players */}
@@ -228,7 +230,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                           maxW="100%"
                           overflow="hidden"
                         >
-                          {player.name || `Player ${player.playerNumber}`}
+                          {player.name || t("courtsTab.playerNumber", { number: player.playerNumber })}
                         </Text>
                         <Badge
                           colorScheme={pairColor}
@@ -278,13 +280,13 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                           px={2}
                           py={0.5}
                         >
-                          Pair {pairNumber}
+                          {t("courtsTab.pairNumber", { number: pairNumber })}
                         </Badge>
                         <Text fontSize="xs" fontWeight="medium" color="gray.500" mb={1}>
-                          Position {positionInPair}
+                          {t("courtsTab.positionNumber", { number: positionInPair })}
                         </Text>
                         <Text fontSize="xs" color="gray.500" mt={1}>
-                          Select player
+                          {t("courtsTab.selectPlayer")}
                         </Text>
                       </Box>
                     );
@@ -298,11 +300,11 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             {/* Available Players */}
             <Box>
               <Text fontSize="md" fontWeight="medium" mb={3}>
-                Available Players:
+                {t("courtsTab.availablePlayers")}
               </Text>
               {waitingPlayers.length === 0 ? (
                 <Text fontSize="sm" color="gray.500" textAlign="center" py={8}>
-                  No players are currently waiting
+                  {t("courtsTab.noPlayersWaiting")}
                 </Text>
               ) : (
                 <PlayerGrid
@@ -326,7 +328,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             flexShrink={0}
           >
             <CompatButton variant="outline" onClick={onCancel}>
-              Cancel
+              {t("courtsTab.cancel")}
             </CompatButton>
             <CompatButton
               colorScheme="blue"
@@ -334,7 +336,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
               disabled={selectedPlayers.length !== 4}
             >
               <Box as={Check} boxSize={4} mr={1} />
-              Start Match ({selectedPlayers.length}/4)
+              {t("courtsTab.startMatchCount", { count: selectedPlayers.length })}
             </CompatButton>
           </Flex>
         </Box>
@@ -350,8 +352,8 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
         onCancel={handleCancelPreview}
         onBack={handleCancelPreview}
         getCourtDisplayName={getCourtDisplayName}
-        title={`Manual Match Preview - Court ${court.courtNumber}`}
-        description="Review the selected players before starting the match:"
+        title={t("courtsTab.manualMatchPreviewTitle", { courtNumber: court.courtNumber })}
+        description={t("courtsTab.manualMatchPreviewDescription")}
       />
     </>
   );

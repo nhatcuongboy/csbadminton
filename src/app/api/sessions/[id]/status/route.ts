@@ -172,7 +172,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/sessions/[id]/status - Cập nhật trạng thái session (PREPARING, IN_PROGRESS, FINISHED)
+// PATCH /api/sessions/[id]/status - Update session status (PREPARING, IN_PROGRESS, FINISHED)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<SessionStatusParams> }

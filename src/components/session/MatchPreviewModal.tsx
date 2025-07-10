@@ -13,12 +13,13 @@ import BadmintonCourt from "../court/BadmintonCourt";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
 import { Level } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface MatchPreviewModalProps {
   isOpen: boolean;
   court: Court | null;
   selectedPlayers: Player[];
-  isLoading: boolean;
+  isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   onBack?: () => void; // Optional back button for manual selection flow
@@ -34,7 +35,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   isOpen,
   court,
   selectedPlayers,
-  isLoading,
+  isLoading = false,
   onConfirm,
   onCancel,
   onBack,
@@ -42,11 +43,15 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   title,
   description,
 }) => {
+  const t = useTranslations("SessionDetail");
+
   if (!isOpen || !court) return null;
 
-  const modalTitle = title || `Auto Assign Match - Court ${court.courtNumber}`;
+  const modalTitle =
+    title ||
+    t("courtsTab.autoAssignMatchTitle", { courtNumber: court.courtNumber });
   const modalDescription =
-    description || "The following players will be assigned to this court:";
+    description || t("courtsTab.autoAssignMatchDescription");
 
   return (
     <Box
@@ -109,7 +114,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               )}
               width="100%"
               showTimeInCenter={false}
-              isLoading={isLoading}
+              // isLoading={isLoading}
             />
           </Box>
 
@@ -126,7 +131,10 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               >
                 <Text fontWeight="medium">
                   #{player.playerNumber}{" "}
-                  {player.name || `Player ${player.playerNumber}`}
+                  {player.name ||
+                    t("courtsTab.playerNumber", {
+                      number: player.playerNumber,
+                    })}
                 </Text>
                 <HStack gap={2}>
                   {player.gender && (
@@ -159,7 +167,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               disabled={isLoading}
             >
               <Box as={ArrowLeft} boxSize={4} mr={1} />
-              Back
+              {t("courtsTab.back")}
             </CompatButton>
           )}
           <CompatButton
@@ -167,7 +175,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             onClick={onCancel}
             disabled={isLoading}
           >
-            Cancel
+            {t("courtsTab.cancel")}
           </CompatButton>
           <CompatButton
             colorScheme="green"
@@ -175,7 +183,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             loading={isLoading}
           >
             <Box as={Play} boxSize={4} mr={1} />
-            Confirm & Start Match
+            {t("courtsTab.confirmMatch")}
           </CompatButton>
         </Flex>
       </Box>

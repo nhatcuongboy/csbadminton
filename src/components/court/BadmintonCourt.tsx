@@ -19,6 +19,7 @@ interface BadmintonCourtProps {
   width?: string;
   showTimeInCenter?: boolean;
   isLoading?: boolean;
+  status?: "playing" | "ready";
 }
 
 export default function BadmintonCourt({
@@ -30,6 +31,7 @@ export default function BadmintonCourt({
   width = "100%",
   showTimeInCenter = true,
   isLoading = false,
+  status,
 }: BadmintonCourtProps) {
   const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
 
@@ -106,9 +108,16 @@ export default function BadmintonCourt({
       width={width}
       aspectRatio={aspectRatio}
       position="relative"
-      borderColor={isActive ? "#b6e2c6" : "gray.300"}
+      borderColor={
+        status === "ready"
+          ? "#facc15" // yellow border for ready
+          : isActive
+          ? "#b6e2c6"
+          : "gray.300"
+      }
       borderRadius="md"
       overflow="visible"
+      boxShadow={status === "ready" ? "0 0 0 4px #fef08a" : undefined}
     >
       {/* Outer boundary */}
       <Box
@@ -119,9 +128,21 @@ export default function BadmintonCourt({
         bottom="2%"
         pointerEvents="all"
         zIndex={1}
-        bg={isActive ? "#179a3b" : "#e6e6e6"}
+        bg={
+          status === "ready"
+            ? "#fef3c7" // light yellow background for ready state
+            : isActive
+            ? "#179a3b"
+            : "#e6e6e6"
+        }
         border="4px solid"
-        borderColor={isActive ? "#b6e2c6" : "gray.300"}
+        borderColor={
+          status === "ready"
+            ? "#facc15" // yellow border for ready
+            : isActive
+            ? "#b6e2c6"
+            : "gray.300"
+        }
         onClick={(e) => {
           e.stopPropagation();
           setClickedPlayer(null);
@@ -503,7 +524,7 @@ export default function BadmintonCourt({
           );
         })}
 
-      {/* Loading indicator when starting match */}
+      {/* Loading indicator */}
       {isLoading && (
         <Box
           position="absolute"
@@ -523,7 +544,7 @@ export default function BadmintonCourt({
           alignItems="center"
           gap={2}
         >
-          <Box
+          {/* <Box
             w={3}
             h={3}
             bg="white"
@@ -543,20 +564,20 @@ export default function BadmintonCourt({
             bg="white"
             borderRadius="full"
             animation="pulse 1.5s ease-in-out 0.4s infinite"
-          />
-          <Text ml={2}>Starting Match...</Text>
+          /> */}
+          <Text ml={2}>Loading...</Text>
         </Box>
       )}
 
-      {/* Match Time Display - Center */}
-      {/* {showTimeInCenter && elapsedTime && (
+      {/* Match Time/Status Display - Center */}
+      {status === "ready" && (
         <Box
           position="absolute"
           top="50%"
           left="50%"
           transform="translate(-50%, -50%)"
-          bg="#2563eb"
-          color="white"
+          bg={status === "ready" ? "#facc15" : "#2563eb"}
+          color={status === "ready" ? "#92400e" : "white"}
           px={3}
           py={1}
           borderRadius="full"
@@ -569,9 +590,9 @@ export default function BadmintonCourt({
           gap={1}
         >
           <Clock size={14} />
-          {elapsedTime}
+          {status === "ready" ? "Ready to Start" : elapsedTime}
         </Box>
-      )} */}
+      )}
     </Box>
   );
 }

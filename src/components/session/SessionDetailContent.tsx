@@ -78,6 +78,7 @@ import CourtsTab from "@/components/session/CourtsTab";
 import PlayersTab from "@/components/session/PlayersTab";
 import ManageTab from "@/components/session/ManageTab";
 import SettingsTab from "@/components/session/SettingsTab";
+import { useTranslations } from "next-intl";
 
 // Types for session data and related entities
 interface Player {
@@ -151,6 +152,7 @@ export default function SessionDetailContent({
 }: {
   sessionData: SessionData;
 }) {
+  const t = useTranslations("SessionDetail");
   const [session, setSession] = useState<SessionData>(sessionData);
   const [refreshInterval, setRefreshInterval] = useState<number>(60);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -181,7 +183,8 @@ export default function SessionDetailContent({
     }>
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isToggleStatusLoading, setIsToggleStatusLoading] = useState<boolean>(false);
+  const [isToggleStatusLoading, setIsToggleStatusLoading] =
+    useState<boolean>(false);
 
   const toast = useToast();
   const playerModalDisclosure = useDisclosure();
@@ -228,11 +231,11 @@ export default function SessionDetailContent({
     const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
     if (elapsedMinutes === 0) {
-      return "< 1 minute";
+      return t("lessThanMinute");
     } else if (elapsedMinutes === 1) {
-      return "1 minute";
+      return t("oneMinute");
     } else {
-      return `${elapsedMinutes} minutes`;
+      return t("minutes", { minutes: elapsedMinutes });
     }
   };
 
@@ -348,14 +351,14 @@ export default function SessionDetailContent({
 
       toast.toast({
         title:
-          nextStatus === "IN_PROGRESS" ? "Session started" : "Session ended",
+          nextStatus === "IN_PROGRESS" ? t("sessionStarted") : t("sessionEnded"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error updating session status:", error);
       toast.toast({
-        title: "Error updating session status",
+        title: t("errorUpdatingSessionStatus"),
         status: "error",
         duration: 3000,
       });
@@ -368,13 +371,13 @@ export default function SessionDetailContent({
   const mapSessionStatusToUI = (status: string) => {
     switch (status) {
       case "PREPARING":
-        return "Start";
+        return t("start");
       case "IN_PROGRESS":
-        return "End";
+        return t("end");
       case "FINISHED":
-        return "Ended";
+        return t("ended");
       default:
-        return "Unknown Status";
+        return t("unknownStatus");
     }
   };
 
@@ -398,17 +401,17 @@ export default function SessionDetailContent({
     const minutes = waitTimeInMinutes % 60;
 
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return t("hoursMinutes", { hours, minutes });
     }
 
-    return `${minutes} min`;
+    return t("minutesShort", { minutes });
   };
 
   // Start a new match with selected players on selected court
   const startNewMatch = async () => {
     if (selectedPlayers.length !== 4 || !selectedCourt) {
       toast.toast({
-        title: "Please select 4 players and a court",
+        title: t("select4PlayersAndCourt"),
         status: "error",
         duration: 3000,
       });
@@ -427,7 +430,7 @@ export default function SessionDetailContent({
       await refreshSessionData();
 
       toast.toast({
-        title: "Match started successfully",
+        title: t("matchStartedSuccessfully"),
         status: "success",
         duration: 3000,
       });
@@ -436,7 +439,7 @@ export default function SessionDetailContent({
     } catch (error) {
       console.error("Error starting match:", error);
       toast.toast({
-        title: "Error starting match",
+        title: t("errorStartingMatch"),
         status: "error",
         duration: 3000,
       });
@@ -450,14 +453,14 @@ export default function SessionDetailContent({
       await refreshSessionData();
 
       toast.toast({
-        title: "Match ended successfully",
+        title: t("matchEndedSuccessfully"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error ending match:", error);
       toast.toast({
-        title: "Error ending match",
+        title: t("errorEndingMatch"),
         status: "error",
         duration: 3000,
       });
@@ -470,8 +473,8 @@ export default function SessionDetailContent({
       // Check if we have enough waiting players
       if (waitingPlayers.length < 4) {
         toast.toast({
-          title: "Not enough players",
-          description: "Need at least 4 waiting players to start a match",
+          title: t("notEnoughPlayers"),
+          description: t("need4PlayersToStartMatch"),
           status: "error",
           duration: 3000,
         });
@@ -490,15 +493,15 @@ export default function SessionDetailContent({
       await refreshSessionData();
 
       toast.toast({
-        title: "Match started successfully",
-        description: "4 players have been auto-assigned to the court",
+        title: t("matchStartedSuccessfully"),
+        description: t("4PlayersAutoAssigned"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error auto-assigning players:", error);
       toast.toast({
-        title: "Error auto-assigning players",
+        title: t("errorAutoAssigningPlayers"),
         status: "error",
         duration: 3000,
       });
@@ -512,14 +515,14 @@ export default function SessionDetailContent({
       await refreshSessionData();
 
       toast.toast({
-        title: "Players auto-assigned successfully",
+        title: t("playersAutoAssignedSuccessfully"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error auto-assigning players:", error);
       toast.toast({
-        title: "Error auto-assigning players",
+        title: t("errorAutoAssigningPlayers"),
         status: "error",
         duration: 3000,
       });
@@ -557,7 +560,7 @@ export default function SessionDetailContent({
   const confirmManualMatch = async () => {
     if (selectedPlayers.length !== 4 || !selectedCourt) {
       toast.toast({
-        title: "Please select exactly 4 players",
+        title: t("selectExactly4Players"),
         status: "error",
         duration: 3000,
       });
@@ -575,14 +578,14 @@ export default function SessionDetailContent({
       await refreshSessionData();
 
       toast.toast({
-        title: "Match started successfully",
+        title: t("matchStartedSuccessfully"),
         status: "success",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error starting match:", error);
       toast.toast({
-        title: "Error starting match",
+        title: t("errorStartingMatch"),
         status: "error",
         duration: 3000,
       });
@@ -697,7 +700,7 @@ export default function SessionDetailContent({
     } catch (error) {
       console.error("Error saving player changes:", error);
       toast.toast({
-        title: "Failed to save player changes",
+        title: t("failedToSavePlayerChanges"),
         status: "error",
         duration: 3000,
       });
@@ -733,8 +736,8 @@ export default function SessionDetailContent({
     } catch (error) {
       console.error("Error updating player:", error);
       toast.toast({
-        title: "Failed to update player",
-        description: error instanceof Error ? error.message : "Unknown error",
+        title: t("failedToUpdatePlayer"),
+        description: error instanceof Error ? error.message : t("unknownError"),
         status: "error",
         duration: 3000,
       });
@@ -750,7 +753,7 @@ export default function SessionDetailContent({
     } catch (error) {
       console.error("Error deleting player:", error);
       toast.toast({
-        title: "Failed to delete player",
+        title: t("failedToDeletePlayer"),
         status: "error",
         duration: 3000,
       });
@@ -791,10 +794,10 @@ export default function SessionDetailContent({
                   size={{ base: "sm", md: "md" }}
                   display={{ base: "none", md: "block" }}
                 >
-                  Session Time
+                  {t("sessionTime")}
                 </Heading>
                 <Heading size="xs" display={{ base: "block", md: "none" }}>
-                  Status
+                  {t("status")}
                 </Heading>
               </Flex>
               <Button
@@ -820,30 +823,30 @@ export default function SessionDetailContent({
               <VStack align="start" spacing={2}>
                 {session.status === "PREPARING" ? (
                   <Text fontSize="lg" color="gray.500">
-                    Not started yet
+                    {t("notStartedYet")}
                   </Text>
                 ) : session.status === "IN_PROGRESS" ? (
                   <>
                     <Text fontWeight="medium">
-                      Start Time: {formatTime(session.startTime!)}
+                      {t("startTime")}: {formatTime(session.startTime!)}
                     </Text>
                     <Text fontSize="sm" color="blue.600">
-                      Status: In Progress
+                      {t("statusInProgress")}
                     </Text>
                   </>
                 ) : (
                   <>
                     <Text fontWeight="medium">
-                      Start Time: {formatTime(session.startTime!)}
+                      {t("startTime")}: {formatTime(session.startTime!)}
                     </Text>
                     {session.endTime && (
                       <Text fontWeight="medium">
-                        End Time: {formatTime(session.endTime)}
+                        {t("endTime")}: {formatTime(session.endTime)}
                       </Text>
                     )}
                     {session.startTime && session.endTime && (
                       <Text fontSize="sm" color="gray.600">
-                        Duration:{" "}
+                        {t("duration")}:{" "}
                         {formatDuration(session.startTime, session.endTime)}
                       </Text>
                     )}
@@ -855,10 +858,10 @@ export default function SessionDetailContent({
             <Box display={{ base: "block", md: "none" }}>
               <Text fontSize="xs" color="blue.600">
                 {session.status === "PREPARING"
-                  ? "Not started"
+                  ? t("notStarted")
                   : session.status === "IN_PROGRESS"
-                  ? "In Progress"
-                  : "Finished"}
+                  ? t("inProgress")
+                  : t("finished")}
               </Text>
             </Box>
           </Box>
@@ -878,10 +881,10 @@ export default function SessionDetailContent({
                 color="blue.500"
                 mr={{ base: 1, md: 2 }}
               />
-              <Heading size={{ base: "xs", md: "md" }}>Players</Heading>
+              <Heading size={{ base: "xs", md: "md" }}>{t("players")}</Heading>
             </Flex>
             <Text fontSize={{ base: "sm", md: "lg" }}>
-              {session.players.length} total
+              {session.players.length} {t("total")}
             </Text>
             <Text
               fontSize={{ base: "xs", md: "sm" }}
@@ -889,9 +892,9 @@ export default function SessionDetailContent({
               display={{ base: "none", md: "block" }}
             >
               {session.players.filter((p) => p.status === "PLAYING").length}{" "}
-              playing /{" "}
+              {t("playing")} /{" "}
               {session.players.filter((p) => p.status === "WAITING").length}{" "}
-              waiting
+              {t("waiting")}
             </Text>
             {/* Mobile simplified view */}
             <Text
@@ -928,10 +931,10 @@ export default function SessionDetailContent({
                   size={{ base: "xs", md: "md" }}
                   display={{ base: "none", md: "block" }}
                 >
-                  Updates
+                  {t("updates")}
                 </Heading>
                 <Heading size="xs" display={{ base: "block", md: "none" }}>
-                  Refresh
+                  {t("refresh")}
                 </Heading>
               </Flex>
               {session.status === "IN_PROGRESS" && (
@@ -947,11 +950,11 @@ export default function SessionDetailContent({
             <Box display={{ base: "none", md: "block" }}>
               <Text fontSize="lg">
                 {session.status === "IN_PROGRESS"
-                  ? `Auto-refresh: ${refreshInterval}s`
-                  : "Auto-refresh disabled"}
+                  ? t("autoRefresh", { seconds: refreshInterval })
+                  : t("autoRefreshDisabled")}
               </Text>
               <Text fontSize="sm" color="gray.500">
-                Last updated: {lastRefreshed.toLocaleTimeString()}
+                {t("lastUpdated")}: {lastRefreshed.toLocaleTimeString()}
               </Text>
             </Box>
             {/* Mobile simplified view */}
@@ -959,7 +962,7 @@ export default function SessionDetailContent({
               <Text fontSize="xs" color="gray.500">
                 {session.status === "IN_PROGRESS"
                   ? `${refreshInterval}s`
-                  : "Off"}
+                  : t("off")}
               </Text>
             </Box>
           </Box>
@@ -993,6 +996,7 @@ export default function SessionDetailContent({
               }
               startManualMatchCreation={startManualMatchCreation}
               onDataRefresh={refreshSessionData}
+              isRefreshing={isRefreshing}
             />
           )}
           {activeTab === 1 && (
@@ -1050,7 +1054,7 @@ export default function SessionDetailContent({
             fontWeight={activeTab === 0 ? "bold" : "normal"}
           >
             <Box as={Users} boxSize={6} mb={1} />
-            Courts
+            {t("courts")}
           </Box>
           <Box
             as="button"
@@ -1064,7 +1068,7 @@ export default function SessionDetailContent({
             fontWeight={activeTab === 1 ? "bold" : "normal"}
           >
             <Box as={Users} boxSize={6} mb={1} />
-            Players
+            {t("players")}
           </Box>
           <Box
             as="button"
@@ -1078,7 +1082,7 @@ export default function SessionDetailContent({
             fontWeight={activeTab === 2 ? "bold" : "normal"}
           >
             <Box as={RefreshCw} boxSize={6} mb={1} />
-            Manage
+            {t("manage")}
           </Box>
           <Box
             as="button"
@@ -1092,7 +1096,7 @@ export default function SessionDetailContent({
             fontWeight={activeTab === 3 ? "bold" : "normal"}
           >
             <Box as={/* icon for settings */ RefreshCw} boxSize={6} mb={1} />
-            Settings
+            {t("settings")}
           </Box>
         </Box>
       </Container>

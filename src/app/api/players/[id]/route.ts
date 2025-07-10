@@ -6,7 +6,7 @@ interface PlayerParams {
   id: string;
 }
 
-// GET /api/players/[id] - Lấy thông tin chi tiết người chơi
+// GET /api/players/[id] - Retrieve detailed player information
 export async function GET(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
     const { id } = await params;
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Pl
   }
 }
 
-// PUT /api/players/[id] - Cập nhật thông tin người chơi
+// PUT /api/players/[id] - Update player information
 export async function PUT(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
     const { id } = await params;
@@ -112,7 +112,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<Pl
   }
 }
 
-// DELETE /api/players/[id] - Xóa người chơi
+// DELETE /api/players/[id] - Delete player
 export async function DELETE(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
   try {
     const { id } = await params;
