@@ -10,6 +10,8 @@ interface CourtParams {
 export async function POST(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
   try {
     const { id } = await params;
+    
+    console.log("END MATCH API - Court ID:", id);
 
     // Validate court exists
     const court = await prisma.court.findUnique({
@@ -20,6 +22,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<C
         currentMatch: true,
       },
     });
+
+    console.log("END MATCH API - Court found:", court ? "Yes" : "No");
+    if (court) {
+      console.log("END MATCH API - Court status:", court.status);
+      console.log("END MATCH API - Current match ID:", court.currentMatchId);
+      console.log("END MATCH API - Session status:", court.session.status);
+    }
 
     if (!court) {
       return errorResponse("Court not found", 404);

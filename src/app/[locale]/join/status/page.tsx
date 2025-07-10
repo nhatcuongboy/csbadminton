@@ -156,8 +156,11 @@ function StatusPageContent() {
           setQueuePosition(position);
         }
 
-        // Get match and court info if player is playing
-        if (playerData.status === "PLAYING" && playerData.currentCourtId) {
+        // Get match and court info if player is playing or ready
+        if (
+          (playerData.status === "PLAYING" || playerData.status === "READY") &&
+          playerData.currentCourtId
+        ) {
           const court = sessionData.courts?.find(
             (c) => c.id === playerData.currentCourtId
           );
@@ -171,7 +174,7 @@ function StatusPageContent() {
             }
           }
         } else {
-          // Clear match and court info if not playing
+          // Clear match and court info if not playing or ready
           setCurrentMatch(null);
           setCurrentCourt(null);
           setCourtPlayers([]);
@@ -422,6 +425,21 @@ function StatusPageContent() {
                           })}
                         </Text>
                       </>
+                    ) : player.status === "READY" ? (
+                      <>
+                        <Center mb={2}>
+                          <Trophy
+                            size={32}
+                            color="var(--chakra-colors-yellow-500)"
+                          />
+                        </Center>
+                        <Heading size="sm" fontWeight="medium">
+                          {t("ready.title")}
+                        </Heading>
+                        <Text fontSize="sm" color="gray.500">
+                          {t("ready.description")}
+                        </Text>
+                      </>
                     ) : (
                       <>
                         <Center mb={2}>
@@ -440,8 +458,8 @@ function StatusPageContent() {
                     )}
                   </Box>
 
-                  {/* Court Visual - Only show when player is playing */}
-                  {player.status === "PLAYING" &&
+                  {/* Court Visual - Show when player is playing or ready */}
+                  {(player.status === "PLAYING" || player.status === "READY") &&
                     currentCourt &&
                     courtPlayers.length > 0 && (
                       <Box
@@ -487,6 +505,7 @@ function StatusPageContent() {
                           )}
                           width="100%"
                           showTimeInCenter={true}
+                          status={currentCourt.status}
                         />
                         <Text
                           fontSize="xs"
@@ -680,6 +699,7 @@ function StatusPageContent() {
               autoAssignPlayers={() => {}}
               onDataRefresh={fetchPlayerData}
               mode="view" // Set to view mode for player status page
+              formatWaitTime={formatWaitTime}
             />
           )}
 

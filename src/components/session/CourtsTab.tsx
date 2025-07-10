@@ -13,6 +13,7 @@ import { Plus, Shuffle, Square, Play, X, Clock } from "lucide-react";
 import BadmintonCourt from "../court/BadmintonCourt";
 import MatchPreviewModal from "./MatchPreviewModal";
 import ManualSelectPlayersModal from "./ManualSelectPlayersModal";
+import { PlayerGrid } from "../player/PlayerGrid";
 import {
   Card,
   CardBody,
@@ -21,7 +22,7 @@ import {
   Button as CompatButton,
   useToast,
 } from "@/components/ui/chakra-compat";
-import { CourtService } from "@/lib/api";
+import { CourtService, SuggestedPlayersResponse } from "@/lib/api";
 import { Player, Court, Match, MatchPlayer } from "@/types/session";
 import { useTranslations } from "next-intl";
 
@@ -53,6 +54,7 @@ interface CourtsTabProps {
   startManualMatchCreation?: (courtId: string) => void;
   onDataRefresh?: () => void;
   isRefreshing?: boolean;
+  formatWaitTime: (waitTimeInMinutes: number) => string;
 }
 
 const CourtsTab: React.FC<
@@ -87,6 +89,7 @@ const CourtsTab: React.FC<
   startManualMatchCreation,
   onDataRefresh,
   isRefreshing = false,
+  formatWaitTime,
 }) => {
   const t = useTranslations("SessionDetail");
   const [loadingEndMatchId, setLoadingEndMatchId] = React.useState<
@@ -94,16 +97,27 @@ const CourtsTab: React.FC<
   >(null);
   const [loadingStartMatchCourtId, setLoadingStartMatchCourtId] =
     React.useState<string | null>(null);
+  const [loadingCancelCourtId, setLoadingCancelCourtId] = React.useState<
+    string | null
+  >(null);
   const toast = useToast();
 
   // Auto-assign modal state
   const [autoAssignModalOpen, setAutoAssignModalOpen] = React.useState(false);
   const [selectedAutoAssignCourt, setSelectedAutoAssignCourt] =
     React.useState<Court | null>(null);
-  const [suggestedPlayers, setSuggestedPlayers] = React.useState<Player[]>([]);
-  const [loadingAutoAssign, setLoadingAutoAssign] = React.useState(false);
   const [loadingConfirmAutoAssign, setLoadingConfirmAutoAssign] =
     React.useState(false);
+  const [currentTopCount, setCurrentTopCount] = React.useState(
+    waitingPlayers.length || 4
+  );
+
+  // Update currentTopCount when waitingPlayers count changes
+  React.useEffect(() => {
+    if (waitingPlayers.length > 0) {
+      setCurrentTopCount(waitingPlayers.length);
+    }
+  }, [waitingPlayers.length]);
 
   // Manual selection modal state
   const [manualSelectModalOpen, setManualSelectModalOpen] =
@@ -113,48 +127,41 @@ const CourtsTab: React.FC<
   const [manualSelectedPlayers, setManualSelectedPlayers] = React.useState<
     string[]
   >([]);
-  const [showManualPreview, setShowManualPreview] = React.useState(false);
   const [confirmingManualMatch, setConfirmingManualMatch] =
     React.useState(false);
 
   // Handle auto-assign match button click
-  const handleAutoAssignClick = async (court: Court) => {
-    try {
-      setLoadingAutoAssign(true);
-      const players = await CourtService.getSuggestedPlayersForCourt(court.id);
-      setSuggestedPlayers(players);
-      setSelectedAutoAssignCourt(court);
-      setAutoAssignModalOpen(true);
-    } catch (error) {
-      console.error("Error getting suggested players:", error);
-      toast.toast({
-        title: t("courtsTab.errorGettingSuggestedPlayers"),
-        description: t("courtsTab.pleaseRetryLater"),
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setLoadingAutoAssign(false);
-    }
+  const handleAutoAssignClick = (court: Court) => {
+    setSelectedAutoAssignCourt(court);
+    setAutoAssignModalOpen(true);
   };
 
-  // Confirm auto-assign and select players only
-  const handleConfirmAutoAssign = async () => {
+  // Handle confirm from modal with suggested players
+  const handleConfirmAutoAssign = async (
+    suggestedPlayers: SuggestedPlayersResponse
+  ) => {
     if (!selectedAutoAssignCourt) return;
 
     try {
       setLoadingConfirmAutoAssign(true);
-      // Only select the suggested players
-      const playerIds = suggestedPlayers.map((p) => p.id);
+
+      const playerIds = [
+        ...suggestedPlayers.pair1.players.map((p: Player) => p.id),
+        ...suggestedPlayers.pair2.players.map((p: Player) => p.id),
+      ];
+
+      // Select the players for the specified court
       await CourtService.selectPlayers(selectedAutoAssignCourt.id, playerIds);
+
       // Close modal and reset state
       setAutoAssignModalOpen(false);
       setSelectedAutoAssignCourt(null);
-      setSuggestedPlayers([]);
+
       // Refresh parent data
       if (onDataRefresh) {
         onDataRefresh();
       }
+
       toast.toast({
         title: t("courtsTab.playersAssignedToCourt"),
         description: t("courtsTab.pleaseStartMatchManually"),
@@ -162,7 +169,7 @@ const CourtsTab: React.FC<
         duration: 3000,
       });
     } catch (error) {
-      console.error("Error confirming auto-assign:", error);
+      console.error("Error selecting players for court:", error);
       toast.toast({
         title: t("courtsTab.errorAssigningPlayers"),
         description: t("courtsTab.pleaseRetryLater"),
@@ -174,11 +181,54 @@ const CourtsTab: React.FC<
     }
   };
 
+  // Select players for court (used by both auto-assign and manual selection)
+  const handleChoosePlayersForCourt = async (
+    playerIds: string[],
+    courtId: string
+  ) => {
+    try {
+      setLoadingConfirmAutoAssign(true);
+      setConfirmingManualMatch(true);
+
+      // Select the players for the specified court
+      await CourtService.selectPlayers(courtId, playerIds);
+
+      // Close modals and reset state
+      setAutoAssignModalOpen(false);
+      setManualSelectModalOpen(false);
+      setSelectedAutoAssignCourt(null);
+      setSelectedManualCourt(null);
+      setManualSelectedPlayers([]);
+
+      // Refresh parent data
+      if (onDataRefresh) {
+        onDataRefresh();
+      }
+
+      toast.toast({
+        title: t("courtsTab.playersAssignedToCourt"),
+        description: t("courtsTab.pleaseStartMatchManually"),
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error selecting players for court:", error);
+      toast.toast({
+        title: t("courtsTab.errorAssigningPlayers"),
+        description: t("courtsTab.pleaseRetryLater"),
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setLoadingConfirmAutoAssign(false);
+      setConfirmingManualMatch(false);
+    }
+  };
+
   // Cancel auto-assign modal
   const handleCancelAutoAssign = () => {
     setAutoAssignModalOpen(false);
     setSelectedAutoAssignCourt(null);
-    setSuggestedPlayers([]);
   };
 
   // Handle manual selection button click
@@ -200,68 +250,9 @@ const CourtsTab: React.FC<
     });
   };
 
-  // Handle continue from manual selection to preview
-  const handleManualSelectionContinue = () => {
-    setManualSelectModalOpen(false);
-    setShowManualPreview(true);
-  };
-
   // Cancel manual selection
   const handleCancelManualSelection = () => {
     setManualSelectModalOpen(false);
-    setSelectedManualCourt(null);
-    setManualSelectedPlayers([]);
-  };
-
-  // Go back from preview to manual selection
-  const handleBackToManualSelection = () => {
-    setShowManualPreview(false);
-    setManualSelectModalOpen(true);
-  };
-
-  // Confirm manual match
-  const handleConfirmManualMatch = async () => {
-    if (!selectedManualCourt || manualSelectedPlayers.length !== 4) return;
-
-    try {
-      setConfirmingManualMatch(true);
-      // First select the manually chosen players
-      await CourtService.selectPlayers(
-        selectedManualCourt.id,
-        manualSelectedPlayers
-      );
-      // Then start the match
-      await CourtService.startMatch(selectedManualCourt.id);
-      // Close modals and reset state
-      setShowManualPreview(false);
-      setSelectedManualCourt(null);
-      setManualSelectedPlayers([]);
-      // Refresh parent data
-      if (onDataRefresh) {
-        onDataRefresh();
-      }
-      toast.toast({
-        title: t("courtsTab.matchStartedSuccessfully"),
-        description: t("courtsTab.playersAssignedToCourt"),
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error confirming manual match:", error);
-      toast.toast({
-        title: t("courtsTab.errorStartingMatch"),
-        description: t("courtsTab.pleaseRetryLater"),
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setConfirmingManualMatch(false);
-    }
-  };
-
-  // Cancel manual preview
-  const handleCancelManualPreview = () => {
-    setShowManualPreview(false);
     setSelectedManualCourt(null);
     setManualSelectedPlayers([]);
   };
@@ -294,19 +285,35 @@ const CourtsTab: React.FC<
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} mt={4}>
         {session.courts.map((court: Court) => {
           const currentMatch = getCurrentMatch(court.id);
-          const isActive = court.status === "IN_USE";
+          const isActive =
+            court.status === "IN_USE" || court.status === "READY";
+          const isCourtReady = court.status === "READY";
           return (
             <Card key={court.id} variant="outline">
               <CardHeader
-                bg={isActive ? "green.50" : "gray.50"}
+                bg={
+                  isCourtReady ? "yellow.50" : isActive ? "green.50" : "gray.50"
+                }
                 p={4}
                 borderBottom="1px"
-                borderColor={isActive ? "green.200" : "gray.200"}
+                borderColor={
+                  isCourtReady
+                    ? "yellow.200"
+                    : isActive
+                    ? "green.200"
+                    : "gray.200"
+                }
               >
                 <Flex justifyContent="space-between" alignItems="center">
                   <Heading
                     size="md"
-                    color={isActive ? "green.700" : "gray.700"}
+                    color={
+                      isCourtReady
+                        ? "yellow.700"
+                        : isActive
+                        ? "green.700"
+                        : "gray.700"
+                    }
                   >
                     {t("courtsTab.courtNumber", { number: court.courtNumber })}
                   </Heading>
@@ -326,13 +333,15 @@ const CourtsTab: React.FC<
                       </Badge>
                     )}
                     <Badge
-                      colorScheme={isActive ? "green" : "gray"}
+                      colorScheme={
+                        isCourtReady ? "yellow" : isActive ? "green" : "gray"
+                      }
                       variant={isActive ? "solid" : "outline"}
                     >
-                      {isActive
-                        ? currentMatch
-                          ? t("courtsTab.inUse")
-                          : t("courtsTab.ready")
+                      {isCourtReady
+                        ? t("courtsTab.ready")
+                        : isActive
+                        ? t("courtsTab.inUse")
                         : t("courtsTab.empty")}
                     </Badge>
                   </HStack>
@@ -357,43 +366,79 @@ const CourtsTab: React.FC<
                       //   height="180px"
                       showTimeInCenter={true}
                       isLoading={isRefreshing}
-                      status={currentMatch ? "playing" : "ready"}
+                      status={court.status}
                     />
                     {/* Show Start Match button if court is IN_USE but no match has started */}
                     {session.status === "IN_PROGRESS" &&
                       mode === "manage" &&
-                      !currentMatch &&
-                      court.currentPlayers.length === 4 && (
-                        <CompatButton
-                          size="sm"
-                          width={{ base: "100%", md: "auto" }}
-                          colorScheme="green"
-                          loading={loadingStartMatchCourtId === court.id}
-                          onClick={async () => {
-                            setLoadingStartMatchCourtId(court.id);
-                            try {
-                              await CourtService.startMatch(court.id);
-                              if (onDataRefresh) onDataRefresh();
-                              toast.toast({
-                                title: t("courtsTab.matchStartedSuccessfully"),
-                                description: t("courtsTab.matchHasStarted"),
-                                status: "success",
-                                duration: 3000,
-                              });
-                            } finally {
-                              setLoadingStartMatchCourtId(null);
-                            }
-                          }}
-                        >
-                          <Box as={Play} boxSize={4} mr={1} />
-                          {t("startMatch")}
-                        </CompatButton>
+                      court.status === "READY" && (
+                        <VStack gap={2} width="100%">
+                          <CompatButton
+                            size="sm"
+                            width={{ base: "100%", md: "auto" }}
+                            colorScheme="green"
+                            loading={loadingStartMatchCourtId === court.id}
+                            onClick={async () => {
+                              setLoadingStartMatchCourtId(court.id);
+                              try {
+                                await CourtService.startMatch(court.id);
+                                if (onDataRefresh) onDataRefresh();
+                                toast.toast({
+                                  title: t(
+                                    "courtsTab.matchStartedSuccessfully"
+                                  ),
+                                  description: t("courtsTab.matchHasStarted"),
+                                  status: "success",
+                                  duration: 3000,
+                                });
+                              } finally {
+                                setLoadingStartMatchCourtId(null);
+                              }
+                            }}
+                          >
+                            <Box as={Play} boxSize={4} mr={1} />
+                            {t("startMatch")}
+                          </CompatButton>
+                          <CompatButton
+                            size="sm"
+                            width={{ base: "100%", md: "auto" }}
+                            colorScheme="red"
+                            variant="outline"
+                            loading={loadingCancelCourtId === court.id}
+                            onClick={async () => {
+                              setLoadingCancelCourtId(court.id);
+                              try {
+                                await CourtService.deselectPlayers(court.id);
+                                if (onDataRefresh) onDataRefresh();
+                                toast.toast({
+                                  title: t("courtsTab.playersDeselected"),
+                                  description: t(
+                                    "courtsTab.courtAvailableForPlay"
+                                  ),
+                                  status: "success",
+                                  duration: 3000,
+                                });
+                              } catch (error) {
+                                console.error(
+                                  "Error deselecting players:",
+                                  error
+                                );
+                              } finally {
+                                setLoadingCancelCourtId(null);
+                              }
+                            }}
+                          >
+                            <Box as={X} boxSize={4} mr={1} />
+                            {t("courtsTab.cancel")}
+                          </CompatButton>
+                        </VStack>
                       )}
                     <VStack gap={2} width="100%">
                       {session.status === "IN_PROGRESS" &&
                         endMatch &&
                         court.currentMatchId &&
-                        mode === "manage" && (
+                        mode === "manage" &&
+                        court.status !== "READY" && ( // Ensure button does not show for READY status
                           <CompatButton
                             size="sm"
                             width={{ base: "100%", md: "auto" }}
@@ -402,7 +447,24 @@ const CourtsTab: React.FC<
                               if (!court.currentMatchId) return;
                               setLoadingEndMatchId(court.currentMatchId);
                               try {
-                                await endMatch(court.currentMatchId);
+                                await CourtService.endMatch(court.id); // Call endMatch API
+                                if (onDataRefresh) onDataRefresh(); // Refresh data after ending match
+                                toast.toast({
+                                  title: t("courtsTab.matchEndedSuccessfully"),
+                                  description: t(
+                                    "courtsTab.courtAvailableForPlay"
+                                  ),
+                                  status: "success",
+                                  duration: 3000,
+                                });
+                              } catch (error) {
+                                console.error("Error ending match:", error);
+                                toast.toast({
+                                  title: t("courtsTab.errorEndingMatch"),
+                                  description: t("courtsTab.pleaseRetryLater"),
+                                  status: "error",
+                                  duration: 3000,
+                                });
                               } finally {
                                 setLoadingEndMatchId(null);
                               }
@@ -479,8 +541,8 @@ const CourtsTab: React.FC<
       <MatchPreviewModal
         isOpen={autoAssignModalOpen}
         court={selectedAutoAssignCourt}
-        selectedPlayers={suggestedPlayers}
-        isLoading={loadingConfirmAutoAssign}
+        waitingPlayersCount={waitingPlayers.length}
+        currentTopCount={currentTopCount}
         onConfirm={handleConfirmAutoAssign}
         onCancel={handleCancelAutoAssign}
         getCourtDisplayName={getCourtDisplayName}
@@ -501,8 +563,16 @@ const CourtsTab: React.FC<
         waitingPlayers={waitingPlayers}
         selectedPlayers={manualSelectedPlayers}
         onPlayerToggle={handleManualPlayerToggle}
-        onConfirm={handleManualSelectionContinue}
+        onConfirm={() => {
+          if (selectedManualCourt) {
+            handleChoosePlayersForCourt(
+              manualSelectedPlayers,
+              selectedManualCourt.id
+            );
+          }
+        }}
         onCancel={handleCancelManualSelection}
+        isLoading={confirmingManualMatch} // Pass loading state for manual selection
         formatWaitTime={(minutes) => {
           const hours = Math.floor(minutes / 60);
           const mins = minutes % 60;
@@ -513,27 +583,29 @@ const CourtsTab: React.FC<
         }}
       />
 
-      {/* Manual Match Preview Modal */}
-      <MatchPreviewModal
-        isOpen={showManualPreview}
-        court={selectedManualCourt}
-        selectedPlayers={waitingPlayers.filter((p) =>
-          manualSelectedPlayers.includes(p.id)
-        )}
-        isLoading={confirmingManualMatch}
-        onConfirm={handleConfirmManualMatch}
-        onCancel={handleCancelManualPreview}
-        onBack={handleBackToManualSelection}
-        getCourtDisplayName={getCourtDisplayName}
-        title={
-          selectedManualCourt
-            ? t("courtsTab.manualMatchPreviewTitle", {
-                courtNumber: selectedManualCourt.courtNumber,
-              })
-            : undefined
-        }
-        description={t("courtsTab.manualMatchPreviewDescription")}
-      />
+      {/* Waiting Players Grid */}
+      {waitingPlayers.length > 0 && (
+        <Box mt={8}>
+          <Flex justifyContent="space-between" alignItems="center" mb={4}>
+            <Heading size="md">
+              {t("courtsTab.waitingPlayers")} ({waitingPlayers.length})
+            </Heading>
+            {/* {waitingPlayers.length > 0 && (
+              <Badge colorScheme="blue" fontSize="md" py={1} px={2}>
+                {waitingPlayers.length}
+              </Badge>
+            )} */}
+          </Flex>
+          <PlayerGrid
+            players={waitingPlayers}
+            playerFilter="WAITING"
+            formatWaitTime={formatWaitTime}
+            selectedPlayers={selectedPlayers}
+            // onPlayerToggle={onPlayerToggle}
+            // selectionMode={true}
+          />
+        </Box>
+      )}
     </>
   );
 };

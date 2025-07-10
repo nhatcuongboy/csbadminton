@@ -26,6 +26,7 @@ interface ManualSelectPlayersModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   formatWaitTime: (waitTimeInMinutes: number) => string;
+  isLoading?: boolean; // Add loading prop
   getCourtDisplayName?: (
     courtName: string | undefined,
     courtNumber: number
@@ -41,11 +42,13 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
   onConfirm,
   onCancel,
   formatWaitTime,
+  isLoading = false, // Add isLoading prop with default
   getCourtDisplayName = (name, number) => name || `Court ${number}`,
 }) => {
   const t = useTranslations("SessionDetail");
   const [showPreview, setShowPreview] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Remove local isLoading state since we're using the prop
+  // const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen || !court) return null;
 
@@ -87,18 +90,10 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
   };
 
   const handleConfirmSelection = () => {
+    console.log(selectedPlayers);
     if (selectedPlayers.length === 4) {
-      setShowPreview(true);
+      onConfirm();
     }
-  };
-
-  const handleConfirmPreview = () => {
-    setIsLoading(true);
-    onConfirm();
-  };
-
-  const handleCancelPreview = () => {
-    setShowPreview(false);
   };
 
   const pairs = getPairAssignments();
@@ -139,7 +134,9 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             flexShrink={0}
           >
             <Heading size="md">
-              {t("courtsTab.manualPlayerSelectionTitle", { courtNumber: court.courtNumber })}
+              {t("courtsTab.manualPlayerSelectionTitle", {
+                courtNumber: court.courtNumber,
+              })}
             </Heading>
             <Box
               as="button"
@@ -157,7 +154,9 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             {/* Selected Players Summary */}
             <Box flex={{ base: "1", lg: "0 0 280px" }} minW="0">
               <Text fontSize="sm" fontWeight="medium" mb={3}>
-                {t("courtsTab.selectedPlayersCount", { count: selectedPlayers.length })}
+                {t("courtsTab.selectedPlayersCount", {
+                  count: selectedPlayers.length,
+                })}
               </Text>
 
               {/* 2x2 Grid for Selected Players */}
@@ -200,7 +199,10 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                           color={`${pairColor}.700`}
                           fontSize="sm"
                           fontWeight="bold"
-                          _hover={{ bg: `${pairColor}.300`, color: `${pairColor}.900` }}
+                          _hover={{
+                            bg: `${pairColor}.300`,
+                            color: `${pairColor}.900`,
+                          }}
                           w={5}
                           h={5}
                           borderRadius="full"
@@ -230,7 +232,10 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                           maxW="100%"
                           overflow="hidden"
                         >
-                          {player.name || t("courtsTab.playerNumber", { number: player.playerNumber })}
+                          {player.name ||
+                            t("courtsTab.playerNumber", {
+                              number: player.playerNumber,
+                            })}
                         </Text>
                         <Badge
                           colorScheme={pairColor}
@@ -282,8 +287,15 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                         >
                           {t("courtsTab.pairNumber", { number: pairNumber })}
                         </Badge>
-                        <Text fontSize="xs" fontWeight="medium" color="gray.500" mb={1}>
-                          {t("courtsTab.positionNumber", { number: positionInPair })}
+                        <Text
+                          fontSize="xs"
+                          fontWeight="medium"
+                          color="gray.500"
+                          mb={1}
+                        >
+                          {t("courtsTab.positionNumber", {
+                            number: positionInPair,
+                          })}
                         </Text>
                         <Text fontSize="xs" color="gray.500" mt={1}>
                           {t("courtsTab.selectPlayer")}
@@ -333,28 +345,17 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             <CompatButton
               colorScheme="blue"
               onClick={handleConfirmSelection}
-              disabled={selectedPlayers.length !== 4}
+              disabled={selectedPlayers.length !== 4 || isLoading}
+              loading={isLoading}
             >
               <Box as={Check} boxSize={4} mr={1} />
-              {t("courtsTab.startMatchCount", { count: selectedPlayers.length })}
+              {t("courtsTab.confirmMatchManual", {
+                count: selectedPlayers.length,
+              })}
             </CompatButton>
           </Flex>
         </Box>
       </Box>
-
-      {/* Match Preview Modal */}
-      <MatchPreviewModal
-        isOpen={showPreview}
-        court={court}
-        selectedPlayers={selectedPlayersData}
-        isLoading={isLoading}
-        onConfirm={handleConfirmPreview}
-        onCancel={handleCancelPreview}
-        onBack={handleCancelPreview}
-        getCourtDisplayName={getCourtDisplayName}
-        title={t("courtsTab.manualMatchPreviewTitle", { courtNumber: court.courtNumber })}
-        description={t("courtsTab.manualMatchPreviewDescription")}
-      />
     </>
   );
 };

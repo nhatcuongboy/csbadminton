@@ -197,9 +197,12 @@ export default function SessionDetailContent({
     .sort((a, b) => b.currentWaitTime - a.currentWaitTime);
 
   // Get active courts (with current matches)
-  const activeCourts = session.courts.filter(
-    (court) => court.status === "IN_USE"
-  );
+  const activeCourts = session.courts
+    .filter((court) => court.status === "IN_USE")
+    .map((court) => ({
+      ...court,
+      status: court.status as "READY" | "IN_USE" | "EMPTY",
+    }));
 
   // Get completed matches
   const completedMatches =
@@ -351,7 +354,9 @@ export default function SessionDetailContent({
 
       toast.toast({
         title:
-          nextStatus === "IN_PROGRESS" ? t("sessionStarted") : t("sessionEnded"),
+          nextStatus === "IN_PROGRESS"
+            ? t("sessionStarted")
+            : t("sessionEnded"),
         status: "success",
         duration: 3000,
       });
@@ -821,37 +826,19 @@ export default function SessionDetailContent({
             </Flex>
             <Box display={{ base: "none", md: "block" }}>
               <VStack align="start" spacing={2}>
-                {session.status === "PREPARING" ? (
-                  <Text fontSize="lg" color="gray.500">
-                    {t("notStartedYet")}
-                  </Text>
-                ) : session.status === "IN_PROGRESS" ? (
-                  <>
-                    <Text fontWeight="medium">
-                      {t("startTime")}: {formatTime(session.startTime!)}
-                    </Text>
-                    <Text fontSize="sm" color="blue.600">
-                      {t("statusInProgress")}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text fontWeight="medium">
-                      {t("startTime")}: {formatTime(session.startTime!)}
-                    </Text>
-                    {session.endTime && (
-                      <Text fontWeight="medium">
-                        {t("endTime")}: {formatTime(session.endTime)}
-                      </Text>
-                    )}
-                    {session.startTime && session.endTime && (
-                      <Text fontSize="sm" color="gray.600">
-                        {t("duration")}:{" "}
-                        {formatDuration(session.startTime, session.endTime)}
-                      </Text>
-                    )}
-                  </>
-                )}
+                <Text fontWeight="medium">
+                  {`${formatTime(session.startTime!)} - ${formatTime(
+                    session.endTime!
+                  )} (${
+                    session.startTime
+                      ? new Date(session.startTime).toLocaleDateString()
+                      : ""
+                  })`}
+                </Text>
+                <Text fontSize="sm" color="gray.600">
+                  {t("duration")}:{" "}
+                  {formatDuration(session.startTime!, session.endTime!)}
+                </Text>
               </VStack>
             </Box>
             {/* Mobile simplified view */}
@@ -997,6 +984,7 @@ export default function SessionDetailContent({
               startManualMatchCreation={startManualMatchCreation}
               onDataRefresh={refreshSessionData}
               isRefreshing={isRefreshing}
+              formatWaitTime={formatWaitTime}
             />
           )}
           {activeTab === 1 && (

@@ -8,19 +8,19 @@ import {
   HStack,
   Badge,
 } from "@chakra-ui/react";
-import { Play, X, ArrowLeft } from "lucide-react";
+import { Play, X, ArrowLeft, User, UserCheck, RefreshCw } from "lucide-react";
 import BadmintonCourt from "../court/BadmintonCourt";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
-import { Level } from "@/lib/api";
+import { Level, SuggestedPlayersResponse, CourtService } from "@/lib/api";
 import { useTranslations } from "next-intl";
 
 interface MatchPreviewModalProps {
   isOpen: boolean;
   court: Court | null;
-  selectedPlayers: Player[];
-  isLoading?: boolean;
-  onConfirm: () => void;
+  waitingPlayersCount?: number; // Total number of waiting players (optional if no topCount selection)
+  currentTopCount?: number; // Current topCount value
+  onConfirm: (suggestedPlayers: SuggestedPlayersResponse) => void; // Updated to pass suggestedPlayers
   onCancel: () => void;
   onBack?: () => void; // Optional back button for manual selection flow
   getCourtDisplayName: (
@@ -34,8 +34,8 @@ interface MatchPreviewModalProps {
 const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   isOpen,
   court,
-  selectedPlayers,
-  isLoading = false,
+  waitingPlayersCount,
+  currentTopCount = waitingPlayersCount || 4,
   onConfirm,
   onCancel,
   onBack,
@@ -45,7 +45,111 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
 }) => {
   const t = useTranslations("SessionDetail");
 
+  // Internal state for managing suggested players and loading
+  const [suggestedPlayers, setSuggestedPlayers] =
+    React.useState<SuggestedPlayersResponse | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [topCount, setTopCount] = React.useState(currentTopCount);
+  const [isConfirming, setIsConfirming] = React.useState(false);
+
+  // Fetch suggested players when modal opens or topCount changes
+  const fetchSuggestedPlayers = React.useCallback(
+    async (courtId: string, count: number) => {
+      try {
+        setIsLoading(true);
+        const response = await CourtService.getSuggestedPlayersForCourt(
+          courtId,
+          count
+        );
+        setSuggestedPlayers(response);
+      } catch (error) {
+        console.error("Error getting suggested players:", error);
+        // You might want to add error handling here
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  // Effect to fetch data when modal opens or court changes
+  React.useEffect(() => {
+    if (isOpen && court?.id) {
+      setTopCount(currentTopCount);
+      fetchSuggestedPlayers(court.id, currentTopCount);
+    } else if (!isOpen) {
+      // Reset state when modal closes
+      setSuggestedPlayers(null);
+      setIsLoading(false);
+      setIsConfirming(false);
+    }
+  }, [isOpen, court?.id, currentTopCount, fetchSuggestedPlayers]);
+
+  // Handle topCount change
+  const handleTopCountChange = (newTopCount: number) => {
+    if (!court?.id) return;
+    setTopCount(newTopCount);
+    fetchSuggestedPlayers(court.id, newTopCount);
+  };
+
+  // Handle confirm
+  const handleConfirm = async () => {
+    if (!suggestedPlayers) return;
+
+    setIsConfirming(true);
+    try {
+      await onConfirm(suggestedPlayers);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   if (!isOpen || !court) return null;
+
+  // Show loading state if no data yet
+  if (!suggestedPlayers) {
+    return (
+      <Box
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="blackAlpha.600"
+        zIndex={1000}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        p={4}
+      >
+        <Box
+          bg="white"
+          borderRadius="lg"
+          boxShadow="xl"
+          maxW="md"
+          w="full"
+          p={8}
+          textAlign="center"
+        >
+          <VStack gap={4}>
+            <Box
+              as={RefreshCw}
+              boxSize={8}
+              color="blue.500"
+              className="animate-spin"
+            />
+            <Text>{t("courtsTab.loadingSuggestedPlayers")}</Text>
+          </VStack>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Combine players from both pairs
+  const allPlayers = [
+    ...suggestedPlayers.pair1.players,
+    ...suggestedPlayers.pair2.players,
+  ];
 
   const modalTitle =
     title ||
@@ -95,14 +199,60 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
           </Box>
         </Flex>
 
-        <Box p={4}>
-          <Text fontSize="sm" color="gray.600" mb={4}>
+        <Box p={4} flex="1" overflowY="auto">
+          {/* <Text fontSize="sm" color="gray.600" mb={4}>
             {modalDescription}
-          </Text>
-
-          <Box mb={4}>
+          </Text> */}
+          {/* TopCount Selection */}
+          {waitingPlayersCount && (
+            <Box bg="gray.50" p={3} borderRadius="md">
+              <HStack gap={3} align="center">
+                <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                  {t("courtsTab.playersToConsider")}:
+                </Text>
+                <Box flex="1" maxW="120px">
+                  <select
+                    style={{
+                      fontSize: "14px",
+                      backgroundColor: "white",
+                      borderColor: "#d1d5db",
+                      borderWidth: "1px",
+                      borderRadius: "6px",
+                      padding: "8px",
+                      width: "100%",
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      opacity: isLoading ? 0.6 : 1,
+                    }}
+                    value={topCount}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      handleTopCountChange(parseInt(e.target.value))
+                    }
+                    disabled={isLoading}
+                  >
+                    {Array.from(
+                      { length: Math.max(0, waitingPlayersCount - 3) },
+                      (_, i) => i + 4
+                    ).map((count) => (
+                      <option key={count} value={count}>
+                        {count} {t("courtsTab.players")}
+                      </option>
+                    ))}
+                  </select>
+                </Box>
+                {isLoading && (
+                  <Box
+                    as={RefreshCw}
+                    boxSize={4}
+                    color="gray.500"
+                    className="animate-spin"
+                  />
+                )}
+              </HStack>
+            </Box>
+          )}
+          <Box>
             <BadmintonCourt
-              players={selectedPlayers.map((player, index) => ({
+              players={allPlayers.map((player: Player, index: number) => ({
                 ...player, // Include all properties from the original player
                 pairNumber: index < 2 ? 1 : 2, // Assign pair numbers based on index
                 isCurrentPlayer: false,
@@ -117,39 +267,175 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               // isLoading={isLoading}
             />
           </Box>
+          {/* Display pair information */}
+          <VStack>
+            <Text fontSize="md" fontWeight="semibold" color="gray.800">
+              {t("courtsTab.balancedPairs")}
+            </Text>
 
-          <VStack gap={2} mb={4}>
-            {selectedPlayers.map((player) => (
-              <Flex
-                key={player.id}
-                justify="space-between"
-                align="center"
-                p={2}
-                bg="gray.50"
-                borderRadius="md"
-                w="full"
-              >
-                <Text fontWeight="medium">
-                  #{player.playerNumber}{" "}
-                  {player.name ||
-                    t("courtsTab.playerNumber", {
-                      number: player.playerNumber,
-                    })}
-                </Text>
-                <HStack gap={2}>
-                  {player.gender && (
-                    <Badge colorScheme="blue" size="sm">
-                      {player.gender}
+            <Box
+              bg="gray.50"
+              borderRadius="lg"
+              p={4}
+              border="1px solid"
+              borderColor="gray.200"
+            >
+              <HStack gap={2} width="full" justify="center" align="stretch">
+                {/* Pair 1 */}
+                <Box
+                  bg="blue.50"
+                  border="2px solid"
+                  borderColor="blue.200"
+                  borderRadius="lg"
+                  p={4}
+                  textAlign="center"
+                  flex="1"
+                  minW="140px"
+                >
+                  <HStack justify="center" mb={3} gap={2}>
+                    <Badge colorScheme="blue" variant="solid" fontSize="sm">
+                      Pair 1
                     </Badge>
-                  )}
-                  {player.level && (
-                    <Badge colorScheme="green" size="sm">
-                      {player.level}
+                    <Badge colorScheme="blue" variant="outline" fontSize="xs">
+                      {suggestedPlayers.pair1.totalLevelScore}
                     </Badge>
-                  )}
-                </HStack>
-              </Flex>
-            ))}
+                  </HStack>
+
+                  <VStack gap={2}>
+                    {suggestedPlayers.pair1.players.map((player: Player) => (
+                      <Box
+                        key={player.id}
+                        bg="white"
+                        borderRadius="md"
+                        p={2}
+                        border="1px solid"
+                        borderColor="blue.100"
+                        width="full"
+                      >
+                        <Text
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          color="gray.800"
+                        >
+                          #{player.playerNumber}
+                        </Text>
+                        <Text fontSize="xs" color="gray.600" mb={1}>
+                          {player.name || `Player ${player.playerNumber}`}
+                        </Text>
+                        <HStack justify="center" gap={1}>
+                          {player.gender && (
+                            <Box
+                              as={player.gender === "MALE" ? User : UserCheck}
+                              boxSize={3}
+                              color={
+                                player.gender === "MALE"
+                                  ? "blue.500"
+                                  : "pink.500"
+                              }
+                            />
+                          )}
+                          {player.level && (
+                            <Badge
+                              colorScheme="green"
+                              size="sm"
+                              variant="solid"
+                            >
+                              {player.level}
+                            </Badge>
+                          )}
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+
+                {/* VS Divider with Score Difference */}
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="center"
+                  minW="80px"
+                  gap={2}
+                >
+                  <Badge
+                    colorScheme="purple"
+                    variant="solid"
+                    fontSize="xs"
+                    borderRadius="full"
+                  >
+                    Gap: {suggestedPlayers.scoreDifference}
+                  </Badge>
+                </Flex>
+
+                {/* Pair 2 */}
+                <Box
+                  bg="orange.50"
+                  border="2px solid"
+                  borderColor="orange.200"
+                  borderRadius="lg"
+                  p={4}
+                  textAlign="center"
+                  flex="1"
+                  minW="140px"
+                >
+                  <HStack justify="center" mb={3} gap={2}>
+                    <Badge colorScheme="orange" variant="solid" fontSize="sm">
+                      Pair 2
+                    </Badge>
+                    <Badge colorScheme="orange" variant="outline" fontSize="xs">
+                      {suggestedPlayers.pair2.totalLevelScore}
+                    </Badge>
+                  </HStack>
+
+                  <VStack gap={2}>
+                    {suggestedPlayers.pair2.players.map((player: Player) => (
+                      <Box
+                        key={player.id}
+                        bg="white"
+                        borderRadius="md"
+                        p={2}
+                        border="1px solid"
+                        borderColor="orange.100"
+                        width="full"
+                      >
+                        <Text
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          color="gray.800"
+                        >
+                          #{player.playerNumber}
+                        </Text>
+                        <Text fontSize="xs" color="gray.600" mb={1}>
+                          {player.name || `Player ${player.playerNumber}`}
+                        </Text>
+                        <HStack justify="center" gap={1}>
+                          {player.gender && (
+                            <Box
+                              as={player.gender === "MALE" ? User : UserCheck}
+                              boxSize={3}
+                              color={
+                                player.gender === "MALE"
+                                  ? "blue.500"
+                                  : "pink.500"
+                              }
+                            />
+                          )}
+                          {player.level && (
+                            <Badge
+                              colorScheme="green"
+                              size="sm"
+                              variant="solid"
+                            >
+                              {player.level}
+                            </Badge>
+                          )}
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+              </HStack>
+            </Box>
           </VStack>
         </Box>
 
@@ -159,6 +445,10 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
           p={4}
           borderTop="1px"
           borderColor="gray.200"
+          position="sticky"
+          bottom={0}
+          bg="white"
+          zIndex={1}
         >
           {onBack && (
             <CompatButton
@@ -173,14 +463,15 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
           <CompatButton
             variant="outline"
             onClick={onCancel}
-            disabled={isLoading}
+            disabled={isLoading || isConfirming}
           >
             {t("courtsTab.cancel")}
           </CompatButton>
           <CompatButton
             colorScheme="green"
-            onClick={onConfirm}
-            loading={isLoading}
+            onClick={handleConfirm}
+            loading={isConfirming}
+            disabled={isLoading}
           >
             <Box as={Play} boxSize={4} mr={1} />
             {t("courtsTab.confirmMatch")}

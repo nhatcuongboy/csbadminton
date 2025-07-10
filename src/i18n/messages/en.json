@@ -244,7 +244,6 @@
       "female": "Female",
       "level": "Level",
       "phone": "Phone",
-      "status": "Status",
       "available": "Available",
       "infoRequired": "Info Required",
       "yesGoToConfirmation": "Yes (will go to confirmation page)",
@@ -355,6 +354,10 @@
           "playerNotFound": "Player Not Found",
           "playerNotFoundDescription": "We couldn't find your player information. You may need to rejoin the session.",
           "returnToJoin": "Return to Join Page"
+        },
+        "ready": {
+          "title": "Ready to Play",
+          "description": "You are ready to play. Please wait for your turn."
         }
       }
     }
@@ -444,6 +447,7 @@
       "cancel": "Cancel",
       "confirmAndStartMatch": "Confirm & Start Match",
       "confirmMatch": "Confirm Match",
+      "confirmMatchManual": "Confirm Match ({count}/4)",
       "manualPlayerSelectionTitle": "Manual Player Selection - Court {courtNumber}",
       "selectedPlayersCount": "Selected Players ({count}/4):",
       "pairNumber": "Pair {number}",
@@ -451,7 +455,12 @@
       "selectPlayer": "Select player",
       "availablePlayers": "Available Players:",
       "noPlayersWaiting": "No players are currently waiting",
-      "startMatchCount": "Start Match ({count}/4)"
+      "startMatchCount": "Start Match ({count}/4)",
+      "balancedPairs": "Balanced Pairs",
+      "playersToConsider": "Players to consider",
+      "players": "players",
+      "loadingSuggestedPlayers": "Loading suggested players...",
+      "waitingPlayers": "Waiting Players"
     },
     "startMatch": "Start Match"
   }

@@ -80,7 +80,7 @@ export interface Player {
   currentWaitTime: number;
   totalWaitTime: number;
   matchesPlayed: number;
-  status: "WAITING" | "PLAYING" | "FINISHED";
+  status: "WAITING" | "PLAYING" | "FINISHED" | "READY";
   currentCourtId?: string;
   currentCourt?: Court;
   preFilledByHost: boolean;
@@ -95,7 +95,7 @@ export interface Court {
   sessionId: string;
   courtNumber: number;
   courtName?: string;
-  status: "EMPTY" | "IN_USE";
+  status: "EMPTY" | "IN_USE" | "READY";
   currentPlayers?: Player[];
   currentMatchId?: string;
   currentMatch?: Match;
@@ -386,11 +386,16 @@ export const CourtService = {
   },
 
   // Get suggested players for court (auto-assign preview)
-  getSuggestedPlayersForCourt: async (courtId: string): Promise<Player[]> => {
-    const response = await api.get<ApiResponse<Player[]>>(
-      `/courts/${courtId}/suggested-players`
+  getSuggestedPlayersForCourt: async (
+    courtId: string,
+    topCount?: number
+  ): Promise<SuggestedPlayersResponse> => {
+    const params = topCount ? { topCount: topCount.toString() } : {};
+    const response = await api.get<ApiResponse<SuggestedPlayersResponse>>(
+      `/courts/${courtId}/suggested-players`,
+      { params }
     );
-    return response.data.data || [];
+    return response.data.data!;
   },
 
   // Select players for court
@@ -405,6 +410,15 @@ export const CourtService = {
       }
     );
     toast.success("Players selected successfully");
+    return response.data.data!;
+  },
+
+  // Deselect players from court (revert the select-players action)
+  deselectPlayers: async (courtId: string): Promise<Court> => {
+    const response = await api.post<ApiResponse<Court>>(
+      `/courts/${courtId}/deselect-players`
+    );
+    toast.success("Players deselected successfully");
     return response.data.data!;
   },
 
@@ -667,4 +681,17 @@ export interface CreateSessionRequest {
   startTime?: Date;
   endTime?: Date;
   courts?: CourtConfig[];
+}
+
+// Suggested players response types
+export interface PlayerPair {
+  players: Player[];
+  totalLevelScore: number;
+}
+
+export interface SuggestedPlayersResponse {
+  pair1: PlayerPair;
+  pair2: PlayerPair;
+  scoreDifference: number;
+  totalPlayersConsidered: number;
 }

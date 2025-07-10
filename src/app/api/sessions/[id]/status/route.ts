@@ -91,17 +91,21 @@ export async function GET(
     // Calculate real-time statistics
     const stats = {
       totalPlayers: session.players.length,
-      confirmedPlayers: session.players.filter(p => p.confirmedByPlayer).length,
-      waitingPlayers: session.players.filter(p => p.status === "WAITING").length,
-      playingPlayers: session.players.filter(p => p.status === "PLAYING").length,
-      availableCourts: session.courts.filter(c => c.status === "EMPTY").length,
-      activeCourts: session.courts.filter(c => c.status === "IN_USE").length,
-      activeMatches: session.courts.filter(c => c.currentMatch).length,
+      confirmedPlayers: session.players.filter((p) => p.confirmedByPlayer)
+        .length,
+      waitingPlayers: session.players.filter((p) => p.status === "WAITING")
+        .length,
+      playingPlayers: session.players.filter((p) => p.status === "PLAYING")
+        .length,
+      availableCourts: session.courts.filter((c) => c.status === "EMPTY")
+        .length,
+      activeCourts: session.courts.filter((c) => c.status === "IN_USE").length,
+      activeMatches: session.courts.filter((c) => c.currentMatch).length,
     };
 
     // Get waiting queue with priority
     const waitingQueue = session.players
-      .filter(p => p.status === "WAITING" && p.confirmedByPlayer)
+      .filter((p) => p.status === "WAITING" && p.confirmedByPlayer)
       .map((player, index) => ({
         ...player,
         queuePosition: index + 1,
@@ -109,13 +113,16 @@ export async function GET(
 
     // Get active matches with details
     const activeMatches = session.courts
-      .filter(c => c.currentMatch)
-      .map(court => ({
+      .filter((c) => c.currentMatch)
+      .map((court) => ({
         matchId: court.currentMatch!.id,
         courtNumber: court.courtNumber,
         startTime: court.currentMatch!.startTime,
-        duration: Math.floor((new Date().getTime() - court.currentMatch!.startTime.getTime()) / (1000 * 60)), // in minutes
-        players: court.currentMatch!.players.map(mp => ({
+        duration: Math.floor(
+          (new Date().getTime() - court.currentMatch!.startTime.getTime()) /
+            (1000 * 60)
+        ), // in minutes
+        players: court.currentMatch!.players.map((mp) => ({
           playerId: mp.player.id,
           playerNumber: mp.player.playerNumber,
           name: mp.player.name,
@@ -127,13 +134,16 @@ export async function GET(
 
     // Calculate wait time statistics
     const waitTimes = session.players
-      .filter(p => p.status === "WAITING")
-      .map(p => p.currentWaitTime);
+      .filter((p) => p.status === "WAITING")
+      .map((p) => p.currentWaitTime);
 
     const waitStats = {
-      averageWaitTime: waitTimes.length > 0 
-        ? Math.round(waitTimes.reduce((sum, time) => sum + time, 0) / waitTimes.length)
-        : 0,
+      averageWaitTime:
+        waitTimes.length > 0
+          ? Math.round(
+              waitTimes.reduce((sum, time) => sum + time, 0) / waitTimes.length
+            )
+          : 0,
       maxWaitTime: waitTimes.length > 0 ? Math.max(...waitTimes) : 0,
       minWaitTime: waitTimes.length > 0 ? Math.min(...waitTimes) : 0,
     };
@@ -153,16 +163,22 @@ export async function GET(
       waitStats,
       waitingQueue,
       activeMatches,
-      courts: session.courts.map(court => ({
+      courts: session.courts.map((court) => ({
         id: court.id,
         courtNumber: court.courtNumber,
         status: court.status,
-        currentMatch: court.currentMatch ? {
-          id: court.currentMatch.id,
-          startTime: court.currentMatch.startTime,
-          duration: Math.floor((new Date().getTime() - court.currentMatch.startTime.getTime()) / (1000 * 60)),
-          playerCount: court.currentMatch.players.length,
-        } : null,
+        currentMatch: court.currentMatch
+          ? {
+              id: court.currentMatch.id,
+              startTime: court.currentMatch.startTime,
+              duration: Math.floor(
+                (new Date().getTime() -
+                  court.currentMatch.startTime.getTime()) /
+                  (1000 * 60)
+              ),
+              playerCount: court.currentMatch.players.length,
+            }
+          : null,
       })),
       lastUpdated: new Date().toISOString(),
     });
@@ -206,15 +222,15 @@ export async function PATCH(
     // Update session data based on status transition
     let updateData: any = { status };
 
-    // If transitioning from PREPARING to IN_PROGRESS, set startTime
-    if (currentSession.status === "PREPARING" && status === "IN_PROGRESS") {
-      updateData.startTime = new Date();
-    }
+    // // If transitioning from PREPARING to IN_PROGRESS, set startTime
+    // if (currentSession.status === "PREPARING" && status === "IN_PROGRESS") {
+    //   updateData.startTime = new Date();
+    // }
 
-    // If transitioning to FINISHED, set endTime
-    if (status === "FINISHED" && currentSession.status !== "FINISHED") {
-      updateData.endTime = new Date();
-    }
+    // // If transitioning to FINISHED, set endTime
+    // if (status === "FINISHED" && currentSession.status !== "FINISHED") {
+    //   updateData.endTime = new Date();
+    // }
 
     // Update session
     const updatedSession = await prisma.session.update({

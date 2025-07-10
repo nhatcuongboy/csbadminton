@@ -19,7 +19,7 @@ interface BadmintonCourtProps {
   width?: string;
   showTimeInCenter?: boolean;
   isLoading?: boolean;
-  status?: "playing" | "ready";
+  status?: "IN_USE" | "READY" | "EMPTY";
 }
 
 export default function BadmintonCourt({
@@ -34,22 +34,6 @@ export default function BadmintonCourt({
   status,
 }: BadmintonCourtProps) {
   const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
-
-  // Debug logging
-  React.useEffect(() => {
-    console.log("BadmintonCourt - Players:", players);
-    console.log("BadmintonCourt - Players length:", players.length);
-    console.log("BadmintonCourt - isActive:", isActive);
-    players.forEach((player, index) => {
-      console.log(`Player ${index}:`, {
-        id: player.id,
-        playerNumber: player.playerNumber,
-        name: player.name,
-        pairNumber: player.pairNumber,
-        assignedPair: player.pairNumber || (index < 2 ? 1 : 2),
-      });
-    });
-  }, [players, isActive]);
 
   // Real court ratio: 13.4m / 6.1m ≈ 2.1967
   const aspectRatio = 13.4 / 6.1;
@@ -109,15 +93,15 @@ export default function BadmintonCourt({
       aspectRatio={aspectRatio}
       position="relative"
       borderColor={
-        status === "ready"
-          ? "#facc15" // yellow border for ready
-          : isActive
+        status === "READY"
+          ? "#facc15" // yellow border for READY
+          : status === "IN_USE" || isActive
           ? "#b6e2c6"
           : "gray.300"
       }
       borderRadius="md"
       overflow="visible"
-      boxShadow={status === "ready" ? "0 0 0 4px #fef08a" : undefined}
+      boxShadow={status === "READY" ? "0 0 0 4px #fef08a" : undefined}
     >
       {/* Outer boundary */}
       <Box
@@ -129,17 +113,17 @@ export default function BadmintonCourt({
         pointerEvents="all"
         zIndex={1}
         bg={
-          status === "ready"
-            ? "#fef3c7" // light yellow background for ready state
-            : isActive
+          status === "READY"
+            ? "#fef3c7" // light yellow background for READY state
+            : status === "IN_USE" || isActive
             ? "#179a3b"
             : "#e6e6e6"
         }
         border="4px solid"
         borderColor={
-          status === "ready"
-            ? "#facc15" // yellow border for ready
-            : isActive
+          status === "READY"
+            ? "#facc15" // yellow border for READY
+            : status === "IN_USE" || isActive
             ? "#b6e2c6"
             : "gray.300"
         }
@@ -570,29 +554,30 @@ export default function BadmintonCourt({
       )}
 
       {/* Match Time/Status Display - Center */}
-      {status === "ready" && (
-        <Box
-          position="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          bg={status === "ready" ? "#facc15" : "#2563eb"}
-          color={status === "ready" ? "#92400e" : "white"}
-          px={3}
-          py={1}
-          borderRadius="full"
-          fontSize="sm"
-          fontWeight="bold"
-          boxShadow="lg"
-          zIndex={4}
-          display="flex"
-          alignItems="center"
-          gap={1}
-        >
-          <Clock size={14} />
-          {status === "ready" ? "Ready to Start" : elapsedTime}
-        </Box>
-      )}
+      {status === "READY" &&
+        showTimeInCenter && ( // Only show badge when status is READY
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            bg="#facc15"
+            color="#92400e"
+            px={3}
+            py={1}
+            borderRadius="full"
+            fontSize="sm"
+            fontWeight="bold"
+            boxShadow="lg"
+            zIndex={4}
+            display="flex"
+            alignItems="center"
+            gap={1}
+          >
+            <Clock size={14} />
+            Ready
+          </Box>
+        )}
     </Box>
   );
 }

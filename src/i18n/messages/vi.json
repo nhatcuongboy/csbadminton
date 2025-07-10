@@ -244,7 +244,6 @@
       "female": "Nữ",
       "level": "Trình độ",
       "phone": "Điện thoại",
-      "status": "Trạng thái",
       "available": "Có sẵn",
       "infoRequired": "Yêu cầu thông tin",
       "yesGoToConfirmation": "Có (sẽ đến trang xác nhận)",
@@ -355,6 +354,10 @@
           "playerNotFound": "Không tìm thấy người chơi",
           "playerNotFoundDescription": "Chúng tôi không thể tìm thấy thông tin người chơi của bạn. Bạn có thể cần tham gia lại phiên.",
           "returnToJoin": "Quay lại trang tham gia"
+        },
+        "ready": {
+          "title": "Chuẩn bị sẵn sàng",
+          "description": "Bạn đã sẵn sàng để chơi. Vui lòng đợi lượt của bạn."
         }
       }
     }
@@ -444,6 +447,7 @@
       "cancel": "Hủy",
       "confirmAndStartMatch": "Xác nhận & Bắt đầu trận đấu",
       "confirmMatch": "Xác nhận trận đấu",
+      "confirmMatchManual": "Xác nhận trận đấu ({count}/4)",
       "manualPlayerSelectionTitle": "Chọn người chơi thủ công - Sân {courtNumber}",
       "selectedPlayersCount": "Người chơi đã chọn ({count}/4):",
       "pairNumber": "Cặp {number}",
@@ -451,7 +455,13 @@
       "selectPlayer": "Chọn người chơi",
       "availablePlayers": "Người chơi có sẵn:",
       "noPlayersWaiting": "Hiện tại không có người chơi nào đang chờ",
-      "startMatchCount": "Bắt đầu trận đấu ({count}/4)"
-    }
+      "startMatchCount": "Bắt đầu trận đấu ({count}/4)",
+      "balancedPairs": "Cặp cân bằng",
+      "playersToConsider": "Số người xem xét",
+      "players": "người chơi",
+      "loadingSuggestedPlayers": "Đang tải gợi ý người chơi...",
+      "waitingPlayers": "Người chơi đang chờ"
+    },
+    "startMatch": "Bắt đầu"
   }
 }

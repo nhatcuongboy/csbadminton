@@ -82,11 +82,12 @@ export async function POST(
         });
       }
 
-      // Update court with current match
+      // Update court with current match and set status to IN_USE
       const updatedCourt = await tx.court.update({
         where: { id },
         data: {
           currentMatchId: match.id,
+          status: "IN_USE", // Set court status to IN_USE
         },
         include: {
           currentPlayers: true,

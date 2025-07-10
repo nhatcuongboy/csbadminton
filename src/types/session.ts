@@ -23,7 +23,7 @@ export interface Court {
   id: string;
   courtNumber: number;
   courtName?: string;
-  status: string;
+  status: "IN_USE" | "READY" | "EMPTY";
   currentMatchId?: string;
   currentPlayers: Player[];
 }
