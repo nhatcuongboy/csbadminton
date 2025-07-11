@@ -32,6 +32,7 @@ import {
   type Match,
   type Player,
 } from "@/lib/api";
+import { getLevelLabel } from "@/utils/level-mapping";
 
 interface SessionManagementProps {
   sessionId: string;
@@ -369,7 +370,7 @@ export default function SessionManagement({
                           #{player.playerNumber} {player.name}
                         </Text>
                         <Text fontSize="sm" color="gray.500">
-                          {player.gender} • {player.level}
+                          {player.gender} • {getLevelLabel(player.level)}
                         </Text>
                       </Box>
                       <Box textAlign="right">

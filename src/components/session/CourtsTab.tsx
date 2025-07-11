@@ -318,7 +318,7 @@ const CourtsTab: React.FC<
                     {t("courtsTab.courtNumber", { number: court.courtNumber })}
                   </Heading>
                   <HStack gap={2}>
-                    {currentMatch && (
+                    {currentMatch && court.status === "IN_USE" && (
                       <Badge
                         colorScheme="blue"
                         variant="solid"
@@ -490,6 +490,7 @@ const CourtsTab: React.FC<
                       //   height="180px"
                       showTimeInCenter={false}
                       isLoading={isRefreshing}
+                      status="EMPTY"
                     />
                     {session.status === "IN_PROGRESS" && mode === "manage" ? (
                       <VStack gap={2}>

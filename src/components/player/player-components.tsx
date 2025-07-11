@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Player } from "@/lib/api";
 import { UserPlus, User, Edit, Trash } from "lucide-react";
 import { Button } from "@chakra-ui/react";
+import { getLevelLabel } from "@/utils/level-mapping";
 
 export function AddPlayerForm({
   sessionId,
@@ -181,7 +182,7 @@ export function PlayerCard({
           <div>{player.gender || "Not specified"}</div>
 
           <div className="text-muted-foreground">Level:</div>
-          <div>{player.level?.replace("_", "") || "Not specified"}</div>
+          <div>{getLevelLabel(player.level, "Not specified")}</div>
 
           <div className="text-muted-foreground">Status:</div>
           <div>{player.status}</div>

@@ -460,7 +460,12 @@
       "playersToConsider": "Players to consider",
       "players": "players",
       "loadingSuggestedPlayers": "Loading suggested players...",
-      "waitingPlayers": "Waiting Players"
+      "waitingPlayers": "Waiting Players",
+      "loadingPairs": "Loading pairs...",
+      "pair1": "Pair 1",
+      "pair2": "Pair 2",
+      "gapLabel": "Gap: {gap}",
+      "playerFallback": "Player {number}"
     },
     "startMatch": "Start Match"
   }

@@ -36,7 +36,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Se
             name: true,
             gender: true,
             level: true,
+            levelDescription: true,
             status: true,
+            requireConfirmInfo: true,
           },
         },
         currentMatch: {

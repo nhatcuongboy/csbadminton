@@ -4,6 +4,7 @@ import { Box, Text } from "@chakra-ui/react";
 import { Clock, User, UserCheck, Venus, Mars } from "lucide-react";
 import React, { useState } from "react";
 import { Player } from "@/types/session";
+import { getLevelLabel } from "@/utils/level-mapping";
 
 interface BadmintonCourtPlayer extends Player {
   pairNumber?: number; // Add pair number for explicit pair assignment
@@ -101,7 +102,7 @@ export default function BadmintonCourt({
       }
       borderRadius="md"
       overflow="visible"
-      boxShadow={status === "READY" ? "0 0 0 4px #fef08a" : undefined}
+      // boxShadow={status === "READY" ? "0 0 0 4px #fef08a" : undefined}
     >
       {/* Outer boundary */}
       <Box
@@ -436,7 +437,7 @@ export default function BadmintonCourt({
                           Level:
                         </Text>
                         <Text fontSize="xs" color="white">
-                          {player.level || "Unknown"}
+                          {getLevelLabel(player.level, "Unknown")}
                         </Text>
                       </Box>
 

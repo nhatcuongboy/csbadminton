@@ -17,11 +17,11 @@ export async function POST(request: NextRequest) {
 
     const sessionIds = activeSessions.map((session) => session.id);
 
-    // Increment currentWaitTime and totalWaitTime for all waiting players in active sessions
+    // Increment currentWaitTime and totalWaitTime for all waiting and ready players in active sessions
     const result = await prisma.player.updateMany({
       where: {
         sessionId: { in: sessionIds },
-        status: "WAITING",
+        status: { in: ["WAITING", "READY"] },
       },
       data: {
         currentWaitTime: {

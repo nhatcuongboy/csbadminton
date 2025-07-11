@@ -460,7 +460,12 @@
       "playersToConsider": "Số người xem xét",
       "players": "người chơi",
       "loadingSuggestedPlayers": "Đang tải gợi ý người chơi...",
-      "waitingPlayers": "Người chơi đang chờ"
+      "waitingPlayers": "Người chơi đang chờ",
+      "loadingPairs": "Đang tải cặp đấu...",
+      "pair1": "Cặp 1",
+      "pair2": "Cặp 2",
+      "gapLabel": "Chênh lệch: {gap}",
+      "playerFallback": "Người chơi {number}"
     },
     "startMatch": "Bắt đầu"
   }

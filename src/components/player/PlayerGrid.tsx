@@ -3,6 +3,7 @@
 import { Box, Badge, Flex, Text, VStack } from "@chakra-ui/react";
 import { Card, CardBody, SimpleGrid } from "@/components/ui/chakra-compat";
 import { Level } from "@/lib/api";
+import { getLevelLabel } from "@/utils/level-mapping";
 
 interface Player {
   id: string;
@@ -189,7 +190,7 @@ export const PlayerGrid = ({
                     fontSize="xs"
                     borderRadius="sm"
                   >
-                    {player.level || "N/A"}
+                    {getLevelLabel(player.level)}
                   </Badge>
                   <Text fontSize="lg" color="gray.600">
                     {player.gender === "MALE"

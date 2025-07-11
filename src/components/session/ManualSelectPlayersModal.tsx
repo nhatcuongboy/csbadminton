@@ -13,6 +13,7 @@ import { X, Check, Users } from "lucide-react";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
+import { getLevelLabel } from "@/utils/level-mapping";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import MatchPreviewModal from "./MatchPreviewModal";
 import { useTranslations } from "next-intl";
@@ -254,7 +255,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                             px={2}
                             variant="outline"
                           >
-                            {player.level}
+                            {getLevelLabel(player.level)}
                           </Badge>
                         )}
                       </Box>

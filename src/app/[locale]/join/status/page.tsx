@@ -1,43 +1,34 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Stack,
-  Flex,
-  Center,
-  Spinner,
-} from "@chakra-ui/react";
+import BadmintonCourt from "@/components/court/BadmintonCourt";
+import CourtsTab from "@/components/session/CourtsTab";
+import PlayersTab from "@/components/session/PlayersTab";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import TopBar from "@/components/ui/TopBar";
 import {
-  ArrowLeft,
-  Clock,
-  CheckCircle2,
-  User,
-  Users,
-  Trophy,
-  Activity,
-} from "lucide-react";
-import {
   PlayerService,
   SessionService,
-  type Player,
-  type Session,
   type Court,
   type Match,
+  type Player,
+  type Session,
 } from "@/lib/api";
 import { getCourtDisplayName } from "@/lib/api/sessions";
-import BadmintonCourt from "@/components/court/BadmintonCourt";
-import { PlayerGrid } from "@/components/player/PlayerGrid";
-import CourtsTab from "@/components/session/CourtsTab";
-import PlayersTab from "@/components/session/PlayersTab";
-import toast from "react-hot-toast";
+import {
+  Box,
+  Center,
+  Container,
+  Flex,
+  Heading,
+  Spinner,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { Activity, CheckCircle2, Clock, User, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 function StatusPageContent() {
   const searchParams = useSearchParams();
@@ -427,12 +418,6 @@ function StatusPageContent() {
                       </>
                     ) : player.status === "READY" ? (
                       <>
-                        <Center mb={2}>
-                          <Trophy
-                            size={32}
-                            color="var(--chakra-colors-yellow-500)"
-                          />
-                        </Center>
                         <Heading size="sm" fontWeight="medium">
                           {t("ready.title")}
                         </Heading>

@@ -1,14 +1,18 @@
 "use client";
 
 import {
-  Badge,
+  CourtService,
+  Level,
+  MatchService,
+  PlayerService,
+  SessionService,
+} from "@/lib/api";
+import {
   Box,
   Container,
   Flex,
   Grid,
   Heading,
-  Input,
-  Select,
   //   Tab,
   //   TabList,
   //   TabPanel,
@@ -17,68 +21,28 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import {
-  TabsComp as Tabs,
-  Tab,
-  TabPanel,
-  TabPanels,
-} from "@/components/ui/chakra-compat";
-import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { useCallback, useEffect, useState } from "react";
-import {
-  SessionService,
-  CourtService,
-  MatchService,
-  PlayerService,
-  Level,
-} from "@/lib/api";
 
 // Import compatibility components
+import CourtsTab from "@/components/session/CourtsTab";
+import ManageTab from "@/components/session/ManageTab";
+import PlayersTab from "@/components/session/PlayersTab";
+import SettingsTab from "@/components/session/SettingsTab";
 import {
   Button,
-  Card,
-  CardBody,
-  CardHeader,
-  HStack,
   IconButton,
-  SimpleGrid,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   useToast,
   VStack,
 } from "@/components/ui/chakra-compat";
-import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import TopBar from "@/components/ui/TopBar";
 import {
   formatDuration,
   formatTime,
   getCourtDisplayName,
 } from "@/lib/api/sessions";
-import BulkPlayersForm from "@/components/player/BulkPlayersForm";
-import SessionManagement from "@/components/session/SessionManagement";
-import BadmintonCourt from "@/components/court/BadmintonCourt";
-import {
-  ArrowLeft,
-  Clock,
-  Edit,
-  Play,
-  Plus,
-  RefreshCw,
-  Save,
-  Shuffle,
-  Square,
-  Trash2,
-  Users,
-} from "lucide-react";
-import CourtsTab from "@/components/session/CourtsTab";
-import PlayersTab from "@/components/session/PlayersTab";
-import ManageTab from "@/components/session/ManageTab";
-import SettingsTab from "@/components/session/SettingsTab";
+import { Clock, Play, RefreshCw, Square, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
+import WaitTimeUpdater from "./WaitTimeUpdater";
 
 // Types for session data and related entities
 interface Player {
@@ -146,7 +110,6 @@ interface SessionData {
   waitingQueue?: Player[];
 }
 
-// Component hiển thị chi tiết session
 export default function SessionDetailContent({
   sessionData,
 }: {
@@ -212,20 +175,6 @@ export default function SessionDetailContent({
         (a, b) =>
           new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
       ) ?? [];
-
-  // Helper function to calculate elapsed time
-  const calculateElapsedTime = (startTime: string): string => {
-    const start = new Date(startTime);
-    const elapsedMs = currentTime.getTime() - start.getTime();
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedSeconds = Math.floor((elapsedMs % 60000) / 1000);
-
-    if (elapsedMinutes === 0) {
-      return `${elapsedSeconds}s`;
-    } else {
-      return `${elapsedMinutes}m ${elapsedSeconds}s`;
-    }
-  };
 
   // Helper function to format elapsed time for court display (more readable)
   const formatCourtElapsedTime = (startTime: string): string => {
@@ -410,45 +359,6 @@ export default function SessionDetailContent({
     }
 
     return t("minutesShort", { minutes });
-  };
-
-  // Start a new match with selected players on selected court
-  const startNewMatch = async () => {
-    if (selectedPlayers.length !== 4 || !selectedCourt) {
-      toast.toast({
-        title: t("select4PlayersAndCourt"),
-        status: "error",
-        duration: 3000,
-      });
-      return;
-    }
-
-    try {
-      await MatchService.createMatch(session.id, {
-        courtId: selectedCourt,
-        playerIds: selectedPlayers,
-      });
-
-      // Clear selections and refresh data
-      setSelectedPlayers([]);
-      setSelectedCourt(null);
-      await refreshSessionData();
-
-      toast.toast({
-        title: t("matchStartedSuccessfully"),
-        status: "success",
-        duration: 3000,
-      });
-
-      matchModalDisclosure.onClose();
-    } catch (error) {
-      console.error("Error starting match:", error);
-      toast.toast({
-        title: t("errorStartingMatch"),
-        status: "error",
-        duration: 3000,
-      });
-    }
   };
 
   // End a match
@@ -767,6 +677,8 @@ export default function SessionDetailContent({
 
   return (
     <>
+      {/* Add WaitTimeUpdater to automatically update wait times every minute */}
+      <WaitTimeUpdater />
       <TopBar
         title={session.name}
         showBackButton={true}
@@ -816,18 +728,15 @@ export default function SessionDetailContent({
                   <Box
                     as={session.status === "IN_PROGRESS" ? Square : Play}
                     boxSize={{ base: 3, md: 4 }}
-                    mr={{ base: 1, md: 2 }}
+                    // mr={{ base: 1, md: 2 }}
                   />
-                  <Text display={{ base: "none", md: "block" }}>
-                    {mapSessionStatusToUI(session.status)}
-                  </Text>
                 </Flex>
               </Button>
             </Flex>
             <Box display={{ base: "none", md: "block" }}>
               <VStack align="start" spacing={2}>
                 <Text fontWeight="medium">
-                  {`${formatTime(session.startTime!)} - ${formatTime(
+                  {`${formatTime(session.startTime!)}-${formatTime(
                     session.endTime!
                   )} (${
                     session.startTime
@@ -843,12 +752,14 @@ export default function SessionDetailContent({
             </Box>
             {/* Mobile simplified view */}
             <Box display={{ base: "block", md: "none" }}>
-              <Text fontSize="xs" color="blue.600">
-                {session.status === "PREPARING"
-                  ? t("notStarted")
-                  : session.status === "IN_PROGRESS"
-                  ? t("inProgress")
-                  : t("finished")}
+              <Text fontSize={"xs"}>
+                {`${formatTime(session.startTime!)}-${formatTime(
+                  session.endTime!
+                )} (${
+                  session.startTime
+                    ? new Date(session.startTime).toLocaleDateString()
+                    : ""
+                })`}
               </Text>
             </Box>
           </Box>

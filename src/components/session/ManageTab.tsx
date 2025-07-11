@@ -1,5 +1,13 @@
 import React from "react";
-import { Flex, Heading, Box, Text, Input, Textarea, Checkbox } from "@chakra-ui/react";
+import {
+  Flex,
+  Heading,
+  Box,
+  Text,
+  Input,
+  Textarea,
+  Checkbox,
+} from "@chakra-ui/react";
 import {
   VStack,
   HStack,
@@ -11,6 +19,7 @@ import {
 } from "@/components/ui/chakra-compat";
 import { Save, Plus, Trash2, Edit } from "lucide-react";
 import { Level } from "@/lib/api";
+import { getLevelLabel } from "@/utils/level-mapping";
 
 interface Player {
   id: string;
@@ -43,10 +52,19 @@ interface ManageTabProps {
   isSaving: boolean;
   addNewPlayerRow: () => void;
   removeNewPlayerRow: (index: number) => void;
-  updateNewPlayer: (index: number, field: string, value: string | boolean) => void;
+  clearAllNewPlayers?: () => void; // Thêm prop mới để clear tất cả
+  updateNewPlayer: (
+    index: number,
+    field: string,
+    value: string | boolean
+  ) => void;
   startEditingPlayer: (player: Player) => void;
   cancelEditingPlayer: (playerId: string) => void;
-  updateEditingPlayer: (playerId: string, field: string, value: string | boolean) => void;
+  updateEditingPlayer: (
+    playerId: string,
+    field: string,
+    value: string | boolean
+  ) => void;
   savePlayerChanges: () => void;
   saveIndividualPlayer: (playerId: string) => void;
   deletePlayer: (playerId: string) => void;
@@ -59,6 +77,7 @@ const ManageTab: React.FC<ManageTabProps> = ({
   isSaving,
   addNewPlayerRow,
   removeNewPlayerRow,
+  clearAllNewPlayers,
   updateNewPlayer,
   startEditingPlayer,
   cancelEditingPlayer,
@@ -93,10 +112,104 @@ const ManageTab: React.FC<ManageTabProps> = ({
     addNewPlayerRow();
   };
 
+  // Track the last player count to know when a new player is added
+  const lastPlayerCount = React.useRef(newPlayers.length);
+
+  // Set default value for newly added players
+  React.useEffect(() => {
+    if (newPlayers.length > lastPlayerCount.current) {
+      // A new player was added
+      const newPlayerIndex = newPlayers.length - 1;
+      const newPlayer = newPlayers[newPlayerIndex];
+      if (newPlayer && (!newPlayer.name || newPlayer.name.trim() === "")) {
+        // Use setTimeout to avoid state update conflicts
+        setTimeout(() => {
+          updateNewPlayer(
+            newPlayerIndex,
+            "name",
+            `Player ${newPlayer.playerNumber}`
+          );
+        }, 10);
+      }
+    }
+    lastPlayerCount.current = newPlayers.length;
+  }, [newPlayers.length, newPlayers, updateNewPlayer]);
+
+  // State for validation errors for new players
+  const [newPlayerErrors, setNewPlayerErrors] = React.useState<{
+    [index: number]: string;
+  }>({});
+
+  // Validate all new players before saving
+  const validateNewPlayers = () => {
+    const errors: { [index: number]: string } = {};
+    newPlayers.forEach((player, idx) => {
+      if (!player.name || player.name.trim() === "") {
+        errors[idx] = "Player name is required";
+      }
+    });
+    setNewPlayerErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Wrap savePlayerChanges to validate before saving
+  const handleSavePlayerChanges = () => {
+    if (validateNewPlayers()) {
+      savePlayerChanges();
+    }
+  };
+
+  // Hàm hủy thêm players (xóa hết newPlayers)
+  const cancelAddPlayers = () => {
+    console.log(
+      "cancelAddPlayers called, newPlayers.length:",
+      newPlayers.length
+    );
+    console.log("clearAllNewPlayers prop:", clearAllNewPlayers);
+
+    if (newPlayers.length > 0) {
+      // Nếu có prop clearAllNewPlayers thì dùng nó (clear tất cả cùng lúc)
+      if (clearAllNewPlayers) {
+        console.log("Using clearAllNewPlayers prop");
+        clearAllNewPlayers();
+        // Clear validation errors
+        setNewPlayerErrors({});
+      } else {
+        console.log("Using fallback removeNewPlayerRow loop");
+        // Fallback: xóa tất cả bằng cách gọi removeNewPlayerRow nhiều lần
+        // Tạo copy của array để tránh vấn đề với index thay đổi
+        const playerCount = newPlayers.length;
+        console.log("Will remove", playerCount, "players");
+        // Xóa từ cuối lên đầu để tránh index shift
+        for (let i = playerCount - 1; i >= 0; i--) {
+          console.log("Removing player at index", i);
+          removeNewPlayerRow(i);
+        }
+        // Clear validation errors
+        setNewPlayerErrors({});
+      }
+    }
+  };
+
+  // Wrapper to ensure all fields are loaded when editing existing players
+  const handleStartEditingPlayer = (player: any) => {
+    startEditingPlayer({
+      ...player,
+      levelDescription: player.levelDescription || "",
+      requireConfirmInfo: !!player.requireConfirmInfo,
+    });
+  };
+
   return (
     <VStack spacing={6} align="stretch">
       {/* Header with session info */}
-      <Box p={4} bg="blue.50" borderRadius="lg" borderWidth="1px" borderColor="blue.200">
+      <Box
+        p={4}
+        bg="blue.50"
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor="blue.200"
+      >
         <Flex justify="space-between" align="center" mb={2}>
           <Heading size="md" color="blue.700">
             Player Management
@@ -105,46 +218,48 @@ const ManageTab: React.FC<ManageTabProps> = ({
             {session.name}
           </Text>
         </Flex>
-        <Flex justify="space-between" align="center" fontSize="sm" color="blue.600">
+        <Flex
+          justify="space-between"
+          align="center"
+          fontSize="sm"
+          color="blue.600"
+        >
           <Text>
-            <strong>{session.numberOfCourts}</strong> courts • <strong>{session.maxPlayersPerCourt}</strong> players per court
+            <strong>{session.numberOfCourts}</strong> courts •{" "}
+            <strong>{session.maxPlayersPerCourt}</strong> players per court
           </Text>
           <Text>
-            Capacity: <strong>{currentPlayerCount}/{maxPlayers}</strong> players
+            Capacity:{" "}
+            <strong>
+              {currentPlayerCount}/{maxPlayers}
+            </strong>{" "}
+            players
           </Text>
         </Flex>
       </Box>
 
-      {/* Action buttons */}
+      {/* Action buttons sẽ được di chuyển xuống dưới vùng New Players */}
 
-      <HStack spacing={2} justifyContent="flex-end">
-        <Button
-          size="sm"
-          leftIcon={<Box as={Plus} boxSize={4} />}
-          onClick={handleAddNewPlayer}
-          colorScheme="green"
-          disabled={isMaxPlayersReached}
-          title={
-            isMaxPlayersReached
-              ? `Maximum players reached (${maxPlayers})`
-              : `Add new player (${currentPlayerCount}/${maxPlayers})`
-          }
-        >
-          Add Player{" "}
-          {!isMaxPlayersReached && `(${currentPlayerCount}/${maxPlayers})`}
-        </Button>
-        {newPlayers.length > 0 && (
+      {/* Nút Add Player khi chưa có new players */}
+      {newPlayers.length === 0 && (
+        <HStack spacing={2} justifyContent="flex-end">
           <Button
             size="sm"
-            leftIcon={<Box as={Save} boxSize={4} />}
-            onClick={savePlayerChanges}
-            colorScheme="blue"
-            loading={isSaving}
+            leftIcon={<Box as={Plus} boxSize={4} />}
+            onClick={handleAddNewPlayer}
+            colorScheme="green"
+            disabled={isMaxPlayersReached}
+            title={
+              isMaxPlayersReached
+                ? `Maximum players reached (${maxPlayers})`
+                : `Add new player (${currentPlayerCount}/${maxPlayers})`
+            }
           >
-            Save Changes
+            Add Player{" "}
+            {!isMaxPlayersReached && `(${currentPlayerCount}/${maxPlayers})`}
           </Button>
-        )}
-      </HStack>
+        </HStack>
+      )}
 
       {/* Max players reached notification */}
       {isMaxPlayersReached && (
@@ -191,10 +306,33 @@ const ManageTab: React.FC<ManageTabProps> = ({
                       <Input
                         placeholder="Player name"
                         value={player.name}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          updateNewPlayer(index, "name", e.target.value)
-                        }
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          updateNewPlayer(index, "name", e.target.value);
+                          // Clear error when user starts typing
+                          if (newPlayerErrors[index]) {
+                            setNewPlayerErrors((prev) => ({
+                              ...prev,
+                              [index]: "",
+                            }));
+                          }
+                        }}
                         flex="2"
+                        borderColor={
+                          newPlayerErrors[index] ? "red.400" : undefined
+                        }
+                        boxShadow={
+                          newPlayerErrors[index]
+                            ? "0 0 0 1px #F56565"
+                            : undefined
+                        }
+                        _focus={{
+                          borderColor: newPlayerErrors[index]
+                            ? "red.400"
+                            : "blue.500",
+                          boxShadow: newPlayerErrors[index]
+                            ? "0 0 0 1px #F56565"
+                            : "0 0 0 1px #3182ce",
+                        }}
                       />
                       <select
                         value={player.gender}
@@ -244,24 +382,32 @@ const ManageTab: React.FC<ManageTabProps> = ({
                         onClick={() => removeNewPlayerRow(index)}
                       />
                     </Flex>
-                    
+
                     {/* Second row with level description */}
                     <Flex gap={4}>
                       <Box minW="60px"></Box> {/* For alignment */}
                       <Box flex="1">
-                        <Text fontSize="sm" mb={1} color="gray.600">Level Description:</Text>
-                        <Textarea 
+                        <Text fontSize="sm" mb={1} color="gray.600">
+                          Level Description:
+                        </Text>
+                        <Textarea
                           placeholder="Optional level description or notes"
                           size="sm"
-                          value={player.levelDescription || ''}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                            updateNewPlayer(index, "levelDescription", e.target.value)
+                          value={player.levelDescription || ""}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>
+                          ) =>
+                            updateNewPlayer(
+                              index,
+                              "levelDescription",
+                              e.target.value
+                            )
                           }
                           rows={2}
                         />
                       </Box>
                     </Flex>
-                    
+
                     {/* Third row with confirmation checkbox */}
                     <Flex gap={4}>
                       <Box minW="60px"></Box> {/* For alignment */}
@@ -271,13 +417,17 @@ const ManageTab: React.FC<ManageTabProps> = ({
                           id={`requireConfirm-${index}`}
                           checked={player.requireConfirmInfo || false}
                           onChange={(e) =>
-                            updateNewPlayer(index, "requireConfirmInfo", e.target.checked)
+                            updateNewPlayer(
+                              index,
+                              "requireConfirmInfo",
+                              e.target.checked
+                            )
                           }
-                          style={{ marginRight: '8px' }}
+                          style={{ marginRight: "8px" }}
                         />
-                        <label 
-                          htmlFor={`requireConfirm-${index}`} 
-                          style={{ fontSize: '14px', marginLeft: '8px' }}
+                        <label
+                          htmlFor={`requireConfirm-${index}`}
+                          style={{ fontSize: "14px", marginLeft: "8px" }}
                         >
                           Require player to confirm information
                         </label>
@@ -288,6 +438,51 @@ const ManageTab: React.FC<ManageTabProps> = ({
               </Card>
             ))}
           </VStack>
+
+          {/* Action buttons for new players */}
+          <Flex
+            justify="flex-end"
+            gap={3}
+            mt={4}
+            pt={3}
+            borderTop="1px solid"
+            borderColor="green.200"
+          >
+            <Button
+              size="sm"
+              leftIcon={<Box as={Plus} boxSize={4} />}
+              onClick={handleAddNewPlayer}
+              colorScheme="green"
+              disabled={isMaxPlayersReached}
+              title={
+                isMaxPlayersReached
+                  ? `Maximum players reached (${maxPlayers})`
+                  : `Add new player (${currentPlayerCount}/${maxPlayers})`
+              }
+            >
+              Add Player{" "}
+              {!isMaxPlayersReached && `(${currentPlayerCount}/${maxPlayers})`}
+            </Button>
+            <Button
+              size="sm"
+              leftIcon={<Box as={Save} boxSize={4} />}
+              colorScheme="blue"
+              onClick={handleSavePlayerChanges}
+              loading={isSaving}
+              disabled={Object.keys(newPlayerErrors).length > 0}
+            >
+              Save Changes
+            </Button>
+            <Button
+              size="sm"
+              leftIcon={<Box as={Trash2} boxSize={4} />}
+              colorScheme="red"
+              variant="outline"
+              onClick={cancelAddPlayers}
+            >
+              Cancel
+            </Button>
+          </Flex>
         </Box>
       )}
 
@@ -299,7 +494,8 @@ const ManageTab: React.FC<ManageTabProps> = ({
               Existing Players ({session.players.length})
             </Heading>
             <Text fontSize="xs" color="gray.500">
-              Click Edit to modify player information including level description and confirmation requirements
+              Click Edit to modify player information including level
+              description and confirmation requirements
             </Text>
           </VStack>
           <VStack align="end" spacing={1}>
@@ -327,7 +523,8 @@ const ManageTab: React.FC<ManageTabProps> = ({
                     No players in this session yet
                   </Text>
                   <Text fontSize="sm" color="gray.500" textAlign="center">
-                    Add some players using the "Add Player" button above to get started!
+                    Add some players using the "Add Player" button above to get
+                    started!
                   </Text>
                 </VStack>
                 <Button
@@ -440,24 +637,32 @@ const ManageTab: React.FC<ManageTabProps> = ({
                               />
                             </HStack>
                           </Flex>
-                          
+
                           {/* Second row - Level description */}
                           <Flex gap={4}>
                             <Box minW="60px"></Box> {/* For alignment */}
                             <Box flex="1">
-                              <Text fontSize="sm" mb={1} color="gray.600">Level Description:</Text>
-                              <Textarea 
+                              <Text fontSize="sm" mb={1} color="gray.600">
+                                Level Description:
+                              </Text>
+                              <Textarea
                                 placeholder="Optional level description or notes"
                                 size="sm"
-                                value={isEditing.levelDescription || ''}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                                  updateEditingPlayer(player.id, "levelDescription", e.target.value)
+                                value={isEditing.levelDescription || ""}
+                                onChange={(
+                                  e: React.ChangeEvent<HTMLTextAreaElement>
+                                ) =>
+                                  updateEditingPlayer(
+                                    player.id,
+                                    "levelDescription",
+                                    e.target.value
+                                  )
                                 }
                                 rows={2}
                               />
                             </Box>
                           </Flex>
-                          
+
                           {/* Third row - Require confirmation */}
                           <Flex gap={4}>
                             <Box minW="60px"></Box> {/* For alignment */}
@@ -467,13 +672,17 @@ const ManageTab: React.FC<ManageTabProps> = ({
                                 id={`requireConfirm-edit-${player.id}`}
                                 checked={isEditing.requireConfirmInfo || false}
                                 onChange={(e) =>
-                                  updateEditingPlayer(player.id, "requireConfirmInfo", e.target.checked)
+                                  updateEditingPlayer(
+                                    player.id,
+                                    "requireConfirmInfo",
+                                    e.target.checked
+                                  )
                                 }
-                                style={{ marginRight: '8px' }}
+                                style={{ marginRight: "8px" }}
                               />
-                              <label 
-                                htmlFor={`requireConfirm-edit-${player.id}`} 
-                                style={{ fontSize: '14px', marginLeft: '8px' }}
+                              <label
+                                htmlFor={`requireConfirm-edit-${player.id}`}
+                                style={{ fontSize: "14px", marginLeft: "8px" }}
                               >
                                 Require player to confirm information
                               </label>
@@ -487,13 +696,18 @@ const ManageTab: React.FC<ManageTabProps> = ({
                           <Flex gap={4} align="center" justify="space-between">
                             <Flex gap={4} align="center" flex="1">
                               <Box minW="60px">
-                                <Text fontSize="sm" fontWeight="bold" color="blue.600">
+                                <Text
+                                  fontSize="sm"
+                                  fontWeight="bold"
+                                  color="blue.600"
+                                >
                                   #{player.playerNumber}
                                 </Text>
                               </Box>
                               <Box flex="2">
                                 <Text fontWeight="medium" fontSize="md">
-                                  {player.name || `Player ${player.playerNumber}`}
+                                  {player.name ||
+                                    `Player ${player.playerNumber}`}
                                 </Text>
                               </Box>
                               <Box flex="1">
@@ -510,13 +724,15 @@ const ManageTab: React.FC<ManageTabProps> = ({
                                     {player.gender === "MALE" ? "♂" : "♀"}
                                   </Text>
                                   <Text fontSize="sm">
-                                    {player.gender === "MALE" ? "Male" : "Female"}
+                                    {player.gender === "MALE"
+                                      ? "Male"
+                                      : "Female"}
                                   </Text>
                                 </Flex>
                               </Box>
                               <Box flex="1">
-                                <Text 
-                                  fontSize="sm" 
+                                <Text
+                                  fontSize="sm"
                                   fontWeight="semibold"
                                   color="purple.600"
                                   bg="purple.50"
@@ -525,7 +741,7 @@ const ManageTab: React.FC<ManageTabProps> = ({
                                   borderRadius="md"
                                   textAlign="center"
                                 >
-                                  {player.level || "N/A"}
+                                  {getLevelLabel(player.level)}
                                 </Text>
                               </Box>
                               <Box flex="1">
@@ -562,7 +778,7 @@ const ManageTab: React.FC<ManageTabProps> = ({
                                 size="sm"
                                 colorScheme="blue"
                                 variant="outline"
-                                onClick={() => startEditingPlayer(player)}
+                                onClick={() => handleStartEditingPlayer(player)}
                               />
                               <IconButton
                                 aria-label="Delete player"
@@ -574,30 +790,46 @@ const ManageTab: React.FC<ManageTabProps> = ({
                               />
                             </HStack>
                           </Flex>
-                          
+
                           {/* Second row - Additional info */}
-                          {(player.levelDescription || player.requireConfirmInfo) && (
+                          {(player.levelDescription ||
+                            player.requireConfirmInfo) && (
                             <Flex gap={4} pl="60px">
                               <VStack align="stretch" spacing={2} flex="1">
                                 {player.levelDescription && (
                                   <Box>
-                                    <Text fontSize="xs" color="gray.500" fontWeight="medium" mb={1}>
+                                    <Text
+                                      fontSize="xs"
+                                      color="gray.500"
+                                      fontWeight="medium"
+                                      mb={1}
+                                    >
                                       Level Description:
                                     </Text>
-                                    <Text fontSize="sm" color="gray.700" p={2} bg="gray.50" borderRadius="md">
+                                    <Text
+                                      fontSize="sm"
+                                      color="gray.700"
+                                      p={2}
+                                      bg="gray.50"
+                                      borderRadius="md"
+                                    >
                                       {player.levelDescription}
                                     </Text>
                                   </Box>
                                 )}
                                 {player.requireConfirmInfo && (
                                   <Flex align="center" gap={2}>
-                                    <Box 
-                                      w={2} 
-                                      h={2} 
-                                      bg="orange.400" 
+                                    <Box
+                                      w={2}
+                                      h={2}
+                                      bg="orange.400"
                                       borderRadius="full"
                                     />
-                                    <Text fontSize="xs" color="orange.600" fontWeight="medium">
+                                    <Text
+                                      fontSize="xs"
+                                      color="orange.600"
+                                      fontWeight="medium"
+                                    >
                                       Requires confirmation from player
                                     </Text>
                                   </Flex>

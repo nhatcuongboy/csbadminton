@@ -46,3 +46,14 @@ export interface Match {
 }
 
 export type PlayerFilter = "ALL" | "PLAYING" | "WAITING";
+
+export enum LevelLabel {
+  Y_MINUS = "Y-",
+  Y = "Y",
+  Y_PLUS = "Y+",
+  TBY = "TBY",
+  TB_MINUS = "TB-",
+  TB = "TB",
+  TB_PLUS = "TB+",
+  K = "K",
+}
