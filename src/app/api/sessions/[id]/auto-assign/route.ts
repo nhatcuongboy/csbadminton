@@ -7,7 +7,10 @@ interface SessionParams {
 }
 
 // POST /api/sessions/[id]/auto-assign - Auto-assign players to empty courts
-export async function POST(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
     const { id: sessionId } = await params;
 
@@ -77,51 +80,59 @@ export async function POST(request: NextRequest, { params }: { params: Promise<S
       const playerIds = players.map((p) => p.id);
 
       // Create match in a transaction
-      const result = await prisma.$transaction(async (tx) => {
-        // 1. Create a new match
-        const newMatch = await tx.match.create({
-          data: {
-            sessionId,
-            courtId: court.id,
-            status: "IN_PROGRESS",
-            startTime: new Date(),
-          },
-        });
-
-        // 2. Create match players (positions 1-4)
-        for (let j = 0; j < 4; j++) {
-          await tx.matchPlayer.create({
+      const result = await prisma.$transaction(
+        async (tx) => {
+          // 1. Create a new match
+          const newMatch = await tx.match.create({
             data: {
-              matchId: newMatch.id,
-              playerId: playerIds[j],
-              position: j + 1,
+              sessionId,
+              courtId: court.id,
+              status: "IN_PROGRESS",
+              startTime: new Date(),
             },
           });
+
+          // 2. Create match players (positions 1-4) in parallel
+          const matchPlayerPromises = playerIds.map((playerId, index) => {
+            return tx.matchPlayer.create({
+              data: {
+                matchId: newMatch.id,
+                playerId: playerId,
+                position: index + 1,
+              },
+            });
+          });
+
+          await Promise.all(matchPlayerPromises);
+
+          // 3. Update court status
+          await tx.court.update({
+            where: { id: court.id },
+            data: {
+              status: "IN_USE",
+              currentMatchId: newMatch.id,
+            },
+          });
+
+          // 4. Update player statuses (using updateMany for efficiency)
+          await tx.player.updateMany({
+            where: {
+              id: { in: playerIds },
+            },
+            data: {
+              status: "PLAYING",
+              currentCourtId: court.id,
+              currentWaitTime: 0, // Reset wait time when starting a match
+            },
+          });
+
+          return newMatch;
+        },
+        {
+          maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+          timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
         }
-
-        // 3. Update court status
-        await tx.court.update({
-          where: { id: court.id },
-          data: {
-            status: "IN_USE",
-            currentMatchId: newMatch.id,
-          },
-        });
-
-        // 4. Update player statuses
-        await tx.player.updateMany({
-          where: {
-            id: { in: playerIds },
-          },
-          data: {
-            status: "PLAYING",
-            currentCourtId: court.id,
-            currentWaitTime: 0, // Reset wait time when starting a match
-          },
-        });
-
-        return newMatch;
-      });
+      );
 
       createdMatches.push(result);
     }

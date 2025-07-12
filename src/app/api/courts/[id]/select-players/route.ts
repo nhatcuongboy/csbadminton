@@ -7,7 +7,10 @@ interface CourtParams {
 }
 
 // POST /api/courts/[id]/select-players - Host selects players for the court
-export async function POST(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<CourtParams> }
+) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -70,31 +73,40 @@ export async function POST(request: NextRequest, { params }: { params: Promise<C
     }
 
     // All validations passed, prepare for transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Update each player's status to READY and assign them to the court
-      for (const playerId of playerIds) {
-        await tx.player.update({
-          where: { id: playerId },
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // Update each player's status to READY and assign them to the court in parallel
+        const playerUpdatePromises = playerIds.map(async (playerId) => {
+          return tx.player.update({
+            where: { id: playerId },
+            data: {
+              status: "READY",
+              currentCourtId: id,
+            },
+          });
+        });
+
+        // Execute all player updates in parallel
+        await Promise.all(playerUpdatePromises);
+
+        // Update court status to READY
+        const updatedCourt = await tx.court.update({
+          where: { id },
           data: {
             status: "READY",
-            currentCourtId: id,
+          },
+          include: {
+            currentPlayers: true,
           },
         });
+
+        return updatedCourt;
+      },
+      {
+        maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+        timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
       }
-
-      // Update court status to READY
-      const updatedCourt = await tx.court.update({
-        where: { id },
-        data: {
-          status: "READY",
-        },
-        include: {
-          currentPlayers: true,
-        },
-      });
-
-      return updatedCourt;
-    });
+    );
 
     return successResponse(
       result,

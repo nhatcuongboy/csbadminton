@@ -8,7 +8,10 @@ interface MatchEndParams {
 }
 
 // PATCH /api/sessions/[id]/matches/[matchId]/end - End a match
-export async function PATCH(request: NextRequest, { params }: { params: Promise<MatchEndParams> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<MatchEndParams> }
+) {
   try {
     const { id: sessionId, matchId } = await params;
 
@@ -56,41 +59,49 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const playerIds = match.players.map((mp) => mp.player.id);
 
     // Start transaction to end match and update related entities
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. End the match
-      const updatedMatch = await tx.match.update({
-        where: { id: matchId },
-        data: {
-          status: "FINISHED",
-          endTime: new Date(),
-        },
-      });
-
-      // 2. Update court status
-      await tx.court.update({
-        where: { id: match.courtId },
-        data: {
-          status: "EMPTY",
-          currentMatchId: null,
-        },
-      });
-
-      // 3. Update player statuses and stats
-      for (const playerId of playerIds) {
-        await tx.player.update({
-          where: { id: playerId },
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 1. End the match
+        const updatedMatch = await tx.match.update({
+          where: { id: matchId },
           data: {
-            status: "WAITING",
-            currentCourtId: null,
-            matchesPlayed: {
-              increment: 1,
-            },
+            status: "FINISHED",
+            endTime: new Date(),
           },
         });
-      }
 
-      return updatedMatch;
-    });
+        // 2. Update court status
+        await tx.court.update({
+          where: { id: match.courtId },
+          data: {
+            status: "EMPTY",
+            currentMatchId: null,
+          },
+        });
+
+        // 3. Update player statuses and stats in parallel
+        const playerUpdatePromises = playerIds.map(async (playerId) => {
+          return tx.player.update({
+            where: { id: playerId },
+            data: {
+              status: "WAITING",
+              currentCourtId: null,
+              matchesPlayed: {
+                increment: 1,
+              },
+            },
+          });
+        });
+
+        await Promise.all(playerUpdatePromises);
+
+        return updatedMatch;
+      },
+      {
+        maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+        timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
+      }
+    );
 
     // Get the updated match data to return
     const updatedMatchData = await prisma.match.findUnique({

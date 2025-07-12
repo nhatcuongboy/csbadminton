@@ -7,10 +7,13 @@ interface CourtParams {
 }
 
 // POST /api/courts/[id]/end-match - End the match on the court
-export async function POST(request: NextRequest, { params }: { params: Promise<CourtParams> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<CourtParams> }
+) {
   try {
     const { id } = await params;
-    
+
     console.log("END MATCH API - Court ID:", id);
 
     // Validate court exists
@@ -48,48 +51,59 @@ export async function POST(request: NextRequest, { params }: { params: Promise<C
     }
 
     // All validations passed, end the match in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // End the match
-      const match = await tx.match.update({
-        where: { id: court.currentMatchId! },
-        data: {
-          status: "FINISHED",
-          endTime: new Date(),
-        },
-      });
-
-      // Update players: move to waiting state and reset their current court
-      for (const player of court.currentPlayers) {
-        await tx.player.update({
-          where: { id: player.id },
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // End the match
+        const match = await tx.match.update({
+          where: { id: court.currentMatchId! },
           data: {
-            status: "WAITING",
-            currentCourtId: null,
-            // Add the time they just played to their total wait time
-            // This is just for record-keeping; the current wait time is reset
-            currentWaitTime: 0,
+            status: "FINISHED",
+            endTime: new Date(),
           },
         });
+
+        // Update players in parallel: move to waiting state and reset their current court
+        const playerUpdatePromises = court.currentPlayers.map(
+          async (player) => {
+            return tx.player.update({
+              where: { id: player.id },
+              data: {
+                status: "WAITING",
+                currentCourtId: null,
+                // Add the time they just played to their total wait time
+                // This is just for record-keeping; the current wait time is reset
+                currentWaitTime: 0,
+              },
+            });
+          }
+        );
+
+        // Execute all player updates in parallel
+        await Promise.all(playerUpdatePromises);
+
+        // Update court status and remove current match
+        const updatedCourt = await tx.court.update({
+          where: { id },
+          data: {
+            status: "EMPTY",
+            currentMatchId: null,
+          },
+          include: {
+            currentPlayers: true,
+          },
+        });
+
+        return {
+          court: updatedCourt,
+          match,
+          players: court.currentPlayers,
+        };
+      },
+      {
+        maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+        timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
       }
-
-      // Update court status and remove current match
-      const updatedCourt = await tx.court.update({
-        where: { id },
-        data: {
-          status: "EMPTY",
-          currentMatchId: null,
-        },
-        include: {
-          currentPlayers: true,
-        },
-      });
-
-      return {
-        court: updatedCourt,
-        match,
-        players: court.currentPlayers,
-      };
-    });
+    );
 
     return successResponse(result, "Match ended successfully");
   } catch (error) {

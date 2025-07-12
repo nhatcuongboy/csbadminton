@@ -52,34 +52,45 @@ export async function POST(
     }
 
     // All validations passed, prepare for transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Get all players currently on the court
-      const playersToDeselect = court.currentPlayers.map((player) => player.id);
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // Get all players currently on the court
+        const playersToDeselect = court.currentPlayers.map(
+          (player) => player.id
+        );
 
-      // Update each player's status back to WAITING and remove them from court
-      for (const playerId of playersToDeselect) {
-        await tx.player.update({
-          where: { id: playerId },
+        // Update each player's status back to WAITING and remove them from court in parallel
+        const playerUpdatePromises = playersToDeselect.map(async (playerId) => {
+          return tx.player.update({
+            where: { id: playerId },
+            data: {
+              status: "WAITING",
+              currentCourtId: null, // Remove court assignment
+            },
+          });
+        });
+
+        // Execute all player updates in parallel
+        await Promise.all(playerUpdatePromises);
+
+        // Update court status back to EMPTY
+        const updatedCourt = await tx.court.update({
+          where: { id },
           data: {
-            status: "WAITING",
-            currentCourtId: null, // Remove court assignment
+            status: "EMPTY",
+          },
+          include: {
+            currentPlayers: true, // Should be empty after the transaction
           },
         });
+
+        return updatedCourt;
+      },
+      {
+        maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+        timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
       }
-
-      // Update court status back to EMPTY
-      const updatedCourt = await tx.court.update({
-        where: { id },
-        data: {
-          status: "EMPTY",
-        },
-        include: {
-          currentPlayers: true, // Should be empty after the transaction
-        },
-      });
-
-      return updatedCourt;
-    });
+    );
 
     return successResponse(
       result,

@@ -22,7 +22,7 @@ export async function POST(
         currentPlayers: true,
       },
     });
-
+    console.log(court);
     if (!court) {
       return errorResponse("Court not found", 404);
     }
@@ -49,57 +49,68 @@ export async function POST(
     }
 
     // All validations passed, create a new match in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create new match
-      const match = await tx.match.create({
-        data: {
-          sessionId: court.sessionId,
-          courtId: id,
-          status: "IN_PROGRESS",
-          startTime: new Date(),
-        },
-      });
-
-      // Link players to match with positions
-      for (let i = 0; i < court.currentPlayers.length; i++) {
-        const player = court.currentPlayers[i];
-        await tx.matchPlayer.create({
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // Create new match
+        const match = await tx.match.create({
           data: {
-            matchId: match.id,
-            playerId: player.id,
-            position: i + 1, // Position 1-4
+            sessionId: court.sessionId,
+            courtId: id,
+            status: "IN_PROGRESS",
+            startTime: new Date(),
           },
         });
 
-        // Increment matches played count for each player
-        await tx.player.update({
-          where: { id: player.id },
+        // Prepare batch updates for players
+        const playerUpdatePromises = court.currentPlayers.map(
+          async (player, i) => {
+            // Create match player
+            await tx.matchPlayer.create({
+              data: {
+                matchId: match.id,
+                playerId: player.id,
+                position: i + 1, // Position 1-4
+              },
+            });
+
+            // Update player matches count
+            return tx.player.update({
+              where: { id: player.id },
+              data: {
+                matchesPlayed: {
+                  increment: 1,
+                },
+              },
+            });
+          }
+        );
+
+        // Execute all player updates in parallel
+        await Promise.all(playerUpdatePromises);
+
+        // Update court with current match and set status to IN_USE
+        const updatedCourt = await tx.court.update({
+          where: { id },
           data: {
-            matchesPlayed: {
-              increment: 1,
-            },
+            currentMatchId: match.id,
+            status: "IN_USE", // Set court status to IN_USE
+          },
+          include: {
+            currentPlayers: true,
+            currentMatch: true,
           },
         });
+
+        return {
+          court: updatedCourt,
+          match,
+        };
+      },
+      {
+        maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+        timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
       }
-
-      // Update court with current match and set status to IN_USE
-      const updatedCourt = await tx.court.update({
-        where: { id },
-        data: {
-          currentMatchId: match.id,
-          status: "IN_USE", // Set court status to IN_USE
-        },
-        include: {
-          currentPlayers: true,
-          currentMatch: true,
-        },
-      });
-
-      return {
-        court: updatedCourt,
-        match,
-      };
-    });
+    );
 
     return successResponse(result, "Match started successfully");
   } catch (error) {

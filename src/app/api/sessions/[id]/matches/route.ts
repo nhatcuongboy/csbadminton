@@ -71,51 +71,59 @@ export async function POST(
     }
 
     // Start transaction to create match and update related entities
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Create a new match
-      const newMatch = await tx.match.create({
-        data: {
-          sessionId,
-          courtId,
-          status: "IN_PROGRESS",
-          startTime: new Date(),
-        },
-      });
-
-      // 2. Create match players (positions 1-4)
-      for (let i = 0; i < 4; i++) {
-        await tx.matchPlayer.create({
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 1. Create a new match
+        const newMatch = await tx.match.create({
           data: {
-            matchId: newMatch.id,
-            playerId: playerIds[i],
-            position: i + 1,
+            sessionId,
+            courtId,
+            status: "IN_PROGRESS",
+            startTime: new Date(),
           },
         });
+
+        // 2. Create match players (positions 1-4) in parallel
+        const matchPlayerPromises = playerIds.map((playerId, index) => {
+          return tx.matchPlayer.create({
+            data: {
+              matchId: newMatch.id,
+              playerId: playerId,
+              position: index + 1,
+            },
+          });
+        });
+
+        await Promise.all(matchPlayerPromises);
+
+        // 3. Update court status
+        await tx.court.update({
+          where: { id: courtId },
+          data: {
+            status: "IN_USE",
+            currentMatchId: newMatch.id,
+          },
+        });
+
+        // 4. Update player statuses (using updateMany for efficiency)
+        await tx.player.updateMany({
+          where: {
+            id: { in: playerIds },
+          },
+          data: {
+            status: "PLAYING",
+            currentCourtId: courtId,
+            currentWaitTime: 0, // Reset wait time when starting a match
+          },
+        });
+
+        return newMatch;
+      },
+      {
+        maxWait: 10000, // Maximum wait time in milliseconds (10 seconds)
+        timeout: 15000, // Transaction timeout in milliseconds (15 seconds)
       }
-
-      // 3. Update court status
-      await tx.court.update({
-        where: { id: courtId },
-        data: {
-          status: "IN_USE",
-          currentMatchId: newMatch.id,
-        },
-      });
-
-      // 4. Update player statuses
-      await tx.player.updateMany({
-        where: {
-          id: { in: playerIds },
-        },
-        data: {
-          status: "PLAYING",
-          currentCourtId: courtId,
-          currentWaitTime: 0, // Reset wait time when starting a match
-        },
-      });
-
-      return newMatch;
-    });
+    );
 
     // Get the full match data to return
     const matchData = await prisma.match.findUnique({

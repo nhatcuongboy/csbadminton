@@ -7,7 +7,10 @@ interface SessionParams {
 }
 
 // GET /api/sessions/[id]/courts - Retrieve list of courts in the session
-export async function GET(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
     const { id } = await params;
 
