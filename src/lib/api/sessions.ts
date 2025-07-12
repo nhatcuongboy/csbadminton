@@ -25,7 +25,7 @@ export function formatDuration(start: string, end: string): string {
   const startTime = new Date(start).getTime();
   const endTime = new Date(end).getTime();
   const durationMinutes = Math.floor((endTime - startTime) / (1000 * 60));
-  return `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`;
+  return `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`;
 }
 
 // Function to map SessionStatus from database to UI status

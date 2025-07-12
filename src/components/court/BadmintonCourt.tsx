@@ -21,6 +21,7 @@ interface BadmintonCourtProps {
   showTimeInCenter?: boolean;
   isLoading?: boolean;
   status?: "IN_USE" | "READY" | "EMPTY";
+  mode?: "manage" | "view";
 }
 
 export default function BadmintonCourt({
@@ -33,6 +34,7 @@ export default function BadmintonCourt({
   showTimeInCenter = true,
   isLoading = false,
   status,
+  mode = "manage",
 }: BadmintonCourtProps) {
   const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
 
@@ -311,12 +313,11 @@ export default function BadmintonCourt({
             >
               {/* Player Circle */}
               <Box
-                bg={player.isCurrentPlayer ? "yellow.100" : pairColors.bg}
+                position="relative"
+                bg={pairColors.bg}
                 borderRadius="full"
                 border="3px solid"
-                borderColor={
-                  player.isCurrentPlayer ? "yellow.500" : pairColors.border
-                }
+                borderColor={pairColors.border}
                 p={1}
                 w="50px"
                 h="50px"
@@ -324,7 +325,7 @@ export default function BadmintonCourt({
                 flexDirection="column"
                 alignItems="center"
                 justifyContent="center"
-                boxShadow={player.isCurrentPlayer ? "lg" : "md"}
+                boxShadow="md"
                 cursor="pointer"
                 transition="all 0.2s"
                 _hover={{
@@ -336,6 +337,34 @@ export default function BadmintonCourt({
                 //   setClickedPlayer(isClicked ? null : player.id);
                 // }}
               >
+                {/* Current player effect */}
+                {player.isCurrentPlayer && (
+                  <Box
+                    position="absolute"
+                    top="-4px"
+                    left="-4px"
+                    right="-4px"
+                    bottom="-4px"
+                    borderRadius="full"
+                    boxShadow="0 0 0 8px #fef08a99, 0 0 16px 0 #facc15"
+                    zIndex={2}
+                    pointerEvents="none"
+                    animation="currentPlayerPulse 1.5s infinite"
+                  />
+                )}
+                <style jsx global>{`
+                  @keyframes currentPlayerPulse {
+                    0% {
+                      box-shadow: 0 0 0 4px #fef08a99, 0 0 8px 0 #facc15;
+                    }
+                    50% {
+                      box-shadow: 0 0 0 8px #fef08a44, 0 0 16px 0 #facc15;
+                    }
+                    100% {
+                      box-shadow: 0 0 0 4px #fef08a99, 0 0 8px 0 #facc15;
+                    }
+                  }
+                `}</style>
                 {/* Player Number */}
                 <Text
                   fontSize="xs"
@@ -366,26 +395,30 @@ export default function BadmintonCourt({
                 </Box>
               </Box>
 
-              {/* Pair indicator */}
-              <Box
-                position="absolute"
-                top="-8px"
-                right="-8px"
-                bg={pairColors.border}
-                color="white"
-                borderRadius="full"
-                w="18px"
-                h="18px"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                fontSize="2xs"
-                fontWeight="bold"
-                border="2px solid white"
-                zIndex={4}
-              >
-                {pairNumber}
-              </Box>
+              {/* Level indicator (badge) */}
+              {mode === "manage" && (
+                <Box
+                  position="absolute"
+                  top="-10px"
+                  right="-12px"
+                  bg={pairColors.border}
+                  color="white"
+                  borderRadius="full"
+                  w="35px"
+                  h="22px"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontSize="xs"
+                  fontWeight="bold"
+                  border="2px solid white"
+                  zIndex={4}
+                  // boxShadow="md"
+                  // letterSpacing={0.5}
+                >
+                  {getLevelLabel(player.level, "?")}
+                </Box>
+              )}
 
               {/* Custom Tooltip */}
               {showTooltip && (

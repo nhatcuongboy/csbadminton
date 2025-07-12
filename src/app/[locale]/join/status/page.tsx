@@ -491,6 +491,7 @@ function StatusPageContent() {
                           width="100%"
                           showTimeInCenter={true}
                           status={currentCourt.status}
+                          mode="view"
                         />
                         <Text
                           fontSize="xs"

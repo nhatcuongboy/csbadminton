@@ -367,6 +367,7 @@ const CourtsTab: React.FC<
                       showTimeInCenter={true}
                       isLoading={isRefreshing}
                       status={court.status}
+                      mode={mode}
                     />
                     {/* Show Start Match button if court is IN_USE but no match has started */}
                     {session.status === "IN_PROGRESS" &&

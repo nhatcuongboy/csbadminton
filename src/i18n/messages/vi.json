@@ -51,7 +51,7 @@
     "configureYourSessionSettingsBelow": "Cấu hình cài đặt kèo bên dưới để tạo trải nghiệm cầu lông hoàn hảo",
     "sessionNamePlaceholder": "Nhập tên kèo (ví dụ: 'Cầu lông thứ 2 tối')",
     "sessionNameDescription": "Chọn một tên mô tả cho kèo của bạn",
-    "sessionDuration": "Thời gian kèo",
+    "sessionDuration": "Thời gian",
     "startTime": "Thời gian bắt đầu",
     "endTime": "Thời gian kết thúc",
     "calculatedFromCourtsConfig": "Tính từ cấu hình sân",
@@ -370,7 +370,7 @@
     "validationError": "Lỗi xác thực"
   },
   "SessionDetail": {
-    "sessionTime": "Thời gian kèo",
+    "sessionTime": "Thời gian",
     "status": "Trạng thái",
     "notStartedYet": "Chưa bắt đầu",
     "startTime": "Thời gian bắt đầu",
@@ -429,8 +429,8 @@
       "ready": "SẴN SÀNG",
       "empty": "TRỐNG",
       "playing": "Đang chơi...",
-      "endMatch": "Kết thúc trận đấu",
-      "autoAssignMatch": "Tự động ghép trận",
+      "endMatch": "Kết thúc",
+      "autoAssignMatch": "Tự động ghép đôi",
       "manualSelection": "Chọn thủ công",
       "courtAvailableForPlay": "Sân sẵn sàng để chơi",
       "errorGettingSuggestedPlayers": "Lỗi lấy danh sách người chơi được đề xuất",

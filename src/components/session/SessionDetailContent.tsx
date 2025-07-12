@@ -22,7 +22,6 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
-
 // Import compatibility components
 import CourtsTab from "@/components/session/CourtsTab";
 import ManageTab from "@/components/session/ManageTab";
@@ -43,6 +42,7 @@ import {
 import { Clock, Play, RefreshCw, Square, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import WaitTimeUpdater from "./WaitTimeUpdater";
+import dayjs from "@/lib/dayjs";
 
 // Types for session data and related entities
 interface Player {
@@ -714,7 +714,7 @@ export default function SessionDetailContent({
                   {t("sessionTime")}
                 </Heading>
                 <Heading size="xs" display={{ base: "block", md: "none" }}>
-                  {t("status")}
+                  {t("sessionTime")}
                 </Heading>
               </Flex>
               <Button
@@ -723,6 +723,7 @@ export default function SessionDetailContent({
                 disabled={session.status === "FINISHED"}
                 loading={isToggleStatusLoading}
                 size={{ base: "xs", md: "sm" }}
+                padding={0}
               >
                 <Flex alignItems="center">
                   <Box
@@ -740,7 +741,7 @@ export default function SessionDetailContent({
                     session.endTime!
                   )} (${
                     session.startTime
-                      ? new Date(session.startTime).toLocaleDateString()
+                      ? dayjs(session.startTime).format("DD/MM/YY")
                       : ""
                   })`}
                 </Text>
@@ -757,7 +758,7 @@ export default function SessionDetailContent({
                   session.endTime!
                 )} (${
                   session.startTime
-                    ? new Date(session.startTime).toLocaleDateString()
+                    ? dayjs(session.startTime).format("DD/MM/YY")
                     : ""
                 })`}
               </Text>
