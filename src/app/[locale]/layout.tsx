@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
@@ -8,6 +8,7 @@ import { Providers } from "../providers";
 import { routing } from "../../i18n/config";
 import { IntlClientProvider } from "../../components/IntlClientProvider";
 import RightDrawerMenu from "../../components/ui/RightDrawerMenu";
+import LocaleValidator from "../../components/LocaleValidator";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -25,6 +26,13 @@ export const metadata: Metadata = {
   description: "Manage badminton sessions, players, and courts",
 };
 
+export async function generateStaticParams() {
+  return [
+    { locale: 'vi' },
+    { locale: 'en' }
+  ];
+}
+
 export default async function LocaleLayout({
   children,
   params,
@@ -33,6 +41,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const validLocales = ['vi', 'en'];
 
   // Load messages directly
   let messages = {};
@@ -61,6 +70,7 @@ export default async function LocaleLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <LocaleValidator locale={locale} validLocales={validLocales} />
         <IntlClientProvider messages={messages} locale={locale}>
           <Providers>
             <RightDrawerMenu />

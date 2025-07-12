@@ -435,6 +435,7 @@
       "courtAvailableForPlay": "Court available for play",
       "errorGettingSuggestedPlayers": "Error getting suggested players",
       "pleaseRetryLater": "Please try again later",
+      "pleaseStartMatchManually": "Please start the match manually",
       "matchStartedSuccessfully": "Match started successfully",
       "playersAssignedToCourt": "Players have been assigned to the court",
       "errorStartingMatch": "Error starting match",

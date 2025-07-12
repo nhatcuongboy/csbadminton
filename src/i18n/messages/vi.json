@@ -435,6 +435,7 @@
       "courtAvailableForPlay": "Sân sẵn sàng để chơi",
       "errorGettingSuggestedPlayers": "Lỗi lấy danh sách người chơi được đề xuất",
       "pleaseRetryLater": "Vui lòng thử lại sau",
+      "pleaseStartMatchManually": "Vui lòng bắt đầu trận đấu thủ công",
       "matchStartedSuccessfully": "Trận đấu đã bắt đầu thành công",
       "playersAssignedToCourt": "Các người chơi đã được phân bổ vào sân",
       "errorStartingMatch": "Lỗi bắt đầu trận đấu",

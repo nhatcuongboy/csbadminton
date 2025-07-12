@@ -32,7 +32,7 @@ export default function GlobalNotFound() {
             Page not found
           </p>
           <Link
-            href="/en"
+            href="/vi"
             style={{
               display: "inline-block",
               padding: "12px 24px",

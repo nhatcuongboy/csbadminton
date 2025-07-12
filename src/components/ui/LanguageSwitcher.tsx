@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Button, Box, Text, Flex } from "@chakra-ui/react";
 import { ChevronDown, Languages } from "lucide-react";
@@ -21,6 +21,7 @@ export default function LanguageSwitcher({ keepDrawerOpen = false }: LanguageSwi
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = useLocale();
 
   const currentLocale = locales.find((l) => l.code === locale) || locales[0];
@@ -29,7 +30,12 @@ export default function LanguageSwitcher({ keepDrawerOpen = false }: LanguageSwi
     startTransition(() => {
       // Replace the current locale in the pathname
       const newPathname = pathname.replace(`/${locale}`, `/${newLocale}`);
-      router.replace(newPathname);
+      
+      // Preserve search params
+      const queryString = searchParams.toString();
+      const fullUrl = queryString ? `${newPathname}?${queryString}` : newPathname;
+      
+      router.replace(fullUrl);
     });
     setIsOpen(false);
     
