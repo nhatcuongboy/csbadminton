@@ -5,7 +5,7 @@ import { Menu, Home, Users, Calendar, Settings, Info, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NextLinkButton } from "./NextLinkButton";
 import LanguageSwitcher from "./LanguageSwitcher";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 
 export default function RightDrawerMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -152,7 +152,9 @@ export default function RightDrawerMenu() {
               <Text fontSize="sm" fontWeight="semibold" color="gray.500" mb={3}>
                 {common("language")}
               </Text>
-              <LanguageSwitcher keepDrawerOpen={true} />
+              <Suspense fallback={<Text fontSize="sm">Loading...</Text>}>
+                <LanguageSwitcher keepDrawerOpen={true} />
+              </Suspense>
             </Box>
 
             {/* Settings Section */}
