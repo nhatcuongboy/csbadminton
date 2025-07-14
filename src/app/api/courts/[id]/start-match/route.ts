@@ -73,13 +73,14 @@ export async function POST(
               },
             });
 
-            // Update player matches count
+            // Update player matches count and status to PLAYING
             return tx.player.update({
               where: { id: player.id },
               data: {
                 matchesPlayed: {
                   increment: 1,
                 },
+                status: "PLAYING", // Update status to PLAYING
               },
             });
           }

@@ -603,6 +603,7 @@ const CourtsTab: React.FC<
             playerFilter="WAITING"
             formatWaitTime={formatWaitTime}
             selectedPlayers={selectedPlayers}
+            mode={mode}
             // onPlayerToggle={onPlayerToggle}
             // selectionMode={true}
           />

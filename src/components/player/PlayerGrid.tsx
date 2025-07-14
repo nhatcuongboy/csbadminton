@@ -22,11 +22,12 @@ interface Player {
 
 interface PlayerGridProps {
   players: Player[];
-  playerFilter: "ALL" | "PLAYING" | "WAITING";
+  playerFilter: "ALL" | "PLAYING" | "WAITING" | "READY";
   formatWaitTime: (waitTimeInMinutes: number) => string;
   selectedPlayers?: string[];
   onPlayerToggle?: (playerId: string) => void;
   selectionMode?: boolean;
+  mode?: "view" | "manage";
 }
 
 export const PlayerGrid = ({
@@ -36,6 +37,7 @@ export const PlayerGrid = ({
   selectedPlayers = [],
   onPlayerToggle,
   selectionMode = false,
+  mode = "manage",
 }: PlayerGridProps) => {
   // Sort players by player number
   const sortedPlayers = [...players].sort(
@@ -54,6 +56,14 @@ export const PlayerGrid = ({
           bgColor = "rgba(59, 130, 246, 0.3)";
           borderColor = "rgba(59, 130, 246, 0.8)";
           colorScheme = "blue";
+        } else if (
+          playerFilter === "READY" ||
+          (playerFilter === "ALL" && player.status === "READY")
+        ) {
+          // Green for ready players
+          bgColor = "rgba(72, 187, 120, 0.2)";
+          borderColor = "rgba(72, 187, 120, 0.8)";
+          colorScheme = "green";
         } else if (
           playerFilter === "WAITING" ||
           (playerFilter === "ALL" && player.status === "WAITING")
@@ -184,14 +194,16 @@ export const PlayerGrid = ({
                   width="100%"
                   alignItems="center"
                 >
-                  <Badge
-                    variant="outline"
-                    colorScheme="orange"
-                    fontSize="xs"
-                    borderRadius="sm"
-                  >
-                    {getLevelLabel(player.level)}
-                  </Badge>
+                  {mode === "manage" && (
+                    <Badge
+                      variant="outline"
+                      colorScheme="orange"
+                      fontSize="xs"
+                      borderRadius="sm"
+                    >
+                      {getLevelLabel(player.level)}
+                    </Badge>
+                  )}
                   <Text fontSize="lg" color="gray.600">
                     {player.gender === "MALE"
                       ? "♂"
@@ -204,7 +216,10 @@ export const PlayerGrid = ({
                 <Text fontSize="xs" color="gray.600" fontWeight="medium">
                   {player.matchesPlayed} matches
                   {(playerFilter === "WAITING" ||
-                    (playerFilter === "ALL" && player.status === "WAITING")) &&
+                    playerFilter === "READY" ||
+                    (playerFilter === "ALL" &&
+                      (player.status === "WAITING" ||
+                        player.status === "READY"))) &&
                     ` • Position ${index + 1}`}
                 </Text>
               </VStack>

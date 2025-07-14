@@ -49,6 +49,9 @@
     "setUpYourBadmintonSession": "Thiết lập kèo cầu lông của bạn",
     "startYourBadmintonJourney": "Bắt đầu hành trình cầu lông của bạn",
     "configureYourSessionSettingsBelow": "Cấu hình cài đặt kèo bên dưới để tạo trải nghiệm cầu lông hoàn hảo",
+    "noActiveSessions": "Không có kèo hoạt động",
+    "noActiveSessionsDescription": "Bạn không có kèo hoạt động nào. Tạo mới để bắt đầu!",
+    "loadingError": "Lỗi khi tải kèo",
     "sessionNamePlaceholder": "Nhập tên kèo (ví dụ: 'Cầu lông thứ 2 tối')",
     "sessionNameDescription": "Chọn một tên mô tả cho kèo của bạn",
     "sessionDuration": "Thời gian",
@@ -218,7 +221,27 @@
       "title": "Tổ chức kèo",
       "description": "Tạo và quản lý kèo cầu lông",
       "createNew": "Tạo kèo mới",
-      "existingSessions": "Kèo hiện có"
+      "existingSessions": "Kèo hiện có",
+      "yourSessions": "Kèo của bạn",
+      "createNewSession": "Tạo kèo mới",
+      "manageSessions": "Quản lý kèo",
+      "hostFeatures": "Tính năng cho người tổ chức",
+      "featurePlayerManagement": {
+        "title": "Quản lý người chơi",
+        "description": "Thêm, chỉnh sửa và quản lý người chơi trong kèo của bạn một cách dễ dàng"
+      },
+      "featureSessionControl": {
+        "title": "Điều khiển kèo",
+        "description": "Tạo và quản lý kèo cầu lông với toàn quyền kiểm soát cài đặt"
+      },
+      "featureAnalytics": {
+        "title": "Phân tích & Báo cáo",
+        "description": "Theo dõi thống kê người chơi và hiệu suất kèo"
+      },
+      "featureCustomization": {
+        "title": "Tùy chỉnh",
+        "description": "Tùy chỉnh tên sân, cài đặt kèo và yêu cầu người chơi"
+      }
     },
     "join": {
       "title": "Tham gia kèo",

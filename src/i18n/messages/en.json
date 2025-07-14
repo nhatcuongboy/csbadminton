@@ -49,6 +49,9 @@
     "setUpYourBadmintonSession": "Set up your badminton session",
     "startYourBadmintonJourney": "Start Your Badminton Journey",
     "configureYourSessionSettingsBelow": "Configure your session settings below to create the perfect badminton experience",
+    "noActiveSessions": "No Active Sessions",
+    "noActiveSessionsDescription": "You don't have any active sessions. Create a new one to get started!",
+    "loadingError": "Error loading sessions",
     "sessionNamePlaceholder": "Enter session name (e.g., 'Monday Night Badminton')",
     "sessionNameDescription": "Choose a descriptive name for your session",
     "sessionDuration": "Session Duration",
@@ -218,7 +221,27 @@
       "title": "Host Session",
       "description": "Create and manage a badminton session",
       "createNew": "Create New Session",
-      "existingSessions": "Existing Sessions"
+      "existingSessions": "Existing Sessions",
+      "yourSessions": "Your Sessions",
+      "createNewSession": "New Session",
+      "manageSessions": "Manage Sessions",
+      "hostFeatures": "Host Features",
+      "featurePlayerManagement": {
+        "title": "Player Management",
+        "description": "Add, edit, and manage players in your sessions with ease"
+      },
+      "featureSessionControl": {
+        "title": "Session Control",
+        "description": "Create and manage badminton sessions with full control over settings"
+      },
+      "featureAnalytics": {
+        "title": "Analytics & Reports",
+        "description": "Track player statistics and session performance"
+      },
+      "featureCustomization": {
+        "title": "Customization",
+        "description": "Customize court names, session settings, and player requirements"
+      }
     },
     "join": {
       "title": "Join Session",

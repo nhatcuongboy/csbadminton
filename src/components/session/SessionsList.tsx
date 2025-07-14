@@ -16,6 +16,7 @@ import {
 import { Calendar, Clock, Users, SquareAsterisk } from "lucide-react";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { SessionService, type Session } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 // Helper functions for formatting
 const formatDate = (dateString: string | Date): string => {
@@ -36,21 +37,6 @@ const formatTime = (dateString: string | Date): string => {
   });
 };
 
-const mapSessionStatus = (
-  status: "PREPARING" | "IN_PROGRESS" | "FINISHED"
-): "upcoming" | "in-progress" | "completed" => {
-  switch (status) {
-    case "PREPARING":
-      return "upcoming";
-    case "IN_PROGRESS":
-      return "in-progress";
-    case "FINISHED":
-      return "completed";
-    default:
-      return "upcoming";
-  }
-};
-
 // UI Session type based on API data
 interface UISession {
   id: string;
@@ -60,17 +46,33 @@ interface UISession {
   numberOfCourts: number;
   totalPlayers: number;
   maxPlayers: number;
-  status: "upcoming" | "in-progress" | "completed";
+  status: "PREPARING" | "IN_PROGRESS" | "FINISHED";
   hostName: string;
 }
 
-const SessionCard = ({ session }: { session: UISession }) => {
-  const statusColors = {
-    upcoming: "blue",
-    "in-progress": "green",
-    completed: "gray",
-  };
+const statusColors = {
+  PREPARING: "blue",
+  IN_PROGRESS: "green",
+  FINISHED: "gray",
+};
 
+const statusLabels = {
+  PREPARING: "Preparing",
+  IN_PROGRESS: "In Progress",
+  FINISHED: "Finished",
+};
+
+interface SessionCardProps {
+  session: UISession;
+  onDelete?: (id: string) => void;
+  mode?: "view" | "manage";
+}
+
+const SessionCard = ({
+  session,
+  onDelete,
+  mode = "view",
+}: SessionCardProps) => {
   return (
     <Box
       borderWidth="1px"
@@ -91,7 +93,7 @@ const SessionCard = ({ session }: { session: UISession }) => {
             {session.title}
           </Heading>
           <Badge colorScheme={statusColors[session.status]}>
-            {session.status.replace("-", " ")}
+            {statusLabels[session.status]}
           </Badge>
         </Flex>
 
@@ -116,20 +118,70 @@ const SessionCard = ({ session }: { session: UISession }) => {
           </Flex>
         </Stack>
 
-        <Flex mt={4} justify="flex-end">
-          <NextLinkButton href={`/host/sessions/${session.id}`} colorScheme="blue">
+        <Flex mt={4} gap={2} justify="flex-end">
+          <NextLinkButton
+            href={`/host/sessions/${session.id}`}
+            colorScheme="blue"
+          >
             Manage Session
           </NextLinkButton>
+          {mode === "manage" && onDelete && (
+            <button
+              style={{
+                background: "#fff",
+                color: "#e53e3e",
+                border: "1px solid #e53e3e",
+                borderRadius: 6,
+                padding: "8px 16px",
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "background 0.2s",
+              }}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Are you sure you want to delete this session?"
+                  )
+                ) {
+                  onDelete(session.id);
+                }
+              }}
+            >
+              Delete
+            </button>
+          )}
         </Flex>
       </Stack>
     </Box>
   );
 };
 
-export default function SessionsList() {
+interface SessionsListProps {
+  status?: string;
+  mode?: "view" | "manage";
+}
+
+export default function SessionsList({
+  status = "ALL",
+  mode = "view",
+}: SessionsListProps) {
   const [sessions, setSessions] = useState<UISession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("session");
+
+  // Delete handler
+  const handleDelete = async (id: string) => {
+    try {
+      setLoading(true);
+      await SessionService.deleteSession(id);
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      setError("Failed to delete session");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchSessions() {
@@ -140,7 +192,8 @@ export default function SessionsList() {
         // Transform API data to UI format
         const uiSessions = sessionData.map((session: Session) => {
           // Calculate max players based on courts and maxPlayersPerCourt
-          const maxPlayers = session.numberOfCourts * session.maxPlayersPerCourt;
+          const maxPlayers =
+            session.numberOfCourts * session.maxPlayersPerCourt;
 
           return {
             id: session.id,
@@ -156,14 +209,14 @@ export default function SessionsList() {
             numberOfCourts: session.numberOfCourts,
             totalPlayers: session._count?.players || 0,
             maxPlayers,
-            status: mapSessionStatus(session.status),
+            status: session.status,
             hostName: session.host?.name || "",
           };
         });
 
         setSessions(uiSessions);
       } catch (err) {
-        setError("Failed to load sessions. Please try again later.");
+        setError(t("loadingError"));
         console.error(err);
       } finally {
         setLoading(false);
@@ -172,6 +225,16 @@ export default function SessionsList() {
 
     fetchSessions();
   }, []);
+
+  // Filter sessions by status
+  const filteredSessions =
+    status === "ALL"
+      ? sessions
+      : status === "UPCOMING_AND_INPROGRESS"
+      ? sessions.filter(
+          (s) => s.status === "PREPARING" || s.status === "IN_PROGRESS"
+        )
+      : sessions.filter((s) => s.status === status);
 
   if (loading) {
     return (
@@ -197,7 +260,7 @@ export default function SessionsList() {
     );
   }
 
-  if (sessions.length === 0) {
+  if (filteredSessions.length === 0) {
     return (
       <Box
         textAlign="center"
@@ -209,11 +272,9 @@ export default function SessionsList() {
         _dark={{ bg: "gray.800" }}
       >
         <Heading size="md" mb={2}>
-          No Active Sessions
+          {t("noActiveSessions")}
         </Heading>
-        <Text color="gray.500">
-          You don't have any active sessions. Create a new one to get started!
-        </Text>
+        <Text color="gray.500">{t("noActiveSessionsDescription")}</Text>
       </Box>
     );
   }
@@ -227,8 +288,13 @@ export default function SessionsList() {
       }}
       gap={6}
     >
-      {sessions.map((session) => (
-        <SessionCard key={session.id} session={session} />
+      {filteredSessions.map((session) => (
+        <SessionCard
+          key={session.id}
+          session={session}
+          onDelete={mode === "manage" ? handleDelete : undefined}
+          mode={mode}
+        />
       ))}
     </Grid>
   );

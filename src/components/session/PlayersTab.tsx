@@ -18,13 +18,14 @@ interface Player {
   confirmedByPlayer: boolean;
 }
 
-type PlayerFilter = "ALL" | "PLAYING" | "WAITING";
+type PlayerFilter = "ALL" | "PLAYING" | "WAITING" | "READY";
 
 interface PlayersTabProps {
   sessionPlayers: Player[];
   playerFilter: PlayerFilter;
   setPlayerFilter: (filter: PlayerFilter) => void;
   formatWaitTime: (waitTimeInMinutes: number) => string;
+  mode?: "view" | "manage"; // Optional mode prop to control UI
 }
 
 const PlayersTab: React.FC<PlayersTabProps> = ({
@@ -32,6 +33,7 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
   playerFilter,
   setPlayerFilter,
   formatWaitTime,
+  mode = "manage", // Default to manage mode
 }) => {
   return (
     <VStack gap={6} align="stretch">
@@ -65,6 +67,14 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
             Waiting (
             {sessionPlayers.filter((p) => p.status === "WAITING").length})
           </Button>
+          <Button
+            size="sm"
+            onClick={() => setPlayerFilter("READY")}
+            colorScheme={playerFilter === "READY" ? "green" : "gray"}
+            variant={playerFilter === "READY" ? "solid" : "outline"}
+          >
+            Ready ({sessionPlayers.filter((p) => p.status === "READY").length})
+          </Button>
         </HStack>
       </Flex>
       {/* Filtered Players Grid */}
@@ -85,6 +95,7 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
             players={filteredPlayers}
             playerFilter={playerFilter}
             formatWaitTime={formatWaitTime}
+            mode={mode}
           />
         );
       })()}
