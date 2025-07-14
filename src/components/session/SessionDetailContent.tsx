@@ -903,7 +903,16 @@ export default function SessionDetailContent({
             <PlayersTab
               sessionPlayers={session.players}
               playerFilter={playerFilter}
-              setPlayerFilter={setPlayerFilter}
+              setPlayerFilter={(filter) => {
+                // Only allow "ALL", "PLAYING", or "WAITING"
+                if (
+                  filter === "ALL" ||
+                  filter === "PLAYING" ||
+                  filter === "WAITING"
+                ) {
+                  setPlayerFilter(filter);
+                }
+              }}
               formatWaitTime={formatWaitTime}
             />
           )}

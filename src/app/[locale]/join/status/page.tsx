@@ -47,9 +47,9 @@ function StatusPageContent() {
   const [currentCourt, setCurrentCourt] = useState<Court | null>(null);
   const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);
   const [activeTab, setActiveTab] = useState<number>(0); // 0: Status, 1: Courts, 2: Players
-  // Use PlayerFilter type to match PlayersTab prop
-  type PlayerFilter = "ALL" | "PLAYING" | "WAITING" | "READY";
-  const [playerFilter, setPlayerFilter] = useState<PlayerFilter>("ALL");
+  const [playerFilter, setPlayerFilter] = useState<
+    "ALL" | "PLAYING" | "WAITING"
+  >("ALL");
 
   // Helper function to format elapsed time for match display
   const formatMatchElapsedTime = (startTime: Date): string => {
@@ -694,7 +694,16 @@ function StatusPageContent() {
             <PlayersTab
               sessionPlayers={session.players || []}
               playerFilter={playerFilter}
-              setPlayerFilter={setPlayerFilter}
+              setPlayerFilter={(filter) => {
+                // Only allow "ALL", "PLAYING", or "WAITING"
+                if (
+                  filter === "ALL" ||
+                  filter === "PLAYING" ||
+                  filter === "WAITING"
+                ) {
+                  setPlayerFilter(filter);
+                }
+              }}
               formatWaitTime={formatWaitTime}
               mode="view"
             />
