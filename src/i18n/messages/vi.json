@@ -489,8 +489,12 @@
       "pair1": "Cặp 1",
       "pair2": "Cặp 2",
       "gapLabel": "Chênh lệch: {gap}",
-      "playerFallback": "Người chơi {number}"
+      "playerFallback": "Người chơi {number}",
+      "matchEndedSuccessfully": "Trận đấu đã kết thúc thành công"
     },
-    "startMatch": "Bắt đầu"
+    "startMatch": "Bắt đầu",
+    "matchs": {
+      "tabTitle": "Trận đấu"
+    }
   }
 }

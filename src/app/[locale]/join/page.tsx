@@ -132,7 +132,7 @@ export default function JoinPage() {
         await PlayerService.confirmPlayer(selectedPlayer.id, {
           confirmedByPlayer: true,
         });
-        
+
         // Navigate directly to status page
         router.push(`/join/status?playerId=${selectedPlayer.id}`);
       }
@@ -247,7 +247,7 @@ export default function JoinPage() {
                         {t("sessionInfo", {
                           host: selectedSession.host.name,
                           courts: selectedSession.numberOfCourts,
-                          players: selectedSession.players?.length || 0
+                          players: selectedSession.players?.length || 0,
                         })}
                       </Text>
                     </Box>
@@ -286,13 +286,17 @@ export default function JoinPage() {
                             onChange={handlePlayerChange}
                             required
                           >
-                            <option value="">{t("selectYourPlayerNumber")}</option>
+                            <option value="">
+                              {t("selectYourPlayerNumber")}
+                            </option>
                             {existingPlayers.map((player) => (
                               <option
                                 key={player.id}
                                 value={player.playerNumber}
                               >
-                                {t("playerNumberFormat", { number: player.playerNumber })}{" "}
+                                {t("playerNumberFormat", {
+                                  number: player.playerNumber,
+                                })}{" "}
                                 {player.name ? `(${player.name})` : ""}
                                 {player.confirmedByPlayer
                                   ? ` - ${t("alreadyJoined")}`
@@ -307,9 +311,7 @@ export default function JoinPage() {
                             color="yellow.700"
                             borderRadius="md"
                           >
-                            <Text>
-                              {t("noPlayersAvailable")}
-                            </Text>
+                            <Text>{t("noPlayersAvailable")}</Text>
                           </Box>
                         )
                       ) : (
@@ -344,7 +346,8 @@ export default function JoinPage() {
                             </Text>
                             {selectedPlayer.name && (
                               <Text>
-                                {t("name")}: <strong>{selectedPlayer.name}</strong>
+                                {t("name")}:{" "}
+                                <strong>{selectedPlayer.name}</strong>
                               </Text>
                             )}
                             {selectedPlayer.gender && (
@@ -367,11 +370,12 @@ export default function JoinPage() {
                             )}
                             {selectedPlayer.phone && (
                               <Text>
-                                {t("phone")}: <strong>{selectedPlayer.phone}</strong>
+                                {t("phone")}:{" "}
+                                <strong>{selectedPlayer.phone}</strong>
                               </Text>
                             )}
                             <Text>
-                              {t("status")}:{" "}
+                              {t("status.yourStatus")}:{" "}
                               <strong
                                 color={
                                   selectedPlayer.confirmedByPlayer
@@ -427,8 +431,11 @@ export default function JoinPage() {
                   disabled={!sessionId || !playerNumber || isSubmitting}
                 >
                   <Flex align="center" justify="center" width="100%">
-                    {isSubmitting ? t("processing") : 
-                     selectedPlayer?.requireConfirmInfo ? t("continueToConfirm") : t("joinNow")}
+                    {isSubmitting
+                      ? t("processing")
+                      : selectedPlayer?.requireConfirmInfo
+                      ? t("continueToConfirm")
+                      : t("joinNow")}
                     {!isSubmitting && (
                       <Box as={ArrowRight} ml={2} boxSize={5} />
                     )}

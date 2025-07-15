@@ -18,7 +18,8 @@ interface Player {
   confirmedByPlayer: boolean;
 }
 
-type PlayerFilter = "ALL" | "PLAYING" | "WAITING" | "READY";
+// Ensure PlayerFilter type includes 'READY'
+export type PlayerFilter = "ALL" | "PLAYING" | "WAITING" | "READY";
 
 interface PlayersTabProps {
   sessionPlayers: Player[];
@@ -69,7 +70,9 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
           </Button>
           <Button
             size="sm"
-            onClick={() => setPlayerFilter("READY")}
+            onClick={() => {
+              setPlayerFilter("READY");
+            }}
             colorScheme={playerFilter === "READY" ? "green" : "gray"}
             variant={playerFilter === "READY" ? "solid" : "outline"}
           >

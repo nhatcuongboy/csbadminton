@@ -393,7 +393,7 @@
     "validationError": "Validation error"
   },
   "SessionDetail": {
-    "sessionTime": "Session Time",
+    "sessionTime": "Time",
     "status": "Status",
     "notStartedYet": "Not started yet",
     "startTime": "Start Time",
@@ -489,8 +489,12 @@
       "pair1": "Pair 1",
       "pair2": "Pair 2",
       "gapLabel": "Gap: {gap}",
-      "playerFallback": "Player {number}"
+      "playerFallback": "Player {number}",
+      "matchEndedSuccessfully": "Match ended successfully"
     },
-    "startMatch": "Start Match"
+    "startMatch": "Start Match",
+    "matchs": {
+      "tabTitle": "Matches"
+    }
   }
 }

@@ -1,30 +1,29 @@
-import React from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  VStack,
-  HStack,
-  Badge,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { Plus, Shuffle, Square, Play, X, Clock } from "lucide-react";
-import BadmintonCourt from "../court/BadmintonCourt";
-import MatchPreviewModal from "./MatchPreviewModal";
-import ManualSelectPlayersModal from "./ManualSelectPlayersModal";
-import { PlayerGrid } from "../player/PlayerGrid";
 import {
   Card,
   CardBody,
   CardHeader,
-  SimpleGrid,
   Button as CompatButton,
+  SimpleGrid,
   useToast,
 } from "@/components/ui/chakra-compat";
 import { CourtService, SuggestedPlayersResponse } from "@/lib/api";
-import { Player, Court, Match, MatchPlayer } from "@/types/session";
+import { Court, Match, Player } from "@/types/session";
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  HStack,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { Clock, Play, Plus, Shuffle, Square, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import React from "react";
+import BadmintonCourt from "../court/BadmintonCourt";
+import { PlayerGrid } from "../player/PlayerGrid";
+import ManualSelectPlayersModal from "./ManualSelectPlayersModal";
+import MatchPreviewModal from "./MatchPreviewModal";
 
 interface CourtsTabProps {
   session: any;
@@ -289,35 +288,71 @@ const CourtsTab: React.FC<
             court.status === "IN_USE" || court.status === "READY";
           const isCourtReady = court.status === "READY";
           return (
-            <Card key={court.id} variant="outline">
+            <Card
+              key={court.id}
+              variant="outline"
+              boxShadow="md"
+              borderRadius="xl"
+            >
               <CardHeader
                 bg={
                   isCourtReady ? "yellow.50" : isActive ? "green.50" : "gray.50"
                 }
                 p={4}
-                borderBottom="1px"
-                borderColor={
-                  isCourtReady
-                    ? "yellow.200"
+                // borderRadius="lg"
+                boxShadow="md"
+                transition="all 0.2s ease-in-out"
+                _hover={{
+                  boxShadow: "lg",
+                  borderColor: isCourtReady
+                    ? "yellow.300"
                     : isActive
-                    ? "green.200"
-                    : "gray.200"
-                }
+                    ? "green.300"
+                    : "gray.300",
+                  transform: "translateY(-1px)",
+                }}
               >
                 <Flex justifyContent="space-between" alignItems="center">
-                  <Heading
-                    size="md"
-                    color={
-                      isCourtReady
-                        ? "yellow.700"
-                        : isActive
-                        ? "green.700"
-                        : "gray.700"
-                    }
-                  >
-                    {t("courtsTab.courtNumber", { number: court.courtNumber })}
-                  </Heading>
-                  <HStack gap={2}>
+                  <Box display="flex" alignItems="center" gap={3}>
+                    <Box
+                      w={8}
+                      h={8}
+                      borderRadius="full"
+                      bg={
+                        isCourtReady
+                          ? "yellow.500"
+                          : isActive
+                          ? "green.500"
+                          : "gray.500"
+                      }
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      color="white"
+                      fontWeight="bold"
+                      fontSize="sm"
+                      boxShadow="sm"
+                    >
+                      {court.courtNumber}
+                    </Box>
+                    <Heading
+                      size="md"
+                      fontWeight="semibold"
+                      color={
+                        isCourtReady
+                          ? "yellow.700"
+                          : isActive
+                          ? "green.700"
+                          : "gray.700"
+                      }
+                    >
+                      {t("courtsTab.courtNumber", {
+                        number: court.courtNumber,
+                      })}
+                    </Heading>
+                  </Box>
+
+                  <HStack gap={2} alignItems="center">
                     {currentMatch && court.status === "IN_USE" && (
                       <Badge
                         colorScheme="blue"
@@ -325,8 +360,12 @@ const CourtsTab: React.FC<
                         display="flex"
                         alignItems="center"
                         gap={1}
+                        fontSize="xs"
+                        px={2}
+                        py={1}
+                        borderRadius="md"
                       >
-                        <Box as={Clock} boxSize={4} />
+                        <Box as={Clock} boxSize={3} />
                         {currentMatch.startTime
                           ? formatCourtElapsedTime(currentMatch.startTime)
                           : "-"}
@@ -336,7 +375,12 @@ const CourtsTab: React.FC<
                       colorScheme={
                         isCourtReady ? "yellow" : isActive ? "green" : "gray"
                       }
-                      variant={isActive ? "solid" : "outline"}
+                      variant="solid"
+                      fontSize="sm"
+                      px={3}
+                      py={1}
+                      borderRadius="md"
+                      fontWeight="semibold"
                     >
                       {isCourtReady
                         ? t("courtsTab.ready")
@@ -347,7 +391,7 @@ const CourtsTab: React.FC<
                   </HStack>
                 </Flex>
               </CardHeader>
-              <CardBody py={4} px={0}>
+              <CardBody pt={0} pb={4} px={0}>
                 {isActive && court.currentPlayers.length > 0 ? (
                   <VStack gap={4}>
                     <BadmintonCourt
@@ -368,6 +412,7 @@ const CourtsTab: React.FC<
                       isLoading={isRefreshing}
                       status={court.status}
                       mode={mode}
+                      // courtColor="#9fbcba"
                     />
                     {/* Show Start Match button if court is IN_USE but no match has started */}
                     {session.status === "IN_PROGRESS" &&
@@ -376,7 +421,7 @@ const CourtsTab: React.FC<
                         <VStack gap={2} width="100%">
                           <CompatButton
                             size="sm"
-                            width={{ base: "100%", md: "auto" }}
+                            // width={{ base: "100%", md: "auto" }}
                             colorScheme="green"
                             loading={loadingStartMatchCourtId === court.id}
                             onClick={async () => {
@@ -402,7 +447,7 @@ const CourtsTab: React.FC<
                           </CompatButton>
                           <CompatButton
                             size="sm"
-                            width={{ base: "100%", md: "auto" }}
+                            // width={{ base: "100%", md: "auto" }}
                             colorScheme="red"
                             variant="outline"
                             loading={loadingCancelCourtId === court.id}
@@ -442,7 +487,7 @@ const CourtsTab: React.FC<
                         court.status !== "READY" && ( // Ensure button does not show for READY status
                           <CompatButton
                             size="sm"
-                            width={{ base: "100%", md: "auto" }}
+                            // width={{ base: "100%", md: "auto" }}
                             colorScheme="red"
                             onClick={async () => {
                               if (!court.currentMatchId) return;
@@ -500,6 +545,7 @@ const CourtsTab: React.FC<
                           onClick={() => handleAutoAssignClick(court)}
                           size="sm"
                           width="full"
+                          disabled={waitingPlayers.length < 4}
                           // loading={
                           //   selectedAutoAssignCourt?.id === court.id &&
                           //   loadingAutoAssign
@@ -515,6 +561,7 @@ const CourtsTab: React.FC<
                             size="sm"
                             width="full"
                             variant="outline"
+                            disabled={waitingPlayers.length < 4}
                           >
                             <Box as={Plus} boxSize={4} mr={1} />
                             {t("courtsTab.manualSelection")}
@@ -579,7 +626,7 @@ const CourtsTab: React.FC<
           const hours = Math.floor(minutes / 60);
           const mins = minutes % 60;
           if (hours > 0) {
-            return `${hours}h ${mins}m`;
+            return `${hours}h${mins}m`;
           }
           return `${mins}m`;
         }}

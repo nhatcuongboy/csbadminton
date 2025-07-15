@@ -2,7 +2,7 @@
 
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import CourtsTab from "@/components/session/CourtsTab";
-import PlayersTab from "@/components/session/PlayersTab";
+import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import TopBar from "@/components/ui/TopBar";
 import {
@@ -47,9 +47,7 @@ function StatusPageContent() {
   const [currentCourt, setCurrentCourt] = useState<Court | null>(null);
   const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);
   const [activeTab, setActiveTab] = useState<number>(0); // 0: Status, 1: Courts, 2: Players
-  const [playerFilter, setPlayerFilter] = useState<
-    "ALL" | "PLAYING" | "WAITING"
-  >("ALL");
+  const [playerFilter, setPlayerFilter] = useState<PlayerFilter>("ALL");
 
   // Helper function to format elapsed time for match display
   const formatMatchElapsedTime = (startTime: Date): string => {
@@ -94,7 +92,7 @@ function StatusPageContent() {
     const minutes = waitTimeInMinutes % 60;
 
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return `${hours}h${minutes}m`;
     }
 
     return `${minutes} min`;
@@ -694,16 +692,7 @@ function StatusPageContent() {
             <PlayersTab
               sessionPlayers={session.players || []}
               playerFilter={playerFilter}
-              setPlayerFilter={(filter) => {
-                // Only allow "ALL", "PLAYING", or "WAITING"
-                if (
-                  filter === "ALL" ||
-                  filter === "PLAYING" ||
-                  filter === "WAITING"
-                ) {
-                  setPlayerFilter(filter);
-                }
-              }}
+              setPlayerFilter={setPlayerFilter}
               formatWaitTime={formatWaitTime}
               mode="view"
             />

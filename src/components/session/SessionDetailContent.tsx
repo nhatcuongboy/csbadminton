@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  CourtService,
-  Level,
-  MatchService,
-  PlayerService,
-  SessionService,
-} from "@/lib/api";
+import { CourtService, Level, MatchService, SessionService } from "@/lib/api";
 import {
   Box,
   Container,
@@ -19,13 +13,12 @@ import {
   //   TabPanels,
   //   Tabs,
   Text,
-  useDisclosure,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
 // Import compatibility components
 import CourtsTab from "@/components/session/CourtsTab";
-import ManageTab from "@/components/session/ManageTab";
-import PlayersTab from "@/components/session/PlayersTab";
+import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
+import SessionHistoryList from "@/components/session/SessionHistoryList";
 import SettingsTab from "@/components/session/SettingsTab";
 import {
   Button,
@@ -39,10 +32,10 @@ import {
   formatTime,
   getCourtDisplayName,
 } from "@/lib/api/sessions";
-import { Clock, Play, RefreshCw, Square, Users } from "lucide-react";
+import dayjs from "@/lib/dayjs";
+import { Clock, Play, RefreshCw, Square, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import WaitTimeUpdater from "./WaitTimeUpdater";
-import dayjs from "@/lib/dayjs";
 
 // Types for session data and related entities
 interface Player {
@@ -126,33 +119,11 @@ export default function SessionDetailContent({
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [matchMode, setMatchMode] = useState<"auto" | "manual">("auto");
   const [showMatchCreation, setShowMatchCreation] = useState<boolean>(false);
-  const [playerFilter, setPlayerFilter] = useState<
-    "ALL" | "PLAYING" | "WAITING"
-  >("ALL");
-
-  // Player management states
-  const [editingPlayers, setEditingPlayers] = useState<{
-    [key: string]: Player;
-  }>({});
-  const [newPlayers, setNewPlayers] = useState<
-    Array<{
-      playerNumber: number;
-      name: string;
-      gender: string;
-      level: Level;
-      phone?: string;
-      levelDescription?: string;
-      requireConfirmInfo?: boolean;
-    }>
-  >([]);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [playerFilter, setPlayerFilter] = useState<PlayerFilter>("ALL");
   const [isToggleStatusLoading, setIsToggleStatusLoading] =
     useState<boolean>(false);
 
   const toast = useToast();
-  const playerModalDisclosure = useDisclosure();
-  const courtModalDisclosure = useDisclosure();
-  const matchModalDisclosure = useDisclosure();
 
   // Get waiting players (players with status WAITING)
   const waitingPlayers = session.players
@@ -166,15 +137,6 @@ export default function SessionDetailContent({
       ...court,
       status: court.status as "READY" | "IN_USE" | "EMPTY",
     }));
-
-  // Get completed matches
-  const completedMatches =
-    session.matches
-      ?.filter((match) => match.status === "FINISHED")
-      .sort(
-        (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-      ) ?? [];
 
   // Helper function to format elapsed time for court display (more readable)
   const formatCourtElapsedTime = (startTime: string): string => {
@@ -507,174 +469,6 @@ export default function SessionDetailContent({
     }
   };
 
-  // Player management functions
-  const addNewPlayerRow = () => {
-    // Find the highest player number from both existing players and new players being added
-    const existingMaxPlayerNumber = Math.max(
-      0,
-      ...session.players.map((p) => p.playerNumber || 0)
-    );
-
-    const newPlayerMaxNumber =
-      newPlayers.length > 0
-        ? Math.max(...newPlayers.map((p) => p.playerNumber || 0))
-        : 0;
-
-    const nextPlayerNumber =
-      Math.max(existingMaxPlayerNumber, newPlayerMaxNumber) + 1;
-
-    setNewPlayers([
-      ...newPlayers,
-      {
-        playerNumber: nextPlayerNumber,
-        name: "",
-        gender: "MALE",
-        level: Level.Y,
-        levelDescription: "",
-        requireConfirmInfo: false,
-      },
-    ]);
-  };
-
-  const removeNewPlayerRow = (index: number) => {
-    setNewPlayers(newPlayers.filter((_, i) => i !== index));
-  };
-
-  const updateNewPlayer = (
-    index: number,
-    field: string,
-    value: string | boolean
-  ) => {
-    setNewPlayers((prev) =>
-      prev.map((player, i) =>
-        i === index ? { ...player, [field]: value } : player
-      )
-    );
-  };
-
-  const startEditingPlayer = (player: Player) => {
-    setEditingPlayers((prev) => ({
-      ...prev,
-      [player.id]: { ...player },
-    }));
-  };
-
-  const cancelEditingPlayer = (playerId: string) => {
-    setEditingPlayers((prev) => {
-      const newState = { ...prev };
-      delete newState[playerId];
-      return newState;
-    });
-  };
-
-  const updateEditingPlayer = (
-    playerId: string,
-    field: string,
-    value: string | boolean
-  ) => {
-    setEditingPlayers((prev) => ({
-      ...prev,
-      [playerId]: {
-        ...prev[playerId],
-        [field]: value,
-      },
-    }));
-  };
-
-  const savePlayerChanges = async () => {
-    try {
-      setIsSaving(true);
-
-      // Prepare data for API
-      const playersToUpdate = Object.values(editingPlayers);
-      const playersToCreate = newPlayers.filter((p) => p.name.trim() !== "");
-
-      // Update existing players
-      if (playersToUpdate.length > 0) {
-        await PlayerService.bulkUpdatePlayers(
-          session.id,
-          playersToUpdate as any
-        );
-      }
-
-      // Create new players
-      if (playersToCreate.length > 0) {
-        // Include levelDescription and requireConfirmInfo fields when sending to API
-        await PlayerService.createBulkPlayers(
-          session.id,
-          playersToCreate as any
-        );
-      }
-
-      // Clear editing states
-      setEditingPlayers({});
-      setNewPlayers([]);
-
-      // Refresh session data
-      await refreshSessionData();
-    } catch (error) {
-      console.error("Error saving player changes:", error);
-      toast.toast({
-        title: t("failedToSavePlayerChanges"),
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const saveIndividualPlayer = async (playerId: string) => {
-    try {
-      setIsSaving(true);
-
-      const playerToUpdate = editingPlayers[playerId];
-      if (!playerToUpdate) {
-        throw new Error("No player data to update");
-      }
-
-      await PlayerService.updatePlayerBySession(
-        session.id,
-        playerId,
-        playerToUpdate as any
-      );
-
-      // Remove from editing state
-      setEditingPlayers((prev) => {
-        const newState = { ...prev };
-        delete newState[playerId];
-        return newState;
-      });
-
-      // Refresh session data
-      await refreshSessionData();
-    } catch (error) {
-      console.error("Error updating player:", error);
-      toast.toast({
-        title: t("failedToUpdatePlayer"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const deletePlayer = async (playerId: string) => {
-    try {
-      await PlayerService.deletePlayerBySession(session.id, playerId);
-      await refreshSessionData();
-    } catch (error) {
-      console.error("Error deleting player:", error);
-      toast.toast({
-        title: t("failedToDeletePlayer"),
-        status: "error",
-        duration: 3000,
-      });
-    }
-  };
-
   return (
     <>
       {/* Add WaitTimeUpdater to automatically update wait times every minute */}
@@ -903,37 +697,17 @@ export default function SessionDetailContent({
             <PlayersTab
               sessionPlayers={session.players}
               playerFilter={playerFilter}
-              setPlayerFilter={(filter) => {
-                // Only allow "ALL", "PLAYING", or "WAITING"
-                if (
-                  filter === "ALL" ||
-                  filter === "PLAYING" ||
-                  filter === "WAITING"
-                ) {
-                  setPlayerFilter(filter);
-                }
-              }}
+              setPlayerFilter={setPlayerFilter}
               formatWaitTime={formatWaitTime}
             />
           )}
-          {activeTab === 2 && (
-            <ManageTab
+          {activeTab === 2 && <SessionHistoryList sessionId={session.id} />}
+          {activeTab === 3 && (
+            <SettingsTab
               session={session}
-              newPlayers={newPlayers}
-              editingPlayers={editingPlayers}
-              isSaving={isSaving}
-              addNewPlayerRow={addNewPlayerRow}
-              removeNewPlayerRow={removeNewPlayerRow}
-              updateNewPlayer={updateNewPlayer}
-              startEditingPlayer={startEditingPlayer}
-              cancelEditingPlayer={cancelEditingPlayer}
-              updateEditingPlayer={updateEditingPlayer}
-              savePlayerChanges={savePlayerChanges}
-              saveIndividualPlayer={saveIndividualPlayer}
-              deletePlayer={deletePlayer}
+              refreshSessionData={refreshSessionData}
             />
           )}
-          {activeTab === 3 && <SettingsTab session={session} />}
         </Box>
 
         {/* Bottom Navigation Bar */}
@@ -962,7 +736,7 @@ export default function SessionDetailContent({
             color={activeTab === 0 ? "blue.500" : "gray.500"}
             fontWeight={activeTab === 0 ? "bold" : "normal"}
           >
-            <Box as={Users} boxSize={6} mb={1} />
+            <Box as={Square} boxSize={6} mb={1} />
             {t("courts")}
           </Box>
           <Box
@@ -990,8 +764,8 @@ export default function SessionDetailContent({
             color={activeTab === 2 ? "blue.500" : "gray.500"}
             fontWeight={activeTab === 2 ? "bold" : "normal"}
           >
-            <Box as={RefreshCw} boxSize={6} mb={1} />
-            {t("manage")}
+            <Box as={Trophy} boxSize={6} mb={1} />
+            {t("matchs.tabTitle")}
           </Box>
           <Box
             as="button"
@@ -1004,7 +778,7 @@ export default function SessionDetailContent({
             color={activeTab === 3 ? "blue.500" : "gray.500"}
             fontWeight={activeTab === 3 ? "bold" : "normal"}
           >
-            <Box as={/* icon for settings */ RefreshCw} boxSize={6} mb={1} />
+            <Box as={RefreshCw} boxSize={6} mb={1} />
             {t("settings")}
           </Box>
         </Box>

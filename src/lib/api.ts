@@ -111,6 +111,8 @@ export interface Match {
   endTime?: Date;
   players?: MatchPlayer[];
   durationMinutes?: number;
+  // Add these fields to match API response
+  court?: Court; // populated by include: { court: true }
 }
 
 export interface MatchPlayer {
