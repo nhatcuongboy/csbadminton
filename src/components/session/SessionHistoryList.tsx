@@ -112,7 +112,7 @@ const HistoryMatchCard = ({ match }: { match: HistoryMatch }) => {
         </Box>
 
         {/* Match score display */}
-        {match.scores && (
+        {match.scores ? (
           <Box borderTopWidth="1px" pt={4} mt={2}>
             <Text fontWeight="semibold" mb={2}>
               Final Score
@@ -128,17 +128,34 @@ const HistoryMatchCard = ({ match }: { match: HistoryMatch }) => {
                 {match.scores.pair2Score}
               </Text>
             </Flex>
-            {winningPair && (
-              <Text
-                mt={2}
-                textAlign="center"
-                fontSize="sm"
-                fontWeight="bold"
-                color="green.600"
-              >
-                {winningPair === 1 ? "(Pair 1 Won)" : "(Pair 2 Won)"}
+            <Text
+              mt={2}
+              textAlign="center"
+              fontSize="sm"
+              fontWeight="bold"
+              color={
+                match.scores.pair1Score === match.scores.pair2Score
+                  ? "gray.600"
+                  : "green.600"
+              }
+            >
+              {match.scores.pair1Score === match.scores.pair2Score
+                ? "(Draw)"
+                : winningPair === 1
+                ? "(Pair 1 Won)"
+                : "(Pair 2 Won)"}
+            </Text>
+          </Box>
+        ) : (
+          <Box borderTopWidth="1px" pt={4} mt={2}>
+            <Text fontWeight="semibold" mb={2}>
+              Final Score
+            </Text>
+            <Flex justifyContent="center" alignItems="center" gap={3}>
+              <Text fontSize="2xl" fontWeight="bold" color="gray.400">
+                ...
               </Text>
-            )}
+            </Flex>
           </Box>
         )}
 

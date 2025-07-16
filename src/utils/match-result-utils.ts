@@ -153,11 +153,13 @@ export function convertBadmintonMatchToUI(
 
 /**
  * Parses score data from various formats and converts to UI format
+ * Returns null if no valid score data is found, allowing UI to show "..."
  */
 export function parseScoreData(
   scoreData: any,
   players?: Array<{ playerId: string; position: number }>
 ): UIMatchResult | null {
+  // Return null if no score data provided
   if (!scoreData) return null;
 
   try {
@@ -167,13 +169,19 @@ export function parseScoreData(
       if (scoreData.startsWith('[') && scoreData.endsWith(']')) {
         const scoreArray = JSON.parse(scoreData);
         if (Array.isArray(scoreArray) && scoreArray.length === 2) {
+          // Check if scores are valid numbers
+          const score1 = Number(scoreArray[0]);
+          const score2 = Number(scoreArray[1]);
+          
+          if (isNaN(score1) || isNaN(score2)) return null;
+          
           return {
             scores: {
-              pair1Score: scoreArray[0],
-              pair2Score: scoreArray[1]
+              pair1Score: score1,
+              pair2Score: score2
             },
-            winningPair: scoreArray[0] > scoreArray[1] ? 1 : scoreArray[1] > scoreArray[0] ? 2 : undefined,
-            isDraw: scoreArray[0] === scoreArray[1]
+            winningPair: score1 > score2 ? 1 : score2 > score1 ? 2 : undefined,
+            isDraw: score1 === score2
           };
         }
       }
@@ -187,13 +195,23 @@ export function parseScoreData(
     if (typeof scoreData === 'object') {
       // Check if it's the new Match interface format
       if (scoreData.score && Array.isArray(scoreData.score) && players) {
-        return convertBadmintonMatchToUI(scoreData, players);
+        const result = convertBadmintonMatchToUI(scoreData, players);
+        // Return null if no valid scores found
+        if (result.scores.pair1Score === 0 && result.scores.pair2Score === 0) {
+          return null;
+        }
+        return result;
       }
       
       // Handle legacy formats
       const scoresObj = scoreData.scores || scoreData;
       const pair1Score = Number(scoresObj.pair1 || scoresObj.team1 || scoresObj.score1 || 0);
       const pair2Score = Number(scoresObj.pair2 || scoresObj.team2 || scoresObj.score2 || 0);
+      
+      // Return null if both scores are 0 or invalid
+      if ((pair1Score === 0 && pair2Score === 0) || (isNaN(pair1Score) || isNaN(pair2Score))) {
+        return null;
+      }
       
       return {
         scores: {
@@ -206,6 +224,7 @@ export function parseScoreData(
     }
   } catch (e) {
     console.warn("Failed to parse score data:", e);
+    return null;
   }
 
   return null;

@@ -1,8 +1,25 @@
 "use client";
 
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import { Box, Container, Flex, Heading, IconButton, Text, Stack } from "@chakra-ui/react";
-import { ArrowLeft, Menu, Home, Users, Calendar, Settings, Info, X } from "lucide-react";
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+  Stack,
+} from "@chakra-ui/react";
+import {
+  ArrowLeft,
+  Menu,
+  Home,
+  Users,
+  Calendar,
+  Settings,
+  Info,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, Suspense } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -149,7 +166,7 @@ export default function TopBar({
           borderBottomWidth="1px"
           borderColor="gray.200"
           _dark={{ borderColor: "gray.600" }}
-          height={"60px"}
+          height={"65px"}
         >
           <Text fontSize="xl" fontWeight="bold">
             Menu

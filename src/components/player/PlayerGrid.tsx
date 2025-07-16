@@ -5,6 +5,35 @@ import { Card, CardBody, SimpleGrid } from "@/components/ui/chakra-compat";
 import { Level } from "@/lib/api";
 import { getLevelLabel } from "@/utils/level-mapping";
 
+// Color constants for different player states
+const PLAYER_COLORS = {
+  SELECTED: {
+    bg: "rgba(59, 130, 246, 0.3)",
+    border: "rgba(59, 130, 246, 0.8)",
+    scheme: "blue",
+  },
+  READY: {
+    bg: "#fae593",
+    border: "#fae593",
+    scheme: "green",
+  },
+  WAITING: {
+    bg: "rgba(251, 146, 60, 0.9)", // Increased opacity from 0.2 to 0.4
+    border: "rgba(251, 146, 60, 0.9)", // Increased opacity from 0.8 to 1 (full)
+    scheme: "orange",
+  },
+  PLAYING: {
+    bg: "rgba(72, 187, 120, 0.8)",
+    border: "rgba(72, 187, 120, 0.8)",
+    scheme: "blue",
+  },
+  DEFAULT: {
+    bg: "rgba(251, 146, 60, 0.3)",
+    border: "rgba(251, 146, 60, 0.5)",
+    scheme: "orange",
+  },
+};
+
 interface Player {
   id: string;
   playerNumber: number;
@@ -53,37 +82,35 @@ export const PlayerGrid = ({
 
         if (isSelected) {
           // Blue color for selected players
-          bgColor = "rgba(59, 130, 246, 0.3)";
-          borderColor = "rgba(59, 130, 246, 0.8)";
-          colorScheme = "blue";
+          bgColor = PLAYER_COLORS.SELECTED.bg;
+          borderColor = PLAYER_COLORS.SELECTED.border;
+          colorScheme = PLAYER_COLORS.SELECTED.scheme;
         } else if (
           playerFilter === "READY" ||
           (playerFilter === "ALL" && player.status === "READY")
         ) {
           // Green for ready players
-          bgColor = "rgba(72, 187, 120, 0.2)";
-          borderColor = "rgba(72, 187, 120, 0.8)";
-          colorScheme = "green";
+          bgColor = PLAYER_COLORS.READY.bg;
+          borderColor = PLAYER_COLORS.READY.border;
+          colorScheme = PLAYER_COLORS.READY.scheme;
         } else if (
           playerFilter === "WAITING" ||
           (playerFilter === "ALL" && player.status === "WAITING")
         ) {
-          // Orange gradient for waiting players
-          const bgOpacity = Math.max(0.1, 1 - index * 0.15);
-          const borderOpacity = Math.max(0.3, 1 - index * 0.1);
-          bgColor = `rgba(251, 146, 60, ${bgOpacity})`;
-          borderColor = `rgba(251, 146, 60, ${borderOpacity})`;
-          colorScheme = "orange";
+          // Orange color for waiting players (increased intensity)
+          bgColor = PLAYER_COLORS.WAITING.bg;
+          borderColor = PLAYER_COLORS.WAITING.border;
+          colorScheme = PLAYER_COLORS.WAITING.scheme;
         } else if (player.status === "PLAYING") {
           // Blue for playing players
-          bgColor = "rgba(59, 130, 246, 0.1)";
-          borderColor = "rgba(59, 130, 246, 0.3)";
-          colorScheme = "blue";
+          bgColor = PLAYER_COLORS.PLAYING.bg;
+          borderColor = PLAYER_COLORS.PLAYING.border;
+          colorScheme = PLAYER_COLORS.PLAYING.scheme;
         } else {
-          // More saturated orange for all status
-          bgColor = "rgba(251, 146, 60, 0.3)";
-          borderColor = "rgba(251, 146, 60, 0.5)";
-          colorScheme = "orange";
+          // Default color for other statuses
+          bgColor = PLAYER_COLORS.DEFAULT.bg;
+          borderColor = PLAYER_COLORS.DEFAULT.border;
+          colorScheme = PLAYER_COLORS.DEFAULT.scheme;
         }
 
         // Priority indicator color (for waiting queue)

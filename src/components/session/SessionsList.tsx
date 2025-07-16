@@ -16,25 +16,36 @@ import {
 import { Calendar, Clock, Users, SquareAsterisk } from "lucide-react";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { SessionService, type Session } from "@/lib/api";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import dayjs from "@/lib/dayjs";
+import "dayjs/locale/vi";
+import "dayjs/locale/en";
 
-// Helper functions for formatting
-const formatDate = (dateString: string | Date): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+// Helper functions for formatting with locale support
+const formatDate = (dateString: string | Date, locale: string): string => {
+  // Create a dayjs instance and set the locale
+  const date = dayjs(dateString).locale(locale === "vi" ? "vi" : "en");
+
+  let formattedDate: string;
+  
+  if (locale === "vi") {
+    // Vietnamese format: "Thứ 2, 04 tháng 7, 2025"
+    formattedDate = date.format("dddd, DD MMMM, YYYY");
+  } else {
+    // English format: "Mon, Jul 04, 2025"
+    formattedDate = date.format("ddd, MMM DD, YYYY");
+  }
+  
+  // Capitalize the first letter of the day name
+  return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 };
 
-const formatTime = (dateString: string | Date): string => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const formatTime = (dateString: string | Date, locale: string): string => {
+  // Create a dayjs instance and set the locale
+  const date = dayjs(dateString).locale(locale === "vi" ? "vi" : "en");
+
+  // Both locales use 24-hour format: "14:30"
+  return date.format("HH:mm");
 };
 
 // UI Session type based on API data
@@ -62,6 +73,20 @@ const statusLabels = {
   FINISHED: "Finished",
 };
 
+// Helper function to get localized status labels
+const getStatusLabel = (status: string, t: any) => {
+  switch (status) {
+    case "PREPARING":
+      return t("status.preparing");
+    case "IN_PROGRESS":
+      return t("status.inProgress");
+    case "FINISHED":
+      return t("status.finished");
+    default:
+      return status;
+  }
+};
+
 interface SessionCardProps {
   session: UISession;
   onDelete?: (id: string) => void;
@@ -73,6 +98,7 @@ const SessionCard = ({
   onDelete,
   mode = "view",
 }: SessionCardProps) => {
+  const t = useTranslations("session");
   return (
     <Box
       borderWidth="1px"
@@ -93,7 +119,7 @@ const SessionCard = ({
             {session.title}
           </Heading>
           <Badge colorScheme={statusColors[session.status]}>
-            {statusLabels[session.status]}
+            {getStatusLabel(session.status, t)}
           </Badge>
         </Flex>
 
@@ -108,12 +134,14 @@ const SessionCard = ({
           </Flex>
           <Flex align="center">
             <Icon as={SquareAsterisk} boxSize={5} mr={2} color="blue.500" />
-            <Text>{session.numberOfCourts} courts available</Text>
+            <Text>
+              {session.numberOfCourts} {t("courtsAvailable")}
+            </Text>
           </Flex>
           <Flex align="center">
             <Icon as={Users} boxSize={5} mr={2} color="blue.500" />
             <Text>
-              {session.totalPlayers} / {session.maxPlayers} players
+              {session.totalPlayers} / {session.maxPlayers} {t("players")}
             </Text>
           </Flex>
         </Stack>
@@ -123,7 +151,7 @@ const SessionCard = ({
             href={`/host/sessions/${session.id}`}
             colorScheme="blue"
           >
-            Manage Session
+            {t("manageSession")}
           </NextLinkButton>
           {mode === "manage" && onDelete && (
             <button
@@ -138,16 +166,12 @@ const SessionCard = ({
                 transition: "background 0.2s",
               }}
               onClick={() => {
-                if (
-                  window.confirm(
-                    "Are you sure you want to delete this session?"
-                  )
-                ) {
+                if (window.confirm(t("deleteConfirmation"))) {
                   onDelete(session.id);
                 }
               }}
             >
-              Delete
+              {t("deleteSession")}
             </button>
           )}
         </Flex>
@@ -169,6 +193,7 @@ export default function SessionsList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations("session");
+  const locale = useLocale();
 
   // Delete handler
   const handleDelete = async (id: string) => {
@@ -199,13 +224,15 @@ export default function SessionsList({
             id: session.id,
             title: session.name,
             date: session.startTime
-              ? formatDate(session.startTime)
-              : formatDate(session.createdAt) + " (Not started)",
+              ? formatDate(session.startTime, locale)
+              : formatDate(session.createdAt, locale) + ` (${t("notStarted")})`,
             time: session.startTime
-              ? `${formatTime(session.startTime)} - ${
-                  session.endTime ? formatTime(session.endTime) : "In progress"
+              ? `${formatTime(session.startTime, locale)} - ${
+                  session.endTime
+                    ? formatTime(session.endTime, locale)
+                    : t("inProgress")
                 }`
-              : "Not started yet",
+              : t("notStartedYet"),
             numberOfCourts: session.numberOfCourts,
             totalPlayers: session._count?.players || 0,
             maxPlayers,
@@ -224,7 +251,7 @@ export default function SessionsList({
     }
 
     fetchSessions();
-  }, []);
+  }, [locale, t]);
 
   // Filter sessions by status
   const filteredSessions =

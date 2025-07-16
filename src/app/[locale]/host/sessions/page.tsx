@@ -22,16 +22,16 @@ export default function HostSessionsPage() {
   const [status, setStatus] = useState<string>("ALL");
 
   const statusOptions = [
-    { value: "ALL", label: "All" },
-    { value: "PREPARING", label: "Preparing" },
-    { value: "IN_PROGRESS", label: "In Progress" },
-    { value: "FINISHED", label: "Finished" },
+    { value: "ALL", label: t("sessionStatus.all") },
+    { value: "PREPARING", label: t("sessionStatus.preparing") },
+    { value: "IN_PROGRESS", label: t("sessionStatus.inProgress") },
+    { value: "FINISHED", label: t("sessionStatus.finished") },
   ];
 
   return (
     <Box minH="100vh">
       {/* Top Bar */}
-      <TopBar showBackButton={true} backHref="/host" title="Host Dashboard" />
+      <TopBar showBackButton={true} backHref="/host" title={t("dashboard")} />
 
       <Container maxW="7xl" p={4} pt={24}>
         {/* Filter */}
@@ -55,9 +55,9 @@ export default function HostSessionsPage() {
         </Flex>
         {/* My Sessions Content Only */}
         <Flex mb={6} justify="space-between" alignItems="center">
-          <Heading size="md">My Badminton Sessions</Heading>
+          <Heading size="md">{t("mySessions")}</Heading>
           <NextLinkButton href="/host/new">
-            <Plus className="mr-2 h-4 w-4" /> New Session
+            <Plus className="mr-2 h-4 w-4" /> {t("createNewSession")}
           </NextLinkButton>
         </Flex>
         <VStack gap={6} alignItems="stretch">

@@ -21,7 +21,7 @@ export default function HostPage() {
         <Box mb={10}>
           <Flex mb={4} justify="space-between" align="center">
             <Heading as="h2" size="xl" textAlign="left">
-              {t("yourSessions")}
+              {t("upcomingSessions")}
             </Heading>
             <Flex gap={4}>
               <NextLinkButton href="/host/new" colorScheme="blue" size="lg">

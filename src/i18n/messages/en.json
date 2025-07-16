@@ -48,6 +48,19 @@
     "createNewSession": "Create New Session",
     "setUpYourBadmintonSession": "Set up your badminton session",
     "startYourBadmintonJourney": "Start Your Badminton Journey",
+    "status": {
+      "preparing": "Preparing",
+      "inProgress": "In Progress",
+      "finished": "Finished"
+    },
+    "courtsAvailable": "courts available",
+    "players": "players",
+    "manageSession": "Manage Session",
+    "deleteSession": "Delete",
+    "deleteConfirmation": "Are you sure you want to delete this session?",
+    "notStarted": "Not started",
+    "notStartedYet": "Not started yet",
+    "inProgress": "In progress",
     "configureYourSessionSettingsBelow": "Configure your session settings below to create the perfect badminton experience",
     "noActiveSessions": "No Active Sessions",
     "noActiveSessionsDescription": "You don't have any active sessions. Create a new one to get started!",
@@ -220,12 +233,21 @@
     "host": {
       "title": "Host Session",
       "description": "Create and manage a badminton session",
+      "dashboard": "Host Dashboard",
       "createNew": "Create New Session",
       "existingSessions": "Existing Sessions",
       "yourSessions": "Your Sessions",
+      "upcomingSessions": "Upcoming Sessions",
+      "mySessions": "My Badminton Sessions",
       "createNewSession": "New Session",
       "manageSessions": "Manage Sessions",
       "hostFeatures": "Host Features",
+      "sessionStatus": {
+        "all": "All",
+        "preparing": "Preparing",
+        "inProgress": "In Progress",
+        "finished": "Finished"
+      },
       "featurePlayerManagement": {
         "title": "Player Management",
         "description": "Add, edit, and manage players in your sessions with ease"
