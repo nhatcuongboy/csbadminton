@@ -7,11 +7,21 @@ interface RouteParams {
 }
 
 // PATCH - Update individual player
-export async function PATCH(request: NextRequest, { params }: { params: Promise<RouteParams> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<RouteParams> }
+) {
   try {
     const { id: sessionId, playerId } = await params;
     const body = await request.json();
-    const { name, gender, level, levelDescription, requireConfirmInfo } = body;
+    const {
+      name,
+      gender,
+      level,
+      levelDescription,
+      requireConfirmInfo,
+      confirmedByPlayer,
+    } = body;
 
     // Validate input
     if (!name || !gender || !level) {
@@ -56,6 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         gender,
         level,
         levelDescription: levelDescription || null,
+        confirmedByPlayer: confirmedByPlayer || false,
         requireConfirmInfo: requireConfirmInfo || false,
       },
     });
@@ -75,7 +86,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 // DELETE - Delete individual player
-export async function DELETE(request: NextRequest, { params }: { params: Promise<RouteParams> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<RouteParams> }
+) {
   try {
     const { id: sessionId, playerId } = await params;
 
@@ -109,9 +123,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // Check if player is currently playing
     if (existingPlayer.status === "PLAYING") {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: "Cannot delete player who is currently playing. End their match first." 
+        {
+          success: false,
+          message:
+            "Cannot delete player who is currently playing. End their match first.",
         },
         { status: 400 }
       );

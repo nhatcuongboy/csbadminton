@@ -24,6 +24,7 @@ import BadmintonCourt from "../court/BadmintonCourt";
 import { PlayerGrid } from "../player/PlayerGrid";
 import ManualSelectPlayersModal from "./ManualSelectPlayersModal";
 import MatchPreviewModal from "./MatchPreviewModal";
+import MatchResultModal from "./MatchResultModal";
 
 interface CourtsTabProps {
   session: any;
@@ -128,6 +129,10 @@ const CourtsTab: React.FC<
   >([]);
   const [confirmingManualMatch, setConfirmingManualMatch] =
     React.useState(false);
+
+  // Match result modal state
+  const [matchResultModalOpen, setMatchResultModalOpen] = React.useState(false);
+  const [selectedMatch, setSelectedMatch] = React.useState<any>(null);
 
   // Handle auto-assign match button click
   const handleAutoAssignClick = (court: Court) => {
@@ -256,6 +261,57 @@ const CourtsTab: React.FC<
     setManualSelectedPlayers([]);
   };
 
+  // Handle match result submission
+  const handleMatchResultSubmit = async (result: {
+    score?: Array<{ playerId: string; score: number }>;
+    winnerIds?: string[];
+    isDraw?: boolean;
+    notes?: string;
+  }) => {
+    if (!selectedMatch) return;
+
+    try {
+      setLoadingEndMatchId(selectedMatch.id);
+
+      // Get court for this match
+      const court = session.courts.find(
+        (c: Court) => c.id === selectedMatch.courtId
+      );
+      if (!court) return;
+
+      await CourtService.endMatch(court.id, result);
+
+      // Close modal and refresh data
+      setMatchResultModalOpen(false);
+      setSelectedMatch(null);
+
+      if (onDataRefresh) onDataRefresh();
+
+      toast.toast({
+        title: t("courtsTab.matchEndedSuccessfully"),
+        description: t("courtsTab.courtAvailableForPlay"),
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error ending match:", error);
+      toast.toast({
+        title: t("courtsTab.errorEndingMatch"),
+        description: t("courtsTab.pleaseRetryLater"),
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setLoadingEndMatchId(null);
+    }
+  };
+
+  // Handle match result modal cancel
+  const handleMatchResultCancel = () => {
+    setMatchResultModalOpen(false);
+    setSelectedMatch(null);
+  };
+
   return (
     <>
       <Flex justifyContent="space-between" mb={4}>
@@ -292,7 +348,7 @@ const CourtsTab: React.FC<
               key={court.id}
               variant="outline"
               boxShadow="md"
-              borderRadius="xl"
+              // borderRadius="xl"
             >
               <CardHeader
                 bg={
@@ -361,9 +417,13 @@ const CourtsTab: React.FC<
                         alignItems="center"
                         gap={1}
                         fontSize="xs"
-                        px={2}
-                        py={1}
+                        px={1.5}
+                        py={0.5}
                         borderRadius="md"
+                        minWidth="48px"
+                        minHeight="20px"
+                        lineHeight={1.2}
+                        style={{ letterSpacing: 0.2 }}
                       >
                         <Box as={Clock} boxSize={3} />
                         {currentMatch.startTime
@@ -376,11 +436,15 @@ const CourtsTab: React.FC<
                         isCourtReady ? "yellow" : isActive ? "green" : "gray"
                       }
                       variant="solid"
-                      fontSize="sm"
-                      px={3}
-                      py={1}
+                      fontSize="xs"
+                      px={1.5}
+                      py={0.5}
                       borderRadius="md"
                       fontWeight="semibold"
+                      minWidth="48px"
+                      minHeight="20px"
+                      lineHeight={1.2}
+                      style={{ letterSpacing: 0.2 }}
                     >
                       {isCourtReady
                         ? t("courtsTab.ready")
@@ -391,7 +455,7 @@ const CourtsTab: React.FC<
                   </HStack>
                 </Flex>
               </CardHeader>
-              <CardBody pt={0} pb={4} px={0}>
+              <CardBody pt={0} pb={0} px={0}>
                 {isActive && court.currentPlayers.length > 0 ? (
                   <VStack gap={4}>
                     <BadmintonCourt
@@ -414,14 +478,15 @@ const CourtsTab: React.FC<
                       mode={mode}
                       // courtColor="#9fbcba"
                     />
-                    {/* Show Start Match button if court is IN_USE but no match has started */}
-                    {session.status === "IN_PROGRESS" &&
-                      mode === "manage" &&
-                      court.status === "READY" && (
-                        <VStack gap={2} width="100%">
+                    {/* Action buttons for courts with players */}
+                    <VStack gap={2} pb={4} width="100%">
+                      {/* Start Match button: chỉ hiển thị khi sân READY và chưa có match đang diễn ra */}
+                      {session.status === "IN_PROGRESS" &&
+                        mode === "manage" &&
+                        court.status === "READY" &&
+                        !court.currentMatchId && (
                           <CompatButton
                             size="sm"
-                            // width={{ base: "100%", md: "auto" }}
                             colorScheme="green"
                             loading={loadingStartMatchCourtId === court.id}
                             onClick={async () => {
@@ -441,13 +506,20 @@ const CourtsTab: React.FC<
                                 setLoadingStartMatchCourtId(null);
                               }
                             }}
+                            disabled={isRefreshing}
                           >
                             <Box as={Play} boxSize={4} mr={1} />
                             {t("startMatch")}
                           </CompatButton>
+                        )}
+
+                      {/* Cancel button: chỉ hiển thị khi sân READY và có currentPlayers */}
+                      {session.status === "IN_PROGRESS" &&
+                        mode === "manage" &&
+                        court.status === "READY" &&
+                        court.currentPlayers.length > 0 && (
                           <CompatButton
                             size="sm"
-                            // width={{ base: "100%", md: "auto" }}
                             colorScheme="red"
                             variant="outline"
                             loading={loadingCancelCourtId === court.id}
@@ -473,49 +545,31 @@ const CourtsTab: React.FC<
                                 setLoadingCancelCourtId(null);
                               }
                             }}
+                            disabled={isRefreshing}
                           >
                             <Box as={X} boxSize={4} mr={1} />
                             {t("courtsTab.cancel")}
                           </CompatButton>
-                        </VStack>
-                      )}
-                    <VStack gap={2} width="100%">
+                        )}
+
+                      {/* End Match button: chỉ hiển thị khi có match đang diễn ra và không phải READY */}
                       {session.status === "IN_PROGRESS" &&
-                        endMatch &&
-                        court.currentMatchId &&
                         mode === "manage" &&
-                        court.status !== "READY" && ( // Ensure button does not show for READY status
+                        court.currentMatchId &&
+                        court.status !== "READY" && (
                           <CompatButton
                             size="sm"
-                            // width={{ base: "100%", md: "auto" }}
                             colorScheme="red"
-                            onClick={async () => {
-                              if (!court.currentMatchId) return;
-                              setLoadingEndMatchId(court.currentMatchId);
-                              try {
-                                await CourtService.endMatch(court.id); // Call endMatch API
-                                if (onDataRefresh) onDataRefresh(); // Refresh data after ending match
-                                toast.toast({
-                                  title: t("courtsTab.matchEndedSuccessfully"),
-                                  description: t(
-                                    "courtsTab.courtAvailableForPlay"
-                                  ),
-                                  status: "success",
-                                  duration: 3000,
-                                });
-                              } catch (error) {
-                                console.error("Error ending match:", error);
-                                toast.toast({
-                                  title: t("courtsTab.errorEndingMatch"),
-                                  description: t("courtsTab.pleaseRetryLater"),
-                                  status: "error",
-                                  duration: 3000,
-                                });
-                              } finally {
-                                setLoadingEndMatchId(null);
+                            onClick={() => {
+                              const currentMatch = getCurrentMatch(court.id);
+                              console.log(court.id, currentMatch);
+                              if (currentMatch) {
+                                setSelectedMatch(currentMatch);
+                                setMatchResultModalOpen(true);
                               }
                             }}
                             loading={loadingEndMatchId === court.currentMatchId}
+                            disabled={isRefreshing}
                           >
                             <Box as={Square} boxSize={4} mr={1} />
                             {t("courtsTab.endMatch")}
@@ -524,7 +578,13 @@ const CourtsTab: React.FC<
                     </VStack>
                   </VStack>
                 ) : (
-                  <VStack gap={4} align="center" justify="center" minH="200px">
+                  <VStack
+                    gap={4}
+                    pb={4}
+                    align="center"
+                    justify="center"
+                    minH="200px"
+                  >
                     <BadmintonCourt
                       players={[]}
                       isActive={false}
@@ -545,7 +605,7 @@ const CourtsTab: React.FC<
                           onClick={() => handleAutoAssignClick(court)}
                           size="sm"
                           width="full"
-                          disabled={waitingPlayers.length < 4}
+                          disabled={waitingPlayers.length < 4 || isRefreshing}
                           // loading={
                           //   selectedAutoAssignCourt?.id === court.id &&
                           //   loadingAutoAssign
@@ -561,7 +621,7 @@ const CourtsTab: React.FC<
                             size="sm"
                             width="full"
                             variant="outline"
-                            disabled={waitingPlayers.length < 4}
+                            disabled={waitingPlayers.length < 4 || isRefreshing}
                           >
                             <Box as={Plus} boxSize={4} mr={1} />
                             {t("courtsTab.manualSelection")}
@@ -630,6 +690,15 @@ const CourtsTab: React.FC<
           }
           return `${mins}m`;
         }}
+      />
+
+      {/* Match Result Modal */}
+      <MatchResultModal
+        isOpen={matchResultModalOpen}
+        match={selectedMatch}
+        onConfirm={handleMatchResultSubmit}
+        onCancel={handleMatchResultCancel}
+        isLoading={loadingEndMatchId === selectedMatch?.id}
       />
 
       {/* Waiting Players Grid */}

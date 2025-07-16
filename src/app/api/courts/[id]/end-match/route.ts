@@ -13,6 +13,34 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    // Parse optional match result fields from request body
+    let score: string | undefined;
+    let winnerIds: string | undefined;
+    let isDraw: boolean | undefined;
+    let notes: string | undefined;
+    try {
+      const body = await request.json();
+      // Score: if array/object, stringify
+      if (body.score !== undefined) {
+        if (typeof body.score === "object") {
+          score = JSON.stringify(body.score);
+        } else {
+          score = body.score;
+        }
+      }
+      // WinnerIds: if array, stringify
+      if (body.winnerIds !== undefined) {
+        if (Array.isArray(body.winnerIds)) {
+          winnerIds = JSON.stringify(body.winnerIds);
+        } else {
+          winnerIds = body.winnerIds;
+        }
+      }
+      isDraw = body.isDraw;
+      notes = body.notes;
+    } catch (e) {
+      // No body or invalid JSON, ignore
+    }
 
     console.log("END MATCH API - Court ID:", id);
 
@@ -59,6 +87,10 @@ export async function POST(
           data: {
             status: "FINISHED",
             endTime: new Date(),
+            ...(score !== undefined ? { score } : {}),
+            ...(winnerIds !== undefined ? { winnerIds } : {}),
+            ...(isDraw !== undefined ? { isDraw } : {}),
+            ...(notes !== undefined ? { notes } : {}),
           },
         });
 

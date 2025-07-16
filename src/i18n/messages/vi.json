@@ -257,6 +257,8 @@
       "selectYourPlayerNumber": "Chọn số người chơi của bạn",
       "playerNumberFormat": "Người chơi #{number}",
       "alreadyJoined": "Đã tham gia",
+      "alreadyConfirmed": "Đã xác nhận",
+      "needConfirmation": "Cần xác nhận",
       "noPlayersAvailable": "Không có người chơi nào trong kèo này. Vui lòng yêu cầu người tổ chức thêm người chơi trước.",
       "selectSessionFirst": "Vui lòng chọn kèo trước",
       "playerInformation": "Thông tin người chơi:",
@@ -274,7 +276,7 @@
       "playerAlreadyJoinedWarning": "Người chơi này đã tham gia kèo. Bạn vẫn có thể tiếp tục để truy cập trạng thái của họ.",
       "selectPlayerHelpText": "Chọn số người chơi của bạn từ danh sách người chơi trong kèo này",
       "processing": "Đang xử lý...",
-      "continueToConfirm": "Tiếp tục để xác nhận",
+      "continueToConfirm": "Tiếp tục",
       "joinNow": "Tham gia ngay",
       "hostMustAddYou": "Người tổ chức phải thêm bạn vào kèo trước khi bạn có thể tham gia",
       "enterCode": "Nhập mã kèo",
@@ -491,6 +493,19 @@
       "gapLabel": "Chênh lệch: {gap}",
       "playerFallback": "Người chơi {number}",
       "matchEndedSuccessfully": "Trận đấu đã kết thúc thành công"
+    },
+    "matchResult": {
+      "title": "Kết quả trận đấu",
+      "matchInfo": "Thông tin trận đấu",
+      "pair1": "Cặp 1",
+      "pair2": "Cặp 2",
+      "score": "Điểm số",
+      "isDraw": "Trận đấu hòa",
+      "notes": "Ghi chú (Tùy chọn)",
+      "notesPlaceholder": "Thêm ghi chú về trận đấu...",
+      "submitResult": "Gửi",
+      "cancel": "Hủy",
+      "selectWinnerInstruction": "Nhấn vào một đội để chọn đội thắng (tùy chọn nếu hòa)"
     },
     "startMatch": "Bắt đầu",
     "matchs": {

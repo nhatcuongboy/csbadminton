@@ -51,6 +51,7 @@ model Player {
   gender            Gender?
   level             Level?
   levelDescription  String?
+  desire            String?
   phone             String?
   preFilledByHost   Boolean       @default(false)
   confirmedByPlayer Boolean       @default(false)
@@ -102,6 +103,12 @@ model Match {
   players      MatchPlayer[]
   court        Court         @relation("CourtMatches", fields: [courtId], references: [id])
   session      Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Match result
+  score        String?
+  winnerIds    String?
+  isDraw       Boolean?      @default(false)
+  notes        String?
 
   @@map("matches")
 }

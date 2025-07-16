@@ -87,6 +87,7 @@ export interface Player {
   confirmedByPlayer: boolean;
   requireConfirmInfo: boolean;
   phone?: string;
+  desire?: string;
 }
 
 // Court types
@@ -437,11 +438,17 @@ export const CourtService = {
 
   // End match
   endMatch: async (
-    courtId: string
+    courtId: string,
+    options?: {
+      score?: Array<{ playerId: string; score: number }>;
+      winnerIds?: string[];
+      isDraw?: boolean;
+      notes?: string;
+    }
   ): Promise<{ court: Court; match: Match; players: Player[] }> => {
     const response = await api.post<
       ApiResponse<{ court: Court; match: Match; players: Player[] }>
-    >(`/courts/${courtId}/end-match`);
+    >(`/courts/${courtId}/end-match`, options || {});
     toast.success("Match ended successfully");
     return response.data.data!;
   },

@@ -27,6 +27,16 @@ import { SessionService, PlayerService, type Session } from "@/lib/api";
 import { useTranslations } from "next-intl";
 import TopBar from "@/components/ui/TopBar";
 import { useRouter } from "@/i18n/config";
+import dayjs from "dayjs";
+
+const formatRangeTime = (
+  startTime?: string | Date,
+  endTime?: string | Date
+) => {
+  return `${dayjs(startTime).format("HH:mm")}-${dayjs(endTime).format(
+    "HH:mm"
+  )}`;
+};
 
 export default function JoinPage() {
   const t = useTranslations("pages.join");
@@ -121,7 +131,10 @@ export default function JoinPage() {
 
     try {
       // Check if player requires confirmation info
-      if (selectedPlayer.requireConfirmInfo) {
+      if (
+        selectedPlayer.requireConfirmInfo &&
+        !selectedPlayer.confirmedByPlayer
+      ) {
         // Navigate to confirm page if player info is required
         router.push(
           `/join/confirm?sessionId=${sessionId}&playerNumber=${playerNumber}&playerId=${selectedPlayer.id}`
@@ -232,9 +245,10 @@ export default function JoinPage() {
                         sessions.map((session) => (
                           <option key={session.id} value={session.id}>
                             {session.name} (
-                            {session.status === "PREPARING"
-                              ? t("upcoming")
-                              : t("inProgress")}
+                            {formatRangeTime(
+                              session.startTime,
+                              session.endTime
+                            )}
                             )
                           </option>
                         ))
@@ -298,9 +312,9 @@ export default function JoinPage() {
                                   number: player.playerNumber,
                                 })}{" "}
                                 {player.name ? `(${player.name})` : ""}
-                                {player.confirmedByPlayer
-                                  ? ` - ${t("alreadyJoined")}`
-                                  : ""}
+                                {/* {player.confirmedByPlayer
+                                  ? ` - ${t("alreadyConfirmed")}`
+                                  : ""} */}
                               </option>
                             ))}
                           </select>
@@ -330,7 +344,8 @@ export default function JoinPage() {
                           mt={3}
                           p={3}
                           bg={
-                            selectedPlayer.confirmedByPlayer
+                            selectedPlayer?.requireConfirmInfo &&
+                            !selectedPlayer.confirmedByPlayer
                               ? "yellow.50"
                               : "blue.50"
                           }
@@ -360,14 +375,6 @@ export default function JoinPage() {
                                 </strong>
                               </Text>
                             )}
-                            {selectedPlayer.level && (
-                              <Text>
-                                {t("level")}:{" "}
-                                <strong>
-                                  {selectedPlayer.level.replace("_", " ")}
-                                </strong>
-                              </Text>
-                            )}
                             {selectedPlayer.phone && (
                               <Text>
                                 {t("phone")}:{" "}
@@ -383,35 +390,20 @@ export default function JoinPage() {
                                     : "green.600"
                                 }
                               >
-                                {selectedPlayer.confirmedByPlayer
-                                  ? t("alreadyJoined")
-                                  : t("available")}
+                                {selectedPlayer?.requireConfirmInfo &&
+                                !selectedPlayer.confirmedByPlayer
+                                  ? t("needConfirmation")
+                                  : t("alreadyConfirmed")}
                               </strong>
                             </Text>
-                            {selectedPlayer.requireConfirmInfo && (
-                              <Text>
-                                {t("infoRequired")}:{" "}
-                                <strong color="blue.600">
-                                  {t("yesGoToConfirmation")}
-                                </strong>
-                              </Text>
-                            )}
-                            {!selectedPlayer.requireConfirmInfo && (
-                              <Text>
-                                {t("infoRequired")}:{" "}
-                                <strong color="gray.600">
-                                  {t("noJoinDirectly")}
-                                </strong>
-                              </Text>
-                            )}
                           </Stack>
-                          {selectedPlayer.confirmedByPlayer && (
+                          {/* {selectedPlayer.confirmedByPlayer && (
                             <Box mt={2} p={2} bg="orange.100" borderRadius="md">
                               <Text fontSize="xs" color="orange.700">
                                 ⚠️ {t("playerAlreadyJoinedWarning")}
                               </Text>
                             </Box>
-                          )}
+                          )} */}
                         </Box>
                       )}
                     </>
@@ -433,7 +425,8 @@ export default function JoinPage() {
                   <Flex align="center" justify="center" width="100%">
                     {isSubmitting
                       ? t("processing")
-                      : selectedPlayer?.requireConfirmInfo
+                      : selectedPlayer?.requireConfirmInfo &&
+                        !selectedPlayer.confirmedByPlayer
                       ? t("continueToConfirm")
                       : t("joinNow")}
                     {!isSubmitting && (

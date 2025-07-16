@@ -1,15 +1,10 @@
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
-import { Providers } from "../providers";
-import { routing } from "../../i18n/config";
 import { IntlClientProvider } from "../../components/IntlClientProvider";
-import RightDrawerMenu from "../../components/ui/RightDrawerMenu";
 import LocaleValidator from "../../components/LocaleValidator";
 import "../globals.css";
+import { Providers } from "../providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +22,7 @@ export const metadata: Metadata = {
 };
 
 export async function generateStaticParams() {
-  return [
-    { locale: 'vi' },
-    { locale: 'en' }
-  ];
+  return [{ locale: "vi" }, { locale: "en" }];
 }
 
 export default async function LocaleLayout({
@@ -41,14 +33,14 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const validLocales = ['vi', 'en'];
+  const validLocales = ["vi", "en"];
 
   // Load messages directly
   let messages = {};
   try {
-    if (locale === 'en') {
+    if (locale === "en") {
       messages = (await import("../../i18n/messages/en.json")).default;
-    } else if (locale === 'vi') {
+    } else if (locale === "vi") {
       messages = (await import("../../i18n/messages/vi.json")).default;
     } else {
       // Fallback to English
@@ -73,7 +65,6 @@ export default async function LocaleLayout({
         <LocaleValidator locale={locale} validLocales={validLocales} />
         <IntlClientProvider messages={messages} locale={locale}>
           <Providers>
-            <RightDrawerMenu />
             {children}
             <Toaster />
           </Providers>

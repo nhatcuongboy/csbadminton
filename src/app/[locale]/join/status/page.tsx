@@ -299,44 +299,8 @@ function StatusPageContent() {
 
   return (
     <>
-      <TopBar
-        title={t("playerInfo", {
-          number: player.playerNumber,
-          name: player.name || `Player ${player.playerNumber}`,
-        })}
-        showBackButton={true}
-        backHref="/join"
-      />
+      <TopBar title={session.name} showBackButton={true} backHref="/join" />
       <Container maxW="3xl" py={20}>
-        {/* Header */}
-        <Box textAlign="center" mb={6}>
-          <Heading
-            as="h1"
-            // size="4xl"
-            mb={2}
-            fontWeight="extrabold"
-            lineHeight="shorter"
-            textAlign="center"
-            bgGradient="linear(to-r, blue.500, purple.500, cyan.500)"
-            bgClip="text"
-            color="transparent"
-            css={{
-              // Fallback for older browsers
-              background:
-                "linear-gradient(to right, #3182ce, #9f7aea, #00b3d4)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-              // Ensure text is visible if gradient fails
-              "@supports not (-webkit-background-clip: text)": {
-                color: "blue.500",
-              },
-            }}
-          >
-            {session.name}
-          </Heading>
-        </Box>
-
         {/* Tab Content */}
         <Box minH="60vh">
           {/* Status Tab */}
@@ -372,6 +336,14 @@ function StatusPageContent() {
               {/* Card Body */}
               <Box p={4}>
                 <Stack gap={4}>
+                  <Center>
+                    <Text color={"red.500"} fontWeight={"bold"}>
+                      {t("playerInfo", {
+                        number: player.playerNumber,
+                        name: player.name || `Player ${player.playerNumber}`,
+                      })}
+                    </Text>
+                  </Center>
                   <Box
                     bg="gray.100"
                     _dark={{ bg: "gray.700" }}
@@ -398,12 +370,12 @@ function StatusPageContent() {
                       </>
                     ) : player.status === "PLAYING" ? (
                       <>
-                        <Center mb={2}>
+                        {/* <Center mb={2}>
                           <CheckCircle2
                             size={32}
                             color="var(--chakra-colors-green-500)"
                           />
-                        </Center>
+                        </Center> */}
                         <Heading size="sm" fontWeight="medium">
                           {t("playing.title")}
                         </Heading>

@@ -1015,9 +1015,9 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                 />
                               </Box>
 
-                              {/* Require confirmation checkbox */}
+                              {/* Confirmation checkboxes */}
                               <Box>
-                                <Flex align="center" gap={3}>
+                                <Flex align="center" gap={3} mb={2}>
                                   <input
                                     type="checkbox"
                                     id={`requireConfirm-edit-${player.id}`}
@@ -1046,6 +1046,37 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                     }}
                                   >
                                     Require player to confirm information
+                                  </label>
+                                </Flex>
+                                <Flex align="center" gap={3}>
+                                  <input
+                                    type="checkbox"
+                                    id={`confirmedByPlayer-edit-${player.id}`}
+                                    checked={
+                                      isEditing.confirmedByPlayer || false
+                                    }
+                                    onChange={(e) =>
+                                      updateEditingPlayer(
+                                        player.id,
+                                        "confirmedByPlayer",
+                                        e.target.checked
+                                      )
+                                    }
+                                    style={{
+                                      width: "16px",
+                                      height: "16px",
+                                      accentColor: "#38a169",
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={`confirmedByPlayer-edit-${player.id}`}
+                                    style={{
+                                      fontSize: "14px",
+                                      color: "#22543d",
+                                      lineHeight: "1.4",
+                                    }}
+                                  >
+                                    Confirmed by player
                                   </label>
                                 </Flex>
                               </Box>
@@ -1228,7 +1259,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                               </HStack>{" "}
                               {/* Additional info section - enhanced styling */}
                               {(player.levelDescription ||
-                                player.requireConfirmInfo) && (
+                                player.requireConfirmInfo ||
+                                player.confirmedByPlayer) && (
                                 <Card
                                   variant="outline"
                                   bg="gray.50"
@@ -1277,6 +1309,22 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                             fontWeight="medium"
                                           >
                                             Requires confirmation from player
+                                          </Text>
+                                        </HStack>
+                                      )}
+                                      {player.confirmedByPlayer && (
+                                        <HStack spacing={2} align="center">
+                                          <Box
+                                            as={UserCheck}
+                                            boxSize={3}
+                                            color="green.500"
+                                          />
+                                          <Text
+                                            fontSize="xs"
+                                            color="green.600"
+                                            fontWeight="medium"
+                                          >
+                                            Confirmed by player
                                           </Text>
                                         </HStack>
                                       )}

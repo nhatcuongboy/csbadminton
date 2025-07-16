@@ -257,6 +257,8 @@
       "selectYourPlayerNumber": "Select your player number",
       "playerNumberFormat": "Player #{number}",
       "alreadyJoined": "Already joined",
+      "alreadyConfirmed": "Already confirmed",
+      "needConfirmation": "Need confirmation",
       "noPlayersAvailable": "No players available in this session. Please ask the host to add players first.",
       "selectSessionFirst": "Please select a session first",
       "playerInformation": "Player Information:",
@@ -274,7 +276,7 @@
       "playerAlreadyJoinedWarning": "This player has already joined the session. You can still continue to access their status.",
       "selectPlayerHelpText": "Select your player number from the list of players in this session",
       "processing": "Processing...",
-      "continueToConfirm": "Continue to Confirm",
+      "continueToConfirm": "Continue",
       "joinNow": "Join Now",
       "hostMustAddYou": "The host must add you to the session before you can join",
       "enterCode": "Enter Session Code",
@@ -491,6 +493,19 @@
       "gapLabel": "Gap: {gap}",
       "playerFallback": "Player {number}",
       "matchEndedSuccessfully": "Match ended successfully"
+    },
+    "matchResult": {
+      "title": "Match Result",
+      "matchInfo": "Match Information",
+      "pair1": "Pair 1",
+      "pair2": "Pair 2",
+      "score": "Score",
+      "isDraw": "This match is a draw",
+      "notes": "Notes (Optional)",
+      "notesPlaceholder": "Add any additional notes about the match...",
+      "submitResult": "Submit",
+      "cancel": "Cancel",
+      "selectWinnerInstruction": "Click on a team to select the winner (optional if draw)"
     },
     "startMatch": "Start Match",
     "matchs": {

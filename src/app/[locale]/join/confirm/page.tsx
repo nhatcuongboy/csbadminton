@@ -1,25 +1,30 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/chakra-compat";
+import TopBar from "@/components/ui/TopBar";
 import { useRouter } from "@/i18n/config";
+import {
+  Level,
+  PlayerService,
+  SessionService,
+  type Player,
+  type Session,
+} from "@/lib/api";
 import {
   Box,
   Container,
   Flex,
   Heading,
-  Text,
-  Stack,
   Input,
   Spinner,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
-import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import { ArrowLeft, Check, User } from "lucide-react";
-import toast from "react-hot-toast";
-import { Button } from "@/components/ui/chakra-compat";
-import { PlayerService, SessionService, type Player, type Session, Level } from "@/lib/api";
+import { Check, User } from "lucide-react";
 import { useTranslations } from "next-intl";
-import TopBar from "@/components/ui/TopBar";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 function ConfirmPageContent() {
   const router = useRouter();
@@ -39,6 +44,7 @@ function ConfirmPageContent() {
     level: "" as "" | Level,
     levelDescription: "",
     phone: "",
+    desire: "",
   });
 
   useEffect(() => {
@@ -67,6 +73,7 @@ function ConfirmPageContent() {
             level: playerData.level || "",
             levelDescription: playerData.levelDescription || "",
             phone: playerData.phone || "",
+            desire: playerData.desire || "",
           });
         } else {
           // If we only have player number, find the player in the session
@@ -84,6 +91,7 @@ function ConfirmPageContent() {
               level: foundPlayer.level || "",
               levelDescription: foundPlayer.levelDescription || "",
               phone: foundPlayer.phone || "",
+              desire: foundPlayer.desire || "",
             });
           } else {
             toast.error("Player not found");
@@ -101,7 +109,9 @@ function ConfirmPageContent() {
     loadSessionAndPlayer();
   }, [sessionId, playerNumber, playerId, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -111,7 +121,7 @@ function ConfirmPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!player) {
       toast.error("Player information not found");
       return;
@@ -125,17 +135,18 @@ function ConfirmPageContent() {
 
     try {
       setIsSubmitting(true);
-      
+
       // Prepare data with proper types
       const playerData: Partial<Player> = {
         name: formData.name,
         gender: formData.gender as "MALE" | "FEMALE",
         level: formData.level as Level,
         levelDescription: formData.levelDescription || undefined,
+        desire: formData.desire || undefined,
         phone: formData.phone || undefined,
         confirmedByPlayer: true,
       };
-      
+
       // Call the API to confirm the player
       await PlayerService.confirmPlayer(player.id, playerData);
 
@@ -151,9 +162,18 @@ function ConfirmPageContent() {
   if (isLoading) {
     return (
       <Box minH="100vh">
-        <TopBar showBackButton={true} backHref="/join" title="Confirm Details" />
+        <TopBar
+          showBackButton={true}
+          backHref="/join"
+          title="Confirm Details"
+        />
         <Container maxW="md" py={12} pt={24}>
-          <Flex justify="center" align="center" height="50vh" direction="column">
+          <Flex
+            justify="center"
+            align="center"
+            height="50vh"
+            direction="column"
+          >
             <Spinner size="xl" color="blue.500" mb={4} />
             <Text>Loading player information...</Text>
           </Flex>
@@ -166,7 +186,7 @@ function ConfirmPageContent() {
     <Box minH="100vh">
       {/* Top Bar */}
       <TopBar showBackButton={true} backHref="/join" title="Confirm Details" />
-      
+
       <Container maxW="md" py={12} pt={24}>
         <Box
           borderRadius="xl"
@@ -201,25 +221,45 @@ function ConfirmPageContent() {
                   <Text fontWeight="medium" mb={2}>
                     Player #{player?.playerNumber}
                   </Text>
-                  
+
                   {!player?.requireConfirmInfo && (
-                    <Box mb={4} p={3} bg="yellow.50" borderRadius="md" borderWidth="1px" borderColor="yellow.200">
+                    <Box
+                      mb={4}
+                      p={3}
+                      bg="yellow.50"
+                      borderRadius="md"
+                      borderWidth="1px"
+                      borderColor="yellow.200"
+                    >
                       <Text fontSize="sm" color="yellow.800">
-                        ℹ️ This session doesn't require detailed information. Your current details are shown below for confirmation only.
+                        ℹ️ This session doesn't require detailed information.
+                        Your current details are shown below for confirmation
+                        only.
                       </Text>
                     </Box>
                   )}
-                  
-                  {player?.requireConfirmInfo && (
-                    <Box mb={4} p={3} bg="blue.50" borderRadius="md" borderWidth="1px" borderColor="blue.200">
+
+                  {/* {player?.requireConfirmInfo && (
+                    <Box
+                      mb={4}
+                      p={3}
+                      bg="blue.50"
+                      borderRadius="md"
+                      borderWidth="1px"
+                      borderColor="blue.200"
+                    >
                       <Text fontSize="sm" color="blue.800">
-                        📝 Please fill in your details to complete your registration.
+                        📝 Please fill in your details to complete your
+                        registration.
                       </Text>
                     </Box>
-                  )}
+                  )} */}
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Full Name <Box as="span" color="red.500">*</Box>
+                      Full Name{" "}
+                      <Box as="span" color="red.500">
+                        *
+                      </Box>
                     </Text>
                     <Input
                       value={formData.name}
@@ -236,7 +276,10 @@ function ConfirmPageContent() {
                   <Flex gap={4} mb={4}>
                     <Box flex={1}>
                       <Text fontWeight="medium" mb={1} fontSize="sm">
-                        Gender <Box as="span" color="red.500">*</Box>
+                        Gender{" "}
+                        <Box as="span" color="red.500">
+                          *
+                        </Box>
                       </Text>
                       <select
                         value={formData.gender}
@@ -262,7 +305,10 @@ function ConfirmPageContent() {
 
                     <Box flex={1}>
                       <Text fontWeight="medium" mb={1} fontSize="sm">
-                        Skill Level <Box as="span" color="red.500">*</Box>
+                        Skill Level{" "}
+                        <Box as="span" color="red.500">
+                          *
+                        </Box>
                       </Text>
                       <select
                         value={formData.level}
@@ -295,7 +341,7 @@ function ConfirmPageContent() {
 
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Level Description (Optional)
+                      Level Description
                     </Text>
                     <Input
                       value={formData.levelDescription}
@@ -308,9 +354,24 @@ function ConfirmPageContent() {
                     />
                   </Box>
 
+                  <Box mb={4}>
+                    <Text fontWeight="medium" mb={1} fontSize="sm">
+                      Desire
+                    </Text>
+                    <Input
+                      value={formData.desire || ""}
+                      onChange={handleInputChange}
+                      name="desire"
+                      placeholder="What do you want from this session?"
+                      size="lg"
+                      disabled={!player?.requireConfirmInfo}
+                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
+                    />
+                  </Box>
+
                   <Box>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Phone Number (Optional)
+                      Phone Number
                     </Text>
                     <Input
                       value={formData.phone}
@@ -331,15 +392,21 @@ function ConfirmPageContent() {
                   width="full"
                   mt={4}
                   loading={isSubmitting}
-                  disabled={isSubmitting || (!player?.requireConfirmInfo && player?.confirmedByPlayer)}
+                  disabled={
+                    isSubmitting ||
+                    (!player?.requireConfirmInfo && player?.confirmedByPlayer)
+                  }
                 >
                   <Flex align="center" justify="center" width="100%">
-                    {isSubmitting ? "Processing..." : 
-                     (!player?.requireConfirmInfo && player?.confirmedByPlayer) ? "Already Confirmed" :
-                     "Confirm & Join"}
-                    {!isSubmitting && !(!player?.requireConfirmInfo && player?.confirmedByPlayer) && (
-                      <Box as={Check} ml={2} boxSize={5} />
-                    )}
+                    {isSubmitting
+                      ? "Processing..."
+                      : !player?.requireConfirmInfo && player?.confirmedByPlayer
+                      ? "Already Confirmed"
+                      : "Confirm"}
+                    {!isSubmitting &&
+                      !(
+                        !player?.requireConfirmInfo && player?.confirmedByPlayer
+                      ) && <Box as={Check} ml={2} boxSize={5} />}
                   </Flex>
                 </Button>
               </Stack>

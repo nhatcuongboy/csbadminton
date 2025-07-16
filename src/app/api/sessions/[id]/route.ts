@@ -38,6 +38,7 @@ export async function GET(
                 gender: true,
                 level: true,
                 levelDescription: true,
+                desire: true,
                 requireConfirmInfo: true,
               },
             },
@@ -54,6 +55,7 @@ export async function GET(
             gender: true,
             level: true,
             levelDescription: true,
+            desire: true,
             currentWaitTime: true,
             totalWaitTime: true,
             matchesPlayed: true,
@@ -219,12 +221,17 @@ export async function DELETE(
       return errorResponse("Session not found", 404);
     }
 
-    // Delete session (cascade will delete related courts, players, matches)
+    // Delete all players related to this session
+    await prisma.player.deleteMany({
+      where: { sessionId: id },
+    });
+
+    // Delete session (cascade will delete related courts, matches)
     await prisma.session.delete({
       where: { id },
     });
 
-    return successResponse(null, "Session deleted successfully");
+    return successResponse(null, "Session and related players deleted successfully");
   } catch (error) {
     console.error("Error deleting session:", error);
     return errorResponse("Failed to delete session");

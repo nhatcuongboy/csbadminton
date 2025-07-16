@@ -183,7 +183,9 @@ export default function SessionDetailContent({
       let matches: any = [];
       try {
         matches = await SessionService.getSessionMatches(session.id);
-      } catch {}
+      } catch (error) {
+        console.error("Error fetching matches:", error);
+      }
       // Convert startTime/endTime to string for SessionData
       setSession({
         ...data,

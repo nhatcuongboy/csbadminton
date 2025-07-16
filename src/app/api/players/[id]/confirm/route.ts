@@ -6,8 +6,11 @@ interface PlayerParams {
   id: string;
 }
 
-// POST /api/players/[id]/confirm - Người chơi xác nhận tham gia
-export async function POST(request: NextRequest, { params }: { params: Promise<PlayerParams> }) {
+// POST /api/players/[id]/confirm - Player confirms their participation
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<PlayerParams> }
+) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -45,6 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<P
           levelDescription: body.levelDescription,
           phone: body.phone,
           confirmedByPlayer: true,
+          desire: body.desire,
         },
       });
 
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<P
         "Player confirmed successfully with info updated"
       );
     } else {
-      // For sessions not requiring info, just confirm
+      // For sessions not requiring info, just confirm and update desire
       const player = await prisma.player.update({
         where: { id },
         data: {
@@ -62,6 +66,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<P
           level: body.level ?? undefined,
           levelDescription: body.levelDescription ?? undefined,
           phone: body.phone ?? undefined,
+          desire: body.desire ?? undefined,
           confirmedByPlayer: true,
         },
       });
