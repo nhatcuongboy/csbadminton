@@ -60,7 +60,7 @@ export default function CourtPlayer({
   isClicked,
   onPlayerClick,
 }: CourtPlayerProps) {
-  const playerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null!);
 
   // Skip if player is invalid
   if (!player || !player.id) {
@@ -75,10 +75,11 @@ export default function CourtPlayer({
   }
 
   const playersInPair = players.filter((p, i) => {
+    if (!p) return false;
     const playerPairNumber = p.pairNumber || (i < 2 ? 1 : 2);
     return playerPairNumber === pairNumber;
   });
-  const indexInPair = playersInPair.indexOf(player);
+  const indexInPair = playersInPair.findIndex((p) => p?.id === player.id);
 
   let positionIndex;
   if (pairNumber === 1) {
@@ -109,7 +110,9 @@ export default function CourtPlayer({
 
   // Calculate tooltip position based on player position
   const getTooltipPosition = () => {
-    if (!playerRef.current) return { left: "50%", top: "50%" };
+    if (!playerRef.current) {
+      return { left: "50%", top: "50%" };
+    }
 
     const rect = playerRef.current.getBoundingClientRect();
     const tooltipWidth = 280; // maxW="280px"
@@ -119,7 +122,9 @@ export default function CourtPlayer({
     let top = rect.top - tooltipHeight - 5; // reduced gap above player
 
     // Adjust if tooltip goes outside viewport
-    if (left < 10) left = 10;
+    if (left < 10) {
+      left = 10;
+    }
     if (left + tooltipWidth > window.innerWidth - 10) {
       left = window.innerWidth - tooltipWidth - 10;
     }
@@ -174,35 +179,37 @@ export default function CourtPlayer({
         >
           {/* Current player effect */}
           {player.isCurrentPlayer && (
-            <Box
-              position="absolute"
-              top="-4px"
-              left="-4px"
-              right="-4px"
-              bottom="-4px"
-              borderRadius="full"
-              boxShadow={`0 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px 0 ${playerEffectColor}`}
-              zIndex={2}
-              pointerEvents="none"
-              animation="currentPlayerPulse 1.5s infinite"
-            />
+            <>
+              <Box
+                position="absolute"
+                top="-4px"
+                left="-4px"
+                right="-4px"
+                bottom="-4px"
+                borderRadius="full"
+                boxShadow={`0 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px 0 ${playerEffectColor}`}
+                zIndex={2}
+                pointerEvents="none"
+                animation="currentPlayerPulse 1.5s infinite"
+              />
+              <style jsx>{`
+                @keyframes currentPlayerPulse {
+                  0% {
+                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
+                      0 0 8px 0 ${playerEffectColor};
+                  }
+                  50% {
+                    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3),
+                      0 0 16px 0 ${playerEffectColor};
+                  }
+                  100% {
+                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
+                      0 0 8px 0 ${playerEffectColor};
+                  }
+                }
+              `}</style>
+            </>
           )}
-          <style jsx global>{`
-            @keyframes currentPlayerPulse {
-              0% {
-                box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
-                  0 0 8px 0 ${playerEffectColor};
-              }
-              50% {
-                box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3),
-                  0 0 16px 0 ${playerEffectColor};
-              }
-              100% {
-                box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
-                  0 0 8px 0 ${playerEffectColor};
-              }
-            }
-          `}</style>
           {/* Player Number */}
           <Text
             fontSize="xs"
