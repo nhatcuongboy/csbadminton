@@ -396,7 +396,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
   };
 
   return (
-    <VStack spacing={8} align="stretch">
+    <VStack spacing={8} align="stretch" p={{ base: 2, md: 4 }}>
       {/* Header section with stats */}
       <Box>
         <Flex justify="space-between" align="center" mb={2}>
@@ -470,8 +470,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
       {/* Maximum players notification */}
       {isMaxPlayersReached && (
         <Card variant="outline" borderColor="orange.200" bg="orange.50">
-          <CardBody p={4}>
-            <HStack spacing={3}>
+          <CardBody>
+            <HStack spacing={6} align="stretch">
               <Box as={AlertCircle} boxSize={5} color="orange.500" />
               <VStack align="start" spacing={1}>
                 <Text fontSize="sm" fontWeight="semibold" color="orange.700">
@@ -491,7 +491,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
       {/* New Players Section */}
       {newPlayers.length > 0 && (
         <Card variant="outline" borderColor="green.200" bg="green.50">
-          <CardBody p={{ base: 4, md: 6 }}>
+          <CardBody>
             <VStack spacing={6} align="stretch">
               {/* Header */}
               <HStack spacing={3}>
@@ -779,7 +779,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
       {/* Existing Players Section */}
       <Card variant="outline">
-        <CardBody p={{ base: 4, md: 6 }}>
+        <CardBody p={1}>
           <VStack spacing={6} align="stretch">
             {/* Header */}
             <Flex justify="space-between" align="center">
@@ -836,7 +836,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                         variant="outline"
                         bg={isEditing ? "blue.50" : "white"}
                         borderColor={isEditing ? "blue.200" : undefined}
-                        shadow={isEditing ? "md" : "sm"}
+                        boxShadow="md"
+                        mb={4}
                       >
                         {" "}
                         <CardBody p={{ base: 4, md: 5 }}>

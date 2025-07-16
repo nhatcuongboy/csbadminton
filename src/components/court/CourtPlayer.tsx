@@ -113,10 +113,10 @@ export default function CourtPlayer({
 
     const rect = playerRef.current.getBoundingClientRect();
     const tooltipWidth = 280; // maxW="280px"
-    const tooltipHeight = 200; // approximate height
+    const tooltipHeight = 150; // reduced approximate height
 
     let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-    let top = rect.top - tooltipHeight - 10; // 10px gap above player
+    let top = rect.top - tooltipHeight - 5; // reduced gap above player
 
     // Adjust if tooltip goes outside viewport
     if (left < 10) left = 10;
@@ -125,8 +125,8 @@ export default function CourtPlayer({
     }
 
     if (top < 10) {
-      // If not enough space above, show below
-      top = rect.bottom + 10;
+      // If not enough space above, show below but closer
+      top = rect.bottom + 5; // reduced gap below player
     }
 
     return {
@@ -135,7 +135,7 @@ export default function CourtPlayer({
     };
   };
 
-  const playerEffectColor = "#facc15";
+  const playerEffectColor = "#ffffff";
 
   return (
     <>
@@ -181,7 +181,7 @@ export default function CourtPlayer({
               right="-4px"
               bottom="-4px"
               borderRadius="full"
-              boxShadow={`0 0 0 8px #fef08a99, 0 0 16px 0 ${playerEffectColor}`}
+              boxShadow={`0 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px 0 ${playerEffectColor}`}
               zIndex={2}
               pointerEvents="none"
               animation="currentPlayerPulse 1.5s infinite"
@@ -190,13 +190,16 @@ export default function CourtPlayer({
           <style jsx global>{`
             @keyframes currentPlayerPulse {
               0% {
-                box-shadow: 0 0 0 4px #fef08a99, 0 0 8px 0 ${playerEffectColor};
+                box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
+                  0 0 8px 0 ${playerEffectColor};
               }
               50% {
-                box-shadow: 0 0 0 8px #fef08a44, 0 0 16px 0 ${playerEffectColor};
+                box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3),
+                  0 0 16px 0 ${playerEffectColor};
               }
               100% {
-                box-shadow: 0 0 0 4px #fef08a99, 0 0 8px 0 ${playerEffectColor};
+                box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
+                  0 0 8px 0 ${playerEffectColor};
               }
             }
           `}</style>
@@ -204,7 +207,7 @@ export default function CourtPlayer({
           <Text
             fontSize="xs"
             fontWeight="bold"
-            color={player.isCurrentPlayer ? "yellow.700" : pairColors.border}
+            color={player.isCurrentPlayer ? "gray.700" : pairColors.border}
             lineHeight="1"
             mb={0.5}
           >
@@ -258,6 +261,7 @@ export default function CourtPlayer({
         isVisible={isClicked}
         position={getTooltipPosition()}
         mode={mode}
+        playerRef={playerRef}
       />
     </>
   );

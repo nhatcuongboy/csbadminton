@@ -178,7 +178,45 @@ export async function GET(
       },
     });
 
-    return successResponse(matches, "Matches retrieved successfully");
+    // Transform matches to format score as [21,19]
+    const formattedMatches = matches.map((match) => {
+      // Create a copy of the match object
+      const formattedMatch = { ...match };
+
+      // If there's a score, parse it and format it as [score1, score2]
+      if (match.score) {
+        try {
+          // Parse the score if it's a JSON string
+          const scoreData =
+            typeof match.score === "string"
+              ? JSON.parse(match.score)
+              : match.score;
+
+          formattedMatch.score = scoreData;
+        } catch (e) {
+          console.warn("Failed to parse match score:", e);
+          // Keep the original score if parsing fails
+        }
+      }
+
+      if (match.winnerIds) {
+        try {
+          // Parse the winnerIds if it's a JSON string
+          const winnerIdsData =
+            typeof match.winnerIds === "string"
+              ? JSON.parse(match.winnerIds)
+              : match.winnerIds;
+
+          formattedMatch.winnerIds = winnerIdsData;
+        } catch (e) {
+          console.warn("Failed to parse match winnerIds:", e);
+        }
+      }
+
+      return formattedMatch;
+    });
+
+    return successResponse(formattedMatches, "Matches retrieved successfully");
   } catch (error) {
     console.error("Error retrieving matches:", error);
     return errorResponse("Failed to retrieve matches");

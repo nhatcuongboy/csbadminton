@@ -357,7 +357,7 @@
         "court": {
           "title": "Court {number}",
           "elapsed": "{time} elapsed",
-          "playerHighlight": "You are highlighted in yellow on the court above",
+          "playerHighlight": "You are highlighted in white on the court above",
           "playingWith": "Playing with:"
         },
         "stats": {
@@ -450,9 +450,9 @@
       "startSessionToBeginMatches": "Start the session to begin matches",
       "sessionHasEnded": "Session has ended",
       "courtNumber": "Court {number}",
-      "inUse": "IN USE",
-      "ready": "READY",
-      "empty": "EMPTY",
+      "inUse": "In use",
+      "ready": "Ready",
+      "empty": "Empty",
       "playing": "Playing...",
       "endMatch": "End Match",
       "autoAssignMatch": "Auto Assign Match",

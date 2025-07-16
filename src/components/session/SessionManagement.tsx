@@ -90,7 +90,7 @@ export default function SessionManagement({
         strategy: autoAssignStrategy,
         maxPlayersPerCourt: 4,
       });
-      toast.success(result.message);
+      // toast.success(result.message);
       await fetchRealTimeData();
     } catch (error) {
       console.error("Error auto-assigning players:", error);
@@ -107,7 +107,7 @@ export default function SessionManagement({
         sessionId,
         waitTimeIncrement
       );
-      toast.success(`Updated wait times for ${result.updatedCount} players`);
+      // toast.success(`Updated wait times for ${result.updatedCount} players`);
       await fetchRealTimeData();
     } catch (error) {
       console.error("Error updating wait times:", error);
@@ -141,7 +141,7 @@ export default function SessionManagement({
         playerIds,
         "current"
       );
-      toast.success(`Reset wait times for ${result.updatedCount} players`);
+      // toast.success(`Reset wait times for ${result.updatedCount} players`);
       await fetchRealTimeData();
     } catch (error) {
       console.error("Error resetting wait times:", error);

@@ -114,6 +114,13 @@ export interface Match {
   durationMinutes?: number;
   // Add these fields to match API response
   court?: Court; // populated by include: { court: true }
+  isDraw: boolean;
+  notes: string;
+  score: {
+    playerId: string;
+    score: number;
+  }[];
+  winnerIds: string[];
 }
 
 export interface MatchPlayer {
@@ -153,14 +160,14 @@ export const SessionService = {
       `/sessions/${id}`,
       data
     );
-    toast.success("Session updated successfully");
+    // toast.success("Session updated successfully");
     return response.data.data!;
   },
 
   // Delete session
   deleteSession: async (id: string): Promise<void> => {
     await api.delete<ApiResponse<null>>(`/sessions/${id}`);
-    toast.success("Session deleted successfully");
+    // toast.success("Session deleted successfully");
   },
 
   // Start session
@@ -168,7 +175,7 @@ export const SessionService = {
     const response = await api.post<ApiResponse<Session>>(
       `/sessions/${id}/start`
     );
-    toast.success("Session started successfully");
+    // toast.success("Session started successfully");
     return response.data.data!;
   },
 
@@ -179,7 +186,7 @@ export const SessionService = {
     const response = await api.post<
       ApiResponse<{ session: Session; statistics: any }>
     >(`/sessions/${id}/end`);
-    toast.success("Session ended successfully");
+    // toast.success("Session ended successfully");
     return response.data.data!;
   },
 
@@ -189,7 +196,7 @@ export const SessionService = {
       `/sessions/${id}/status`,
       { status }
     );
-    toast.success("Session status updated successfully");
+    // toast.success("Session status updated successfully");
     return response.data.data!;
   },
 
@@ -324,7 +331,7 @@ export const PlayerService = {
       `/players/${id}/confirm`,
       data
     );
-    toast.success("Player confirmed successfully");
+    // toast.success("Player confirmed successfully");
     return response.data.data!;
   },
 
@@ -432,7 +439,7 @@ export const CourtService = {
     const response = await api.post<
       ApiResponse<{ court: Court; match: Match }>
     >(`/courts/${courtId}/start-match`);
-    toast.success("Match started successfully");
+    // toast.success("Match started successfully");
     return response.data.data!;
   },
 
@@ -449,7 +456,7 @@ export const CourtService = {
     const response = await api.post<
       ApiResponse<{ court: Court; match: Match; players: Player[] }>
     >(`/courts/${courtId}/end-match`, options || {});
-    toast.success("Match ended successfully");
+    // toast.success("Match ended successfully");
     return response.data.data!;
   },
 
@@ -495,7 +502,7 @@ export const MatchService = {
         message: string;
       }>
     >(`/sessions/${sessionId}/matches`, data);
-    toast.success("Match created successfully");
+    // toast.success("Match created successfully");
     return response.data.data!;
   },
 
@@ -504,7 +511,7 @@ export const MatchService = {
     const response = await api.patch<ApiResponse<Match>>(
       `/sessions/${sessionId}/matches/${matchId}/end`
     );
-    toast.success("Match ended successfully");
+    // toast.success("Match ended successfully");
     return response.data.data!;
   },
 
@@ -531,7 +538,7 @@ export const MatchService = {
         message: string;
       }>
     >(`/sessions/${sessionId}/auto-assign`, options || {});
-    toast.success("Players auto-assigned successfully");
+    // toast.success("Players auto-assigned successfully");
     return response.data.data!;
   },
 };
@@ -609,7 +616,7 @@ export const WaitTimeService = {
       resetType,
       playerIds,
     });
-    toast.success("Wait times reset successfully");
+    // toast.success("Wait times reset successfully");
     return {
       updatedCount: response.data.data!.updatedCount,
       players: response.data.data!.players,

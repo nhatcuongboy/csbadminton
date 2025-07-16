@@ -357,7 +357,7 @@
         "court": {
           "title": "Sân {number}",
           "elapsed": "Đã chơi {time}",
-          "playerHighlight": "Bạn được tô sáng màu xanh trên sân ở trên",
+          "playerHighlight": "Bạn được tô sáng màu trắng trên sân ở phía trên",
           "playingWith": "Chơi cùng với:"
         },
         "stats": {
@@ -450,9 +450,9 @@
       "startSessionToBeginMatches": "Bắt đầu kèo để bắt đầu các trận đấu",
       "sessionHasEnded": "Kèo đã kết thúc",
       "courtNumber": "Sân {number}",
-      "inUse": "ĐANG SỬ DỤNG",
-      "ready": "SẴN SÀNG",
-      "empty": "TRỐNG",
+      "inUse": "Đang chơi",
+      "ready": "Sẵn sàng",
+      "empty": "Trống",
       "playing": "Đang chơi...",
       "endMatch": "Kết thúc",
       "autoAssignMatch": "Tự động ghép đôi",
