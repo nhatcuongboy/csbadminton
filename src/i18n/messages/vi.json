@@ -303,7 +303,9 @@
           "title": "Sân {number}",
           "elapsed": "Đã chơi {time}",
           "playerHighlight": "Bạn được tô sáng màu trắng trên sân ở phía trên",
-          "playingWith": "Chơi cùng với:"
+          "playingWith": "Chơi cùng với:",
+          "partnerWith": "Đang chơi cùng cặp với:",
+          "opponents": "Đối thủ:"
         },
         "stats": {
           "minutes": "phút",
@@ -377,6 +379,7 @@
     "errorUpdatingSessionStatus": "Lỗi cập nhật trạng thái kèo",
     "select4PlayersAndCourt": "Vui lòng chọn 4 người chơi và một sân",
     "matchStartedSuccessfully": "Trận đấu đã bắt đầu thành công",
+    "matchHasStarted": "Trận đấu đã bắt đầu",
     "errorStartingMatch": "Lỗi bắt đầu trận đấu",
     "matchEndedSuccessfully": "Trận đấu đã kết thúc thành công",
     "errorEndingMatch": "Lỗi kết thúc trận đấu",

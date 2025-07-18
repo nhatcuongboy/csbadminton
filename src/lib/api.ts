@@ -419,7 +419,7 @@ export const CourtService = {
         playerIds,
       }
     );
-    toast.success("Players selected successfully");
+    // toast.success("Players selected successfully");
     return response.data.data!;
   },
 
@@ -428,7 +428,7 @@ export const CourtService = {
     const response = await api.post<ApiResponse<Court>>(
       `/courts/${courtId}/deselect-players`
     );
-    toast.success("Players deselected successfully");
+    // toast.success("Players deselected successfully");
     return response.data.data!;
   },
 

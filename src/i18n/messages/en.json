@@ -380,7 +380,9 @@
           "title": "Court {number}",
           "elapsed": "{time} elapsed",
           "playerHighlight": "You are highlighted in white on the court above",
-          "playingWith": "Playing with:"
+          "playingWith": "Playing with:",
+          "partnerWith": "Playing with teammate:",
+          "opponents": "Opponents:"
         },
         "stats": {
           "minutes": "min",
@@ -454,6 +456,7 @@
     "errorUpdatingSessionStatus": "Error updating session status",
     "select4PlayersAndCourt": "Please select 4 players and a court",
     "matchStartedSuccessfully": "Match started successfully",
+    "matchHasStarted": "Match has started",
     "errorStartingMatch": "Error starting match",
     "matchEndedSuccessfully": "Match ended successfully",
     "errorEndingMatch": "Error ending match",

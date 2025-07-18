@@ -177,6 +177,25 @@ export default function CourtPlayer({
             onPlayerClick(isClicked ? null : player.id);
           }}
         >
+          {/* Gender badge at top-left */}
+          <Box
+            position="absolute"
+            top="-8px"
+            left="-8px"
+            bg={getGenderColor(player.gender)}
+            color="white"
+            borderRadius="full"
+            w="22px"
+            h="22px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            border="2px solid white"
+            zIndex={5}
+            boxShadow="sm"
+          >
+            <Box as={GenderIcon} boxSize="14px" />
+          </Box>
           {/* Current player effect */}
           {player.isCurrentPlayer && (
             <>
@@ -187,7 +206,7 @@ export default function CourtPlayer({
                 right="-4px"
                 bottom="-4px"
                 borderRadius="full"
-                boxShadow={`0 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px 0 ${playerEffectColor}`}
+                boxShadow={`0 0 0 10px rgba(255, 255, 255, 0.6), 0 0 16px 0 ${playerEffectColor}`}
                 zIndex={2}
                 pointerEvents="none"
                 animation="currentPlayerPulse 1.5s infinite"
@@ -195,47 +214,31 @@ export default function CourtPlayer({
               <style jsx>{`
                 @keyframes currentPlayerPulse {
                   0% {
-                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
+                    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.6),
                       0 0 8px 0 ${playerEffectColor};
                   }
                   50% {
-                    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3),
+                    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.3),
                       0 0 16px 0 ${playerEffectColor};
                   }
                   100% {
-                    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6),
+                    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.6),
                       0 0 8px 0 ${playerEffectColor};
                   }
                 }
               `}</style>
             </>
           )}
-          {/* Player Number */}
+          {/* Player Number only (gender hidden) */}
           <Text
-            fontSize="xs"
+            fontSize="l"
             fontWeight="bold"
-            color={player.isCurrentPlayer ? "gray.700" : pairColors.border}
+            color={pairColors.border}
             lineHeight="1"
             mb={0.5}
           >
             #{player.playerNumber}
           </Text>
-
-          {/* Gender indicator */}
-          <Box
-            bg={getGenderColor(player.gender)}
-            color="white"
-            borderRadius="full"
-            w="16px"
-            h="16px"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            fontSize="2xs"
-            fontWeight="bold"
-          >
-            <Box as={GenderIcon} boxSize="10px" />
-          </Box>
         </Box>
 
         {mode === "manage" && (

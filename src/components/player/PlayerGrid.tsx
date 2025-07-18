@@ -68,14 +68,10 @@ export const PlayerGrid = ({
   selectionMode = false,
   mode = "manage",
 }: PlayerGridProps) => {
-  // Sort players by player number
-  const sortedPlayers = [...players].sort(
-    (a, b) => a.playerNumber - b.playerNumber
-  );
-
+  console.log(playerFilter);
   return (
     <SimpleGrid columns={{ base: 2, md: 4, lg: 6 }} spacing={4}>
-      {sortedPlayers.map((player, index) => {
+      {players.map((player, index) => {
         // Color scheme based on status and filter
         let bgColor, borderColor, colorScheme;
         const isSelected = selectionMode && selectedPlayers.includes(player.id);
@@ -119,9 +115,7 @@ export const PlayerGrid = ({
           playerFilter === "WAITING" ||
           (playerFilter === "ALL" && player.status === "WAITING")
         ) {
-          if (index === 0) priorityColor = "red.400";
-          else if (index === 1) priorityColor = "orange.400";
-          else if (index === 2) priorityColor = "yellow.400";
+          if (index < 4) priorityColor = "red.400";
         }
 
         return (
@@ -148,7 +142,7 @@ export const PlayerGrid = ({
           >
             <CardBody p={3} position="relative">
               {/* Priority indicator (top right) */}
-              <Box
+              {/* <Box
                 position="absolute"
                 top={1}
                 right={1}
@@ -156,7 +150,7 @@ export const PlayerGrid = ({
                 h={2}
                 borderRadius="full"
                 bg={priorityColor}
-              />
+              /> */}
 
               {/* Selection indicator (top left) */}
               {selectionMode && isSelected && (
@@ -189,12 +183,12 @@ export const PlayerGrid = ({
                     #{player.playerNumber}
                   </Text>
                   <Badge
-                    colorScheme={
+                    colorPalette={
                       player.currentWaitTime > 15
                         ? "red"
-                        : player.currentWaitTime > 5
+                        : player.currentWaitTime > 10
                         ? "yellow"
-                        : "green"
+                        : "gray"
                     }
                     variant="solid"
                     fontSize="xs"
@@ -224,14 +218,15 @@ export const PlayerGrid = ({
                   {mode === "manage" && (
                     <Badge
                       variant="outline"
-                      colorScheme="orange"
+                      // colorPalette={"purple"}
+                      background={"whiteAlpha.800"}
                       fontSize="xs"
                       borderRadius="sm"
                     >
                       {getLevelLabel(player.level)}
                     </Badge>
                   )}
-                  <Text fontSize="lg" color="gray.600">
+                  <Text fontSize="lg" color="white.600">
                     {player.gender === "MALE"
                       ? "♂"
                       : player.gender === "FEMALE"
@@ -242,12 +237,6 @@ export const PlayerGrid = ({
 
                 <Text fontSize="xs" color="gray.600" fontWeight="medium">
                   {player.matchesPlayed} matches
-                  {(playerFilter === "WAITING" ||
-                    playerFilter === "READY" ||
-                    (playerFilter === "ALL" &&
-                      (player.status === "WAITING" ||
-                        player.status === "READY"))) &&
-                    ` • Position ${index + 1}`}
                 </Text>
               </VStack>
             </CardBody>

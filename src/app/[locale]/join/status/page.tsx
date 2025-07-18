@@ -531,37 +531,116 @@ function StatusPageContent() {
                           >
                             {t("court.playerHighlight")}
                           </Text>
-                          {courtPlayers.length > 0 && (
-                            <Box mt={2}>
-                              <Text
-                                fontSize="xs"
-                                color="gray.600"
-                                textAlign="center"
-                                mb={1}
-                              >
-                                {t("court.playingWith")}
-                              </Text>
-                              <Flex justify="center" wrap="wrap" gap={2}>
-                                {courtPlayers
-                                  .filter((p) => p.id !== player.id)
-                                  .map((p) => (
-                                    <Text
-                                      key={p.id}
-                                      fontSize="xs"
-                                      color="gray.500"
-                                      bg="gray.50"
-                                      px={2}
-                                      py={1}
-                                      borderRadius="md"
-                                    >
-                                      #{p.playerNumber}{" "}
-                                      {p.name?.split(" ")[0] ||
-                                        `P${p.playerNumber}`}
-                                    </Text>
-                                  ))}
-                              </Flex>
-                            </Box>
-                          )}
+
+                          {/* Show partner information */}
+                          {courtPlayers.length > 1 &&
+                            (() => {
+                              // Helper to infer pair number (first 2 players = pair 1, last 2 = pair 2)
+                              const getPairNumber = (idx: number) =>
+                                idx < 2 ? 1 : 2;
+                              const myIndex = courtPlayers.findIndex(
+                                (p) => p.id === player.id
+                              );
+                              const myPairNumber = getPairNumber(myIndex);
+                              const partners = courtPlayers.filter(
+                                (p, idx) =>
+                                  getPairNumber(idx) === myPairNumber &&
+                                  p.id !== player.id
+                              );
+                              const opponents = courtPlayers.filter(
+                                (p, idx) => getPairNumber(idx) !== myPairNumber
+                              );
+
+                              return (
+                                <Box
+                                  mt={3}
+                                  p={3}
+                                  bg="blue.50"
+                                  borderRadius="md"
+                                  _dark={{ bg: "blue.900" }}
+                                >
+                                  {partners.length > 0 && (
+                                    <Box mb={2}>
+                                      <Text
+                                        fontSize="sm"
+                                        fontWeight="semibold"
+                                        color="blue.700"
+                                        _dark={{ color: "blue.300" }}
+                                        mb={1}
+                                      >
+                                        🤝 {t("court.partnerWith")}
+                                      </Text>
+                                      <Flex
+                                        justify="center"
+                                        wrap="wrap"
+                                        gap={2}
+                                      >
+                                        {partners.map((p) => (
+                                          <Text
+                                            key={p.id}
+                                            fontSize="sm"
+                                            color="blue.600"
+                                            bg="blue.100"
+                                            _dark={{
+                                              bg: "blue.800",
+                                              color: "blue.200",
+                                            }}
+                                            px={3}
+                                            py={1}
+                                            borderRadius="md"
+                                            fontWeight="medium"
+                                          >
+                                            #{p.playerNumber}{" "}
+                                            {p.name?.split(" ")[0] ||
+                                              `P${p.playerNumber}`}
+                                          </Text>
+                                        ))}
+                                      </Flex>
+                                    </Box>
+                                  )}
+
+                                  {opponents.length > 0 && (
+                                    <Box>
+                                      <Text
+                                        fontSize="sm"
+                                        fontWeight="semibold"
+                                        color="orange.700"
+                                        _dark={{ color: "orange.300" }}
+                                        mb={1}
+                                      >
+                                        ⚔️ {t("court.opponents")}
+                                      </Text>
+                                      <Flex
+                                        justify="center"
+                                        wrap="wrap"
+                                        gap={2}
+                                      >
+                                        {opponents.map((p) => (
+                                          <Text
+                                            key={p.id}
+                                            fontSize="sm"
+                                            color="orange.600"
+                                            bg="orange.100"
+                                            _dark={{
+                                              bg: "orange.800",
+                                              color: "orange.200",
+                                            }}
+                                            px={3}
+                                            py={1}
+                                            borderRadius="md"
+                                            fontWeight="medium"
+                                          >
+                                            #{p.playerNumber}{" "}
+                                            {p.name?.split(" ")[0] ||
+                                              `P${p.playerNumber}`}
+                                          </Text>
+                                        ))}
+                                      </Flex>
+                                    </Box>
+                                  )}
+                                </Box>
+                              );
+                            })()}
                         </Box>
                       )}
 
