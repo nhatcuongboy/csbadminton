@@ -1,33 +1,24 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { Button } from "@/components/ui/chakra-compat";
+import TopBar from "@/components/ui/TopBar";
+import { useRouter } from "@/i18n/config";
+import { PlayerService, SessionService, type Session } from "@/lib/api";
 import {
   Box,
   Container,
   Flex,
   Heading,
-  Text,
   Input,
-  Stack,
   Spinner,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Users,
-  Hash,
-  LogIn,
-  Activity,
-} from "lucide-react";
-import { useState } from "react";
-import toast from "react-hot-toast";
-import { Button } from "@/components/ui/chakra-compat";
-import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import { SessionService, PlayerService, type Session } from "@/lib/api";
-import { useTranslations } from "next-intl";
-import TopBar from "@/components/ui/TopBar";
-import { useRouter } from "@/i18n/config";
 import dayjs from "dayjs";
+import { Activity, ArrowRight, Hash, LogIn, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const formatRangeTime = (
   startTime?: string | Date,

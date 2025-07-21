@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { IntlClientProvider } from "../../components/IntlClientProvider";
 import LocaleValidator from "../../components/LocaleValidator";
+import { PWAInstallPrompt, PWAStatus } from "../../components/PWAComponents";
 import "../globals.css";
 import { Providers } from "../providers";
 
@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Badminton Session Management",
   description: "Manage badminton sessions, players, and courts",
 };
@@ -65,7 +65,9 @@ export default async function LocaleLayout({
         <LocaleValidator locale={locale} validLocales={validLocales} />
         <IntlClientProvider messages={messages} locale={locale}>
           <Providers>
+            <PWAStatus />
             {children}
+            <PWAInstallPrompt />
             <Toaster />
           </Providers>
         </IntlClientProvider>
