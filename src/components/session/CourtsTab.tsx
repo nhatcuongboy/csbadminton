@@ -411,7 +411,7 @@ const CourtsTab: React.FC<
                   <HStack gap={2} alignItems="center">
                     {currentMatch && court.status === "IN_USE" && (
                       <Badge
-                        colorScheme="blue"
+                        colorPalette="blue"
                         variant="solid"
                         display="flex"
                         alignItems="center"
@@ -432,7 +432,7 @@ const CourtsTab: React.FC<
                       </Badge>
                     )}
                     <Badge
-                      colorScheme={
+                      colorPalette={
                         isCourtReady ? "yellow" : isActive ? "green" : "gray"
                       }
                       variant="solid"

@@ -1,11 +1,9 @@
 "use client";
 
-import { Player } from "@/types/session";
 import { Box, Spinner } from "@chakra-ui/react";
-import { Clock } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import CourtPlayer, { BadmintonCourtPlayer } from "./CourtPlayer";
-import { useTranslations } from "next-intl";
 
 interface BadmintonCourtProps {
   players: BadmintonCourtPlayer[];
@@ -231,7 +229,7 @@ export default function BadmintonCourt({
       )}
 
       {/* Match Time/Status Display - Center */}
-      {status === "READY" &&
+      {/* {status === "READY" &&
         showTimeInCenter && ( // Only show badge when status is READY
           <Box
             position="absolute"
@@ -254,7 +252,7 @@ export default function BadmintonCourt({
             <Clock size={14} />
             {t("courtsTab.ready")}
           </Box>
-        )}
+        )} */}
     </Box>
   );
 }
