@@ -1,34 +1,26 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { Link } from "../../i18n/config";
+import { NextLinkButton } from "@/components/ui/NextLinkButton";
+import TopBar from "@/components/ui/TopBar";
 import {
   Box,
-  Button,
   Container,
   Flex,
   Grid,
   Heading,
-  Text,
-  Stack,
   SimpleGrid,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
-import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import TopBar from "@/components/ui/TopBar";
 import {
   ArrowRight,
-  Plus,
-  Calendar,
-  Users,
-  Check,
   ArrowUpRight,
-  Home as HomeIcon,
-  Play,
-  History,
-  Settings,
-  Search,
+  Calendar,
+  Check,
+  Plus,
+  Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 type FeatureCardProps = {
@@ -292,59 +284,6 @@ export default function Home() {
             <Text color="gray.500" fontSize="sm">
               © {new Date().getFullYear()} {t("title")}. {t("copyright")}
             </Text>
-          </Flex>
-        </Container>
-      </Box>
-
-      {/* Bottom Navigation Bar */}
-      <Box
-        position="fixed"
-        bottom={0}
-        left={0}
-        right={0}
-        zIndex={998}
-        bg="white"
-        borderTopWidth="1px"
-        borderTopColor="gray.200"
-        boxShadow="0 -2px 10px rgba(0, 0, 0, 0.1)"
-        _dark={{
-          bg: "gray.800",
-          borderTopColor: "gray.600",
-          boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.2)",
-        }}
-      >
-        <Container maxW="container.xl">
-          <Flex justify="space-around" align="center" py={2}>
-            <BottomNavItem
-              icon={HomeIcon}
-              label="Home"
-              href="/"
-              isActive={true}
-            />
-            <BottomNavItem
-              icon={Play}
-              label="Host"
-              href="/host"
-              isActive={false}
-            />
-            <BottomNavItem
-              icon={Users}
-              label="Join"
-              href="/join"
-              isActive={false}
-            />
-            <BottomNavItem
-              icon={Search}
-              label="Find"
-              href="/find"
-              isActive={false}
-            />
-            <BottomNavItem
-              icon={History}
-              label="History"
-              href="/history"
-              isActive={false}
-            />
           </Flex>
         </Container>
       </Box>

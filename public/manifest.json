@@ -1,6 +1,6 @@
 {
   "name": "Badminton Session Management",
-  "short_name": "Badminton App",
+  "short_name": "CS Badminton",
   "description": "Manage badminton sessions, players, and courts efficiently",
   "start_url": "/",
   "display": "standalone",

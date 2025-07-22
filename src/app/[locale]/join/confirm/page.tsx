@@ -32,7 +32,8 @@ function ConfirmPageContent() {
   const sessionId = searchParams.get("sessionId");
   const playerNumber = searchParams.get("playerNumber");
   const playerId = searchParams.get("playerId");
-  const t = useTranslations();
+  const t = useTranslations("pages.join");
+  const tCommon = useTranslations("common");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +52,7 @@ function ConfirmPageContent() {
     async function loadSessionAndPlayer() {
       try {
         if (!sessionId || !playerNumber) {
-          toast.error("Missing session or player information");
+          toast.error(t("confirm.errors.missingInfo"));
           router.push("/join");
           return;
         }
@@ -94,13 +95,13 @@ function ConfirmPageContent() {
               desire: foundPlayer.desire || "",
             });
           } else {
-            toast.error("Player not found");
+            toast.error(t("confirm.errors.playerNotFound"));
             router.push("/join");
           }
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        toast.error("Failed to load player information");
+        toast.error(t("confirm.errors.loadFailed"));
       } finally {
         setIsLoading(false);
       }
@@ -123,13 +124,13 @@ function ConfirmPageContent() {
     e.preventDefault();
 
     if (!player) {
-      toast.error("Player information not found");
+      toast.error(t("confirm.errors.playerNotFound"));
       return;
     }
 
     // Validate form data
     if (!formData.name || !formData.gender || !formData.level) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("confirm.errors.requiredFields"));
       return;
     }
 
@@ -154,7 +155,7 @@ function ConfirmPageContent() {
       router.push(`/join/status?playerId=${player.id}`);
     } catch (error) {
       console.error("Error confirming player:", error);
-      toast.error("Failed to confirm registration");
+      toast.error(t("confirm.errors.confirmFailed"));
       setIsSubmitting(false);
     }
   };
@@ -165,7 +166,7 @@ function ConfirmPageContent() {
         <TopBar
           showBackButton={true}
           backHref="/join"
-          title="Confirm Details"
+          title={t("confirm.title")}
         />
         <Container maxW="md" py={12} pt={24}>
           <Flex
@@ -175,7 +176,7 @@ function ConfirmPageContent() {
             direction="column"
           >
             <Spinner size="xl" color="blue.500" mb={4} />
-            <Text>Loading player information...</Text>
+            <Text>{tCommon("loading")}</Text>
           </Flex>
         </Container>
       </Box>
@@ -185,7 +186,11 @@ function ConfirmPageContent() {
   return (
     <Box minH="100vh">
       {/* Top Bar */}
-      <TopBar showBackButton={true} backHref="/join" title="Confirm Details" />
+      <TopBar
+        showBackButton={true}
+        backHref="/join"
+        title={t("confirm.title")}
+      />
 
       <Container maxW="md" py={12} pt={24}>
         <Box
@@ -206,10 +211,10 @@ function ConfirmPageContent() {
           >
             <Flex align="center" mb={2}>
               <Box as={User} boxSize={5} color="blue.500" mr={2} />
-              <Heading size="md">Complete Your Registration</Heading>
+              <Heading size="md">{t("confirm.subtitle")}</Heading>
             </Flex>
             <Text color="gray.500" fontSize="sm">
-              Fill in your details to join {session?.name}
+              {t("confirm.description", { sessionName: session?.name || "" })}
             </Text>
           </Box>
 
@@ -219,7 +224,9 @@ function ConfirmPageContent() {
               <Stack gap={4}>
                 <Box>
                   <Text fontWeight="medium" mb={2}>
-                    Player #{player?.playerNumber}
+                    {t("confirm.playerNumber", {
+                      number: player?.playerNumber || 0,
+                    })}
                   </Text>
 
                   {!player?.requireConfirmInfo && (
@@ -232,9 +239,7 @@ function ConfirmPageContent() {
                       borderColor="yellow.200"
                     >
                       <Text fontSize="sm" color="yellow.800">
-                        ℹ️ This session doesn't require detailed information.
-                        Your current details are shown below for confirmation
-                        only.
+                        ℹ️ {t("confirm.form.noInfoRequired")}
                       </Text>
                     </Box>
                   )}
@@ -256,7 +261,7 @@ function ConfirmPageContent() {
                   )} */}
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Full Name{" "}
+                      {t("confirm.form.fullName")}{" "}
                       <Box as="span" color="red.500">
                         *
                       </Box>
@@ -265,7 +270,7 @@ function ConfirmPageContent() {
                       value={formData.name}
                       onChange={handleInputChange}
                       name="name"
-                      placeholder="Enter your name"
+                      placeholder={t("confirm.form.namePlaceholder")}
                       size="lg"
                       required
                       disabled={!player?.requireConfirmInfo}
@@ -276,7 +281,7 @@ function ConfirmPageContent() {
                   <Flex gap={4} mb={4}>
                     <Box flex={1}>
                       <Text fontWeight="medium" mb={1} fontSize="sm">
-                        Gender{" "}
+                        {t("confirm.form.gender")}{" "}
                         <Box as="span" color="red.500">
                           *
                         </Box>
@@ -297,15 +302,19 @@ function ConfirmPageContent() {
                           opacity: !player?.requireConfirmInfo ? 0.6 : 1,
                         }}
                       >
-                        <option value="">Select Gender</option>
-                        <option value="MALE">Male</option>
-                        <option value="FEMALE">Female</option>
+                        <option value="">
+                          {t("confirm.form.selectGender")}
+                        </option>
+                        <option value="MALE">{t("confirm.form.male")}</option>
+                        <option value="FEMALE">
+                          {t("confirm.form.female")}
+                        </option>
                       </select>
                     </Box>
 
                     <Box flex={1}>
                       <Text fontWeight="medium" mb={1} fontSize="sm">
-                        Skill Level{" "}
+                        {t("confirm.form.skillLevel")}{" "}
                         <Box as="span" color="red.500">
                           *
                         </Box>
@@ -326,28 +335,48 @@ function ConfirmPageContent() {
                           opacity: !player?.requireConfirmInfo ? 0.6 : 1,
                         }}
                       >
-                        <option value="">Select Level</option>
-                        <option value={Level.Y_MINUS}>Y- (Beginner)</option>
-                        <option value={Level.Y}>Y (Weak)</option>
-                        <option value={Level.Y_PLUS}>Y+ (Weak+)</option>
-                        <option value={Level.TBY}>TBY (Medium-weak)</option>
-                        <option value={Level.TB_MINUS}>TB- (Medium-)</option>
-                        <option value={Level.TB}>TB (Medium)</option>
-                        <option value={Level.TB_PLUS}>TB+ (Medium+)</option>
-                        <option value={Level.K}>K (Advanced)</option>
+                        <option value="">
+                          {t("confirm.form.selectLevel")}
+                        </option>
+                        <option value={Level.Y_MINUS}>
+                          {t("confirm.form.levels.beginner")}
+                        </option>
+                        <option value={Level.Y}>
+                          {t("confirm.form.levels.weak")}
+                        </option>
+                        <option value={Level.Y_PLUS}>
+                          {t("confirm.form.levels.weakPlus")}
+                        </option>
+                        <option value={Level.TBY}>
+                          {t("confirm.form.levels.mediumWeak")}
+                        </option>
+                        <option value={Level.TB_MINUS}>
+                          {t("confirm.form.levels.mediumMinus")}
+                        </option>
+                        <option value={Level.TB}>
+                          {t("confirm.form.levels.medium")}
+                        </option>
+                        <option value={Level.TB_PLUS}>
+                          {t("confirm.form.levels.mediumPlus")}
+                        </option>
+                        <option value={Level.K}>
+                          {t("confirm.form.levels.advanced")}
+                        </option>
                       </select>
                     </Box>
                   </Flex>
 
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Level Description
+                      {t("confirm.form.levelDescription")}
                     </Text>
                     <Input
                       value={formData.levelDescription}
                       onChange={handleInputChange}
                       name="levelDescription"
-                      placeholder="Describe your playing style or experience"
+                      placeholder={t(
+                        "confirm.form.levelDescriptionPlaceholder"
+                      )}
                       size="lg"
                       disabled={!player?.requireConfirmInfo}
                       opacity={!player?.requireConfirmInfo ? 0.6 : 1}
@@ -356,13 +385,13 @@ function ConfirmPageContent() {
 
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Desire
+                      {t("confirm.form.desire")}
                     </Text>
                     <Input
                       value={formData.desire || ""}
                       onChange={handleInputChange}
                       name="desire"
-                      placeholder="What do you want from this session?"
+                      placeholder={t("confirm.form.desirePlaceholder")}
                       size="lg"
                       disabled={!player?.requireConfirmInfo}
                       opacity={!player?.requireConfirmInfo ? 0.6 : 1}
@@ -371,13 +400,13 @@ function ConfirmPageContent() {
 
                   <Box>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
-                      Phone Number
+                      {t("confirm.form.phoneNumber")}
                     </Text>
                     <Input
                       value={formData.phone}
                       onChange={handleInputChange}
                       name="phone"
-                      placeholder="+84 xxx xxx xxx"
+                      placeholder={t("confirm.form.phonePlaceholder")}
                       size="lg"
                       disabled={!player?.requireConfirmInfo}
                       opacity={!player?.requireConfirmInfo ? 0.6 : 1}
@@ -399,10 +428,10 @@ function ConfirmPageContent() {
                 >
                   <Flex align="center" justify="center" width="100%">
                     {isSubmitting
-                      ? "Processing..."
+                      ? t("confirm.form.processing")
                       : !player?.requireConfirmInfo && player?.confirmedByPlayer
-                      ? "Already Confirmed"
-                      : "Confirm"}
+                      ? t("confirm.form.alreadyConfirmed")
+                      : t("confirm.form.confirmButton")}
                     {!isSubmitting &&
                       !(
                         !player?.requireConfirmInfo && player?.confirmedByPlayer
@@ -422,7 +451,7 @@ function ConfirmPageContent() {
             textAlign="center"
           >
             <Text fontSize="sm" color="gray.500">
-              This information will be visible to the session host
+              {t("confirm.footer")}
             </Text>
           </Box>
         </Box>

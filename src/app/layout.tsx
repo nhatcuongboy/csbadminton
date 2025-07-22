@@ -1,10 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NODE_ENV === "production"
+      ? process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "https://csbadminton.vercel.app/"
+      : "http://localhost:3000"
+  ),
   title: "Badminton Session Management",
   description: "Manage badminton sessions, players, and courts efficiently",
   manifest: "/manifest.json",
-  keywords: ["badminton", "session", "management", "sports", "court", "players"],
+  keywords: [
+    "badminton",
+    "session",
+    "management",
+    "sports",
+    "court",
+    "players",
+  ],
   authors: [{ name: "Badminton App Team" }],
   creator: "Badminton App Team",
   publisher: "Badminton App Team",
@@ -47,12 +61,13 @@ export const metadata = {
     description: "Manage badminton sessions, players, and courts efficiently",
     images: ["/icons/icon-512x512.png"],
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#2563eb",
 };
 

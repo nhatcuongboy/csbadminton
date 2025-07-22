@@ -16,11 +16,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "Badminton Session Management",
-  description: "Manage badminton sessions, players, and courts",
-};
-
 export async function generateStaticParams() {
   return [{ locale: "vi" }, { locale: "en" }];
 }
@@ -67,7 +62,7 @@ export default async function LocaleLayout({
           <Providers>
             <PWAStatus />
             {children}
-            <PWAInstallPrompt />
+            {/* <PWAInstallPrompt /> */}
             <Toaster />
           </Providers>
         </IntlClientProvider>

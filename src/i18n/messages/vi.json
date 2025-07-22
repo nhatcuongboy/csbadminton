@@ -325,22 +325,33 @@
         "playerNumber": "Người chơi #{number}",
         "form": {
           "namePlaceholder": "Nhập tên của bạn",
+          "fullName": "Họ và tên",
           "gender": "Giới tính",
           "selectGender": "Chọn giới tính",
           "male": "Nam",
           "female": "Nữ",
+          "skillLevel": "Trình độ",
           "selectLevel": "Chọn trình độ",
-          "levels": {
-            "weak": "Yếu",
-            "weakPlus": "Yếu+",
-            "mediumWeak": "Trung bình yếu",
-            "mediumMinus": "Trung bình-",
-            "medium": "Trung bình",
-            "mediumPlus": "Trung bình+"
-          },
+          "levelDescription": "Mô tả trình độ",
+          "levelDescriptionPlaceholder": "Mô tả phong cách chơi hoặc kinh nghiệm của bạn",
+          "desire": "Mong muốn",
+          "desirePlaceholder": "Bạn muốn gì từ kèo này?",
+          "phoneNumber": "Số điện thoại",
           "phonePlaceholder": "+84 xxx xxx xxx",
           "processing": "Đang xử lý...",
-          "confirmButton": "Xác nhận & Tham gia"
+          "confirmButton": "Xác nhận & Tham gia",
+          "alreadyConfirmed": "Đã xác nhận",
+          "noInfoRequired": "Kèo này không yêu cầu thông tin chi tiết. Thông tin hiện tại của bạn được hiển thị dưới đây chỉ để xác nhận.",
+          "levels": {
+            "beginner": "Y- (Mới bắt đầu)",
+            "weak": "Y (Yếu)",
+            "weakPlus": "Y+ (Yếu+)",
+            "mediumWeak": "TBY (Trung bình yếu)",
+            "mediumMinus": "TB- (Trung bình-)",
+            "medium": "TB (Trung bình)",
+            "mediumPlus": "TB+ (Trung bình+)",
+            "advanced": "K (Nâng cao)"
+          }
         },
         "footer": "Thông tin này sẽ hiển thị cho người tổ chức kèo",
         "errors": {
@@ -515,7 +526,7 @@
       "loadingPairs": "Đang tải cặp đấu...",
       "pair1": "Cặp 1",
       "pair2": "Cặp 2",
-      "gapLabel": "Chênh lệch: {gap}",
+      "gapLabel": "Lệch:",
       "playerFallback": "Người chơi {number}",
       "matchEndedSuccessfully": "Trận đấu đã kết thúc thành công"
     },

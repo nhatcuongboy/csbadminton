@@ -325,22 +325,33 @@
         "playerNumber": "Player #{number}",
         "form": {
           "namePlaceholder": "Enter your name",
+          "fullName": "Full Name",
           "gender": "Gender",
           "selectGender": "Select Gender",
           "male": "Male",
           "female": "Female",
+          "skillLevel": "Skill Level",
           "selectLevel": "Select Level",
-          "levels": {
-            "weak": "Weak",
-            "weakPlus": "Weak+",
-            "mediumWeak": "Medium-weak",
-            "mediumMinus": "Medium-",
-            "medium": "Medium",
-            "mediumPlus": "Medium+"
-          },
+          "levelDescription": "Level Description",
+          "levelDescriptionPlaceholder": "Describe your playing style or experience",
+          "desire": "Desire",
+          "desirePlaceholder": "What do you want from this session?",
+          "phoneNumber": "Phone Number",
           "phonePlaceholder": "+84 xxx xxx xxx",
           "processing": "Processing...",
-          "confirmButton": "Confirm & Join"
+          "confirmButton": "Confirm & Join",
+          "alreadyConfirmed": "Already Confirmed",
+          "noInfoRequired": "This session doesn't require detailed information. Your current details are shown below for confirmation only.",
+          "levels": {
+            "beginner": "Y- (Beginner)",
+            "weak": "Y (Weak)",
+            "weakPlus": "Y+ (Weak+)",
+            "mediumWeak": "TBY (Medium-weak)",
+            "mediumMinus": "TB- (Medium-)",
+            "medium": "TB (Medium)",
+            "mediumPlus": "TB+ (Medium+)",
+            "advanced": "K (Advanced)"
+          }
         },
         "footer": "This information will be visible to the session host",
         "errors": {
@@ -515,7 +526,7 @@
       "loadingPairs": "Loading pairs...",
       "pair1": "Pair 1",
       "pair2": "Pair 2",
-      "gapLabel": "Gap: {gap}",
+      "gapLabel": "Gap:",
       "playerFallback": "Player {number}",
       "matchEndedSuccessfully": "Match ended successfully"
     },

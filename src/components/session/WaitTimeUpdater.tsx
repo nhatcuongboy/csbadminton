@@ -27,11 +27,6 @@ export default function WaitTimeUpdater() {
       if (result.success) {
         setLastUpdate(new Date());
         setUpdateCount((prev) => prev + 1);
-        console.log(
-          `Updated wait times for ${result.data.updated} players in ${
-            result.data.sessions?.length || 0
-          } sessions`
-        );
       } else {
         console.error("Failed to update wait times:", result.message);
       }

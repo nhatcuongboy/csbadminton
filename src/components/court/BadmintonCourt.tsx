@@ -5,6 +5,7 @@ import { Box, Spinner } from "@chakra-ui/react";
 import { Clock } from "lucide-react";
 import { useState } from "react";
 import CourtPlayer, { BadmintonCourtPlayer } from "./CourtPlayer";
+import { useTranslations } from "next-intl";
 
 interface BadmintonCourtProps {
   players: BadmintonCourtPlayer[];
@@ -33,8 +34,10 @@ export default function BadmintonCourt({
   mode = "manage",
   courtColor = "#179a3b",
 }: BadmintonCourtProps) {
+  const t = useTranslations("SessionDetail");
   const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
   const aspectRatio = 13.4 / 6.1;
+
   return (
     <Box
       width={width}
@@ -249,7 +252,7 @@ export default function BadmintonCourt({
             gap={1}
           >
             <Clock size={14} />
-            Ready
+            {t("courtsTab.ready")}
           </Box>
         )}
     </Box>

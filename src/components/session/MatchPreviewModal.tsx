@@ -7,8 +7,18 @@ import {
   VStack,
   HStack,
   Badge,
+  Spinner,
 } from "@chakra-ui/react";
-import { Play, X, ArrowLeft, User, UserCheck, RefreshCw } from "lucide-react";
+import {
+  Play,
+  X,
+  ArrowLeft,
+  User,
+  UserCheck,
+  RefreshCw,
+  Mars,
+  Venus,
+} from "lucide-react";
 import BadmintonCourt from "../court/BadmintonCourt";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
@@ -268,21 +278,49 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             />
           </Box>
           {/* Display pair information */}
-          <VStack>
-            <Text fontSize="md" fontWeight="semibold" color="gray.800">
-              {t("courtsTab.balancedPairs")}
-            </Text>
+          <VStack gap={2} mt={2}>
+            {!isLoading && suggestedPlayers && (
+              <HStack
+                justify="space-between"
+                width="full"
+                px={4}
+                align="center"
+              >
+                <HStack gap={2} justify="center" flex="1">
+                  <Badge colorPalette="blue" variant="solid" fontSize="sm">
+                    {t("courtsTab.pair1")}
+                  </Badge>
+                </HStack>
 
-            <Box
-              bg="gray.50"
-              borderRadius="lg"
-              p={4}
-              border="1px solid"
-              borderColor="gray.200"
-            >
-              {!suggestedPlayers ? (
-                t("courtsTab.loadingPairs")
-              ) : (
+                <Text
+                  fontSize="lg"
+                  fontWeight="bold"
+                  color="gray.600"
+                  minW="80px"
+                  textAlign="center"
+                >
+                  Vs
+                </Text>
+
+                <HStack gap={2} justify="center" flex="1">
+                  <Badge colorPalette="orange" variant="solid" fontSize="sm">
+                    {t("courtsTab.pair2")}
+                  </Badge>
+                </HStack>
+              </HStack>
+            )}
+
+            {!isLoading && suggestedPlayers ? (
+              <Box
+                bg="gray.50"
+                borderRadius="lg"
+                p={3}
+                border="1px solid"
+                borderColor="gray.200"
+                maxHeight="280px"
+                overflowY="auto"
+                width="full"
+              >
                 <HStack gap={2} width="full" justify="center" align="stretch">
                   {/* Pair 1 */}
                   <Box
@@ -290,21 +328,24 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                     border="2px solid"
                     borderColor="blue.200"
                     borderRadius="lg"
-                    p={4}
+                    p={3}
                     textAlign="center"
                     flex="1"
                     minW="140px"
+                    position="relative"
                   >
-                    <HStack justify="center" mb={3} gap={2}>
-                      <Badge colorScheme="blue" variant="solid" fontSize="sm">
-                        {t("courtsTab.pair1")}
-                      </Badge>
-                      <Badge colorScheme="blue" variant="outline" fontSize="xs">
-                        {suggestedPlayers.pair1.totalLevelScore}
-                      </Badge>
-                    </HStack>
-
-                    <VStack gap={2}>
+                    <Badge
+                      colorPalette="yellow"
+                      variant="solid"
+                      fontSize="xs"
+                      position="absolute"
+                      top={2}
+                      right={2}
+                      borderRadius="full"
+                    >
+                      {suggestedPlayers.pair1.totalLevelScore}
+                    </Badge>
+                    <VStack gap={1.5}>
                       {suggestedPlayers.pair1.players.map((player: Player) => (
                         <Box
                           key={player.id}
@@ -316,13 +357,20 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                           width="full"
                         >
                           <Text
-                            fontSize="sm"
+                            fontSize="xs"
                             fontWeight="semibold"
                             color="gray.800"
                           >
                             #{player.playerNumber}
                           </Text>
-                          <Text fontSize="xs" color="gray.600" mb={1}>
+                          <Text
+                            fontSize="xs"
+                            color="gray.600"
+                            mb={1}
+                            overflow="hidden"
+                            whiteSpace="nowrap"
+                            textOverflow="ellipsis"
+                          >
                             {player.name ||
                               t("courtsTab.playerFallback", {
                                 number: player.playerNumber,
@@ -331,20 +379,29 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                           <HStack justify="center" gap={1}>
                             {player.gender && (
                               <Box
-                                as={player.gender === "MALE" ? User : UserCheck}
+                                as={
+                                  player.gender === "MALE"
+                                    ? Mars
+                                    : player.gender === "FEMALE"
+                                    ? Venus
+                                    : User
+                                }
                                 boxSize={3}
                                 color={
                                   player.gender === "MALE"
-                                    ? "blue.500"
-                                    : "pink.500"
+                                    ? "#3182ce"
+                                    : player.gender === "FEMALE"
+                                    ? "#d53f8c"
+                                    : "#718096"
                                 }
                               />
                             )}
                             {player.level && (
                               <Badge
-                                colorScheme="green"
+                                colorPalette="red"
                                 size="sm"
                                 variant="solid"
+                                fontSize="xs"
                               >
                                 {getLevelLabel(player.level)}
                               </Badge>
@@ -355,23 +412,30 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                     </VStack>
                   </Box>
 
-                  {/* VS Divider with Score Difference */}
+                  {/* Gap indicator */}
                   <Flex
                     direction="column"
                     align="center"
                     justify="center"
-                    minW="80px"
-                    gap={2}
+                    minW="60px"
                   >
+                    <Text
+                      fontSize="sm"
+                      // fontWeight="bold"
+                      color="gray.600"
+                      // minW="80px"
+                      textAlign="center"
+                      mb={1}
+                    >
+                      {t("courtsTab.gapLabel")}
+                    </Text>
                     <Badge
-                      colorScheme="purple"
+                      colorPalette="yellow"
                       variant="solid"
                       fontSize="xs"
-                      borderRadius="full"
+                      // borderRadius="full"
                     >
-                      {t("courtsTab.gapLabel", {
-                        gap: suggestedPlayers.scoreDifference,
-                      })}
+                      {suggestedPlayers.scoreDifference}
                     </Badge>
                   </Flex>
 
@@ -381,25 +445,24 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                     border="2px solid"
                     borderColor="orange.200"
                     borderRadius="lg"
-                    p={4}
+                    p={3}
                     textAlign="center"
                     flex="1"
                     minW="140px"
+                    position="relative"
                   >
-                    <HStack justify="center" mb={3} gap={2}>
-                      <Badge colorScheme="orange" variant="solid" fontSize="sm">
-                        {t("courtsTab.pair2")}
-                      </Badge>
-                      <Badge
-                        colorScheme="orange"
-                        variant="outline"
-                        fontSize="xs"
-                      >
-                        {suggestedPlayers.pair2.totalLevelScore}
-                      </Badge>
-                    </HStack>
-
-                    <VStack gap={2}>
+                    <Badge
+                      colorPalette="yellow"
+                      variant="solid"
+                      fontSize="xs"
+                      position="absolute"
+                      top={2}
+                      left={2}
+                      borderRadius="full"
+                    >
+                      {suggestedPlayers.pair2.totalLevelScore}
+                    </Badge>
+                    <VStack gap={1.5}>
                       {suggestedPlayers.pair2.players.map((player: Player) => (
                         <Box
                           key={player.id}
@@ -411,13 +474,20 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                           width="full"
                         >
                           <Text
-                            fontSize="sm"
+                            fontSize="xs"
                             fontWeight="semibold"
                             color="gray.800"
                           >
                             #{player.playerNumber}
                           </Text>
-                          <Text fontSize="xs" color="gray.600" mb={1}>
+                          <Text
+                            fontSize="xs"
+                            color="gray.600"
+                            mb={1}
+                            overflow="hidden"
+                            whiteSpace="nowrap"
+                            textOverflow="ellipsis"
+                          >
                             {player.name ||
                               t("courtsTab.playerFallback", {
                                 number: player.playerNumber,
@@ -426,20 +496,29 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                           <HStack justify="center" gap={1}>
                             {player.gender && (
                               <Box
-                                as={player.gender === "MALE" ? User : UserCheck}
+                                as={
+                                  player.gender === "MALE"
+                                    ? Mars
+                                    : player.gender === "FEMALE"
+                                    ? Venus
+                                    : User
+                                }
                                 boxSize={3}
                                 color={
                                   player.gender === "MALE"
-                                    ? "blue.500"
-                                    : "pink.500"
+                                    ? "#3182ce"
+                                    : player.gender === "FEMALE"
+                                    ? "#d53f8c"
+                                    : "#718096"
                                 }
                               />
                             )}
                             {player.level && (
                               <Badge
-                                colorScheme="green"
+                                colorPalette="red"
                                 size="sm"
                                 variant="solid"
+                                fontSize="xs"
                               >
                                 {getLevelLabel(player.level)}
                               </Badge>
@@ -450,8 +529,12 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                     </VStack>
                   </Box>
                 </HStack>
-              )}
-            </Box>
+              </Box>
+            ) : (
+              <Flex justify="center" py={4}>
+                <Spinner color="blue.500" />
+              </Flex>
+            )}
           </VStack>
         </Box>
 
@@ -484,7 +567,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             {t("courtsTab.cancel")}
           </CompatButton>
           <CompatButton
-            colorScheme="green"
+            // colorPalette="green"
             onClick={handleConfirm}
             loading={isConfirming}
             disabled={isLoading}

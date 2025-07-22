@@ -68,7 +68,6 @@ export const PlayerGrid = ({
   selectionMode = false,
   mode = "manage",
 }: PlayerGridProps) => {
-  console.log(playerFilter);
   return (
     <SimpleGrid columns={{ base: 2, md: 4, lg: 6 }} spacing={4}>
       {players.map((player, index) => {
