@@ -477,12 +477,16 @@
     "errorAutoAssigningPlayers": "Lỗi tự động phân bổ người chơi",
     "playersAutoAssignedSuccessfully": "Người chơi đã được tự động phân bổ thành công",
     "selectExactly4Players": "Vui lòng chọn chính xác 4 người chơi",
+    "confirmEndSession": "Xác nhận kết thúc kèo",
+    "confirmEndSessionMessage": "Bạn có chắc chắn muốn kết thúc kèo này? Hành động này không thể hoàn tác và sẽ kết thúc tất cả các trận đấu đang diễn ra.",
+    "cancel": "Hủy",
+    "endSession": "Kết thúc kèo",
     "failedToSavePlayerChanges": "Không thể lưu thay đổi người chơi",
     "failedToUpdatePlayer": "Không thể cập nhật người chơi",
     "unknownError": "Lỗi không xác định",
     "failedToDeletePlayer": "Không thể xóa người chơi",
     "courtsTab": {
-      "activeCourts": "Sân đang hoạt động",
+      "activeCourts": "Trạng thái sân",
       "startSessionToBeginMatches": "Bắt đầu kèo để bắt đầu các trận đấu",
       "sessionHasEnded": "Kèo đã kết thúc",
       "courtNumber": "Sân {number}",
@@ -520,6 +524,7 @@
       "startMatchCount": "Bắt đầu trận đấu ({count}/4)",
       "balancedPairs": "Cặp cân bằng",
       "playersToConsider": "Số người xem xét",
+      "longestWait": "(chờ lâu nhất)",
       "players": "người chơi",
       "loadingSuggestedPlayers": "Đang tải gợi ý người chơi...",
       "waitingPlayers": "Người chơi đang chờ",
@@ -544,6 +549,15 @@
       "selectWinnerInstruction": "Nhấn vào một đội để chọn đội thắng (tùy chọn nếu hòa)"
     },
     "startMatch": "Bắt đầu",
+    "playersTab": {
+      "players": "Người chơi",
+      "all": "Tất cả",
+      "playing": "Đang chơi",
+      "waiting": "Đang chờ",
+      "ready": "Sẵn sàng",
+      "playerStatistics": "Thống kê người chơi",
+      "noPlayersFound": "Không tìm thấy người chơi nào có trạng thái {status}"
+    },
     "matchs": {
       "tabTitle": "Trận đấu"
     }

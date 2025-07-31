@@ -3,7 +3,7 @@
 import { Player } from "@/types/session";
 import { getLevelLabel } from "@/utils/level-mapping";
 import { Box, Text } from "@chakra-ui/react";
-import { Mars, User, Venus } from "lucide-react";
+import { Mars, User, Venus, X } from "lucide-react";
 import { useRef } from "react";
 import PlayerTooltip from "./PlayerTooltip";
 
@@ -47,9 +47,10 @@ interface CourtPlayerProps {
   player: BadmintonCourtPlayer;
   index: number;
   players: BadmintonCourtPlayer[];
-  mode: "manage" | "view";
+  mode: "manage" | "view" | "selection";
   isClicked: boolean;
   onPlayerClick: (id: string | null) => void;
+  onRemovePlayer?: (id: string) => void; // Add optional remove callback
 }
 
 export default function CourtPlayer({
@@ -59,6 +60,7 @@ export default function CourtPlayer({
   mode,
   isClicked,
   onPlayerClick,
+  onRemovePlayer,
 }: CourtPlayerProps) {
   const playerRef = useRef<HTMLDivElement>(null!);
 
@@ -241,25 +243,57 @@ export default function CourtPlayer({
           </Text>
         </Box>
 
-        {mode === "manage" && (
+        {mode !== "view" && (
+          <>
+            <Box
+              position="absolute"
+              top="-10px"
+              right="-12px"
+              bg={pairColors.border}
+              color="white"
+              borderRadius="full"
+              w="35px"
+              h="22px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              fontSize="xs"
+              fontWeight="bold"
+              border="2px solid white"
+              zIndex={4}
+            >
+              {getLevelLabel(player.level, "?")}
+            </Box>
+          </>
+        )}
+        {/* Remove button */}
+        {mode === "selection" && (
           <Box
             position="absolute"
-            top="-10px"
-            right="-12px"
-            bg={pairColors.border}
+            bottom="-8px"
+            right="-8px"
+            bg="red.500"
             color="white"
             borderRadius="full"
-            w="35px"
-            h="22px"
+            w="20px"
+            h="20px"
             display="flex"
             alignItems="center"
             justifyContent="center"
-            fontSize="xs"
-            fontWeight="bold"
             border="2px solid white"
-            zIndex={4}
+            zIndex={5}
+            cursor="pointer"
+            transition="all 0.2s"
+            _hover={{
+              bg: "red.600",
+              transform: "scale(1.1)",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemovePlayer?.(player.id);
+            }}
           >
-            {getLevelLabel(player.level, "?")}
+            <Box as={X} boxSize="12px" />
           </Box>
         )}
       </Box>

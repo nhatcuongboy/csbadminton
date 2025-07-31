@@ -152,6 +152,11 @@ export async function GET(
 ) {
   try {
     const { id: sessionId } = await params;
+    
+    // Get query parameters for filtering
+    const { searchParams } = new URL(request.url);
+    const playerId = searchParams.get('playerId');
+    const courtId = searchParams.get('courtId');
 
     // Check if session exists
     const session = await prisma.session.findUnique({
@@ -162,9 +167,26 @@ export async function GET(
       return errorResponse("Session not found", 404);
     }
 
-    // Get all matches for the session
+    // Build where condition based on filters
+    let whereCondition: any = { sessionId };
+
+    // Filter by court if courtId is provided
+    if (courtId) {
+      whereCondition.courtId = courtId;
+    }
+
+    // Filter by player if playerId is provided
+    if (playerId) {
+      whereCondition.players = {
+        some: {
+          playerId: playerId,
+        },
+      };
+    }
+
+    // Get matches for the session with filters
     const matches = await prisma.match.findMany({
-      where: { sessionId },
+      where: whereCondition,
       include: {
         players: {
           include: {
@@ -216,7 +238,25 @@ export async function GET(
       return formattedMatch;
     });
 
-    return successResponse(formattedMatches, "Matches retrieved successfully");
+    // Prepare response with filter information
+    const responseData = {
+      matches: formattedMatches,
+      totalMatches: formattedMatches.length,
+      filters: {
+        playerId: playerId || null,
+        courtId: courtId || null,
+      },
+    };
+
+    let message = "Matches retrieved successfully";
+    if (playerId || courtId) {
+      const filterDescriptions = [];
+      if (playerId) filterDescriptions.push(`player ID: ${playerId}`);
+      if (courtId) filterDescriptions.push(`court ID: ${courtId}`);
+      message += ` (filtered by ${filterDescriptions.join(', ')})`;
+    }
+
+    return successResponse(responseData, message);
   } catch (error) {
     console.error("Error retrieving matches:", error);
     return errorResponse("Failed to retrieve matches");

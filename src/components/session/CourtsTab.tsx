@@ -11,13 +11,22 @@ import { Court, Match, Player } from "@/types/session";
 import {
   Badge,
   Box,
+  Collapsible,
   Flex,
   Heading,
   HStack,
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { Clock, Play, Plus, Shuffle, Square, X } from "lucide-react";
+import {
+  ChevronDown,
+  Clock,
+  Play,
+  Plus,
+  Shuffle,
+  Square,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import React from "react";
 import BadmintonCourt from "../court/BadmintonCourt";
@@ -133,6 +142,9 @@ const CourtsTab: React.FC<
   // Match result modal state
   const [matchResultModalOpen, setMatchResultModalOpen] = React.useState(false);
   const [selectedMatch, setSelectedMatch] = React.useState<any>(null);
+
+  // Collapsible state for courts
+  const [isCourtsSectionOpen, setIsCourtsSectionOpen] = React.useState(true);
 
   // Handle auto-assign match button click
   const handleAutoAssignClick = (court: Court) => {
@@ -314,337 +326,363 @@ const CourtsTab: React.FC<
 
   return (
     <>
-      <Flex justifyContent="space-between" mb={4}>
-        <Heading size="md">{t("courtsTab.activeCourts")}</Heading>
-        {session.status === "IN_PROGRESS" && (
-          <HStack gap={2}>
-            {/* <CompatButton size="sm" onClick={autoAssignPlayers}>
-              <Box as={Shuffle} boxSize={4} mr={1} />
-              Auto Assign
-            </CompatButton> */}
-          </HStack>
-        )}
-      </Flex>
-      {session.status !== "IN_PROGRESS" && mode === "manage" && (
-        <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
-          {session.status === "PREPARING"
-            ? t("courtsTab.startSessionToBeginMatches")
-            : t("courtsTab.sessionHasEnded")}
-        </Text>
-      )}
-      {/* {session.status === "IN_PROGRESS" && activeCourts.length === 0 && (
-        <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
-          No active courts. Create a new match to start playing.
-        </Text>
-      )} */}
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} mt={4}>
-        {session.courts.map((court: Court) => {
-          const currentMatch = getCurrentMatch(court.id);
-          const isActive =
-            court.status === "IN_USE" || court.status === "READY";
-          const isCourtReady = court.status === "READY";
-          return (
-            <Card
-              key={court.id}
-              variant="outline"
-              boxShadow="md"
-              // borderRadius="xl"
-            >
-              <CardHeader
-                bg={
-                  isCourtReady ? "yellow.50" : isActive ? "green.50" : "gray.50"
+      <Collapsible.Root
+        open={isCourtsSectionOpen}
+        onOpenChange={(details) => setIsCourtsSectionOpen(details.open)}
+      >
+        <Collapsible.Trigger paddingY="3" width="100%">
+          <Flex justifyContent="space-between" alignItems="center">
+            <HStack gap={2} alignItems="center">
+              <Heading size="md">{t("courtsTab.activeCourts")}</Heading>
+              <Box
+                as={ChevronDown}
+                boxSize={5}
+                color="gray.500"
+                transform={
+                  isCourtsSectionOpen ? "rotate(180deg)" : "rotate(0deg)"
                 }
-                p={4}
-                // borderRadius="lg"
-                boxShadow="md"
-                transition="all 0.2s ease-in-out"
-                _hover={{
-                  boxShadow: "lg",
-                  borderColor: isCourtReady
-                    ? "yellow.300"
-                    : isActive
-                    ? "green.300"
-                    : "gray.300",
-                  transform: "translateY(-1px)",
-                }}
-              >
-                <Flex justifyContent="space-between" alignItems="center">
-                  <Box display="flex" alignItems="center" gap={3}>
-                    <Box
-                      w={8}
-                      h={8}
-                      borderRadius="full"
-                      bg={
-                        isCourtReady
-                          ? "yellow.500"
-                          : isActive
-                          ? "green.500"
-                          : "gray.500"
-                      }
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      color="white"
-                      fontWeight="bold"
-                      fontSize="sm"
-                      boxShadow="sm"
-                    >
-                      {court.courtNumber}
-                    </Box>
-                    <Heading
-                      size="md"
-                      fontWeight="semibold"
-                      color={
-                        isCourtReady
-                          ? "yellow.700"
-                          : isActive
-                          ? "green.700"
-                          : "gray.700"
-                      }
-                    >
-                      {t("courtsTab.courtNumber", {
-                        number: court.courtNumber,
-                      })}
-                    </Heading>
-                  </Box>
-
-                  <HStack gap={2} alignItems="center">
-                    {currentMatch && court.status === "IN_USE" && (
-                      <Badge
-                        colorPalette="blue"
-                        variant="solid"
-                        display="flex"
-                        alignItems="center"
-                        gap={1}
-                        fontSize="xs"
-                        px={1.5}
-                        py={0.5}
-                        borderRadius="md"
-                        minWidth="48px"
-                        minHeight="20px"
-                        lineHeight={1.2}
-                        style={{ letterSpacing: 0.2 }}
-                      >
-                        <Box as={Clock} boxSize={3} />
-                        {currentMatch.startTime
-                          ? formatCourtElapsedTime(currentMatch.startTime)
-                          : "-"}
-                      </Badge>
-                    )}
-                    <Badge
-                      colorPalette={
-                        isCourtReady ? "yellow" : isActive ? "green" : "gray"
-                      }
-                      variant="solid"
-                      fontSize="xs"
-                      px={1.5}
-                      py={0.5}
-                      borderRadius="md"
-                      fontWeight="semibold"
-                      minWidth="48px"
-                      minHeight="20px"
-                      lineHeight={1.2}
-                      style={{ letterSpacing: 0.2 }}
-                    >
-                      {isCourtReady
-                        ? t("courtsTab.ready")
+                transition="transform 0.2s ease-in-out"
+              />
+            </HStack>
+            <HStack gap={2}>
+              {session.status === "IN_PROGRESS" && <HStack gap={2}></HStack>}
+            </HStack>
+          </Flex>
+        </Collapsible.Trigger>
+        <Collapsible.Content>
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} mt={4} p={1}>
+            {session.courts.map((court: Court) => {
+              const currentMatch = getCurrentMatch(court.id);
+              const isActive =
+                court.status === "IN_USE" || court.status === "READY";
+              const isCourtReady = court.status === "READY";
+              return (
+                <Card
+                  key={court.id}
+                  variant="outline"
+                  boxShadow="md"
+                  // borderRadius="xl"
+                >
+                  <CardHeader
+                    bg={
+                      isCourtReady
+                        ? "yellow.50"
                         : isActive
-                        ? t("courtsTab.inUse")
-                        : t("courtsTab.empty")}
-                    </Badge>
-                  </HStack>
-                </Flex>
-              </CardHeader>
-              <CardBody pt={0} pb={0} px={0}>
-                {isActive && court.currentPlayers.length > 0 ? (
-                  <VStack gap={4}>
-                    <BadmintonCourt
-                      players={court.currentPlayers}
-                      isActive={isActive}
-                      elapsedTime={
-                        currentMatch
-                          ? formatCourtElapsedTime(currentMatch.startTime)
-                          : t("courtsTab.playing")
-                      }
-                      courtName={getCourtDisplayName(
-                        court.courtName,
-                        court.courtNumber
-                      )}
-                      width="100%"
-                      //   height="180px"
-                      showTimeInCenter={true}
-                      isLoading={isRefreshing}
-                      status={court.status}
-                      mode={mode}
-                      // courtColor="#9fbcba"
-                    />
-                    {/* Action buttons for courts with players */}
-                    <VStack gap={2} pb={4} width="100%">
-                      {/* Start Match button: chỉ hiển thị khi sân READY và chưa có match đang diễn ra */}
-                      {session.status === "IN_PROGRESS" &&
-                        mode === "manage" &&
-                        court.status === "READY" &&
-                        !court.currentMatchId && (
-                          <CompatButton
-                            size="sm"
-                            colorScheme="green"
-                            loading={loadingStartMatchCourtId === court.id}
-                            onClick={async () => {
-                              setLoadingStartMatchCourtId(court.id);
-                              try {
-                                await CourtService.startMatch(court.id);
-                                if (onDataRefresh) onDataRefresh();
-                                toast.toast({
-                                  title: t(
-                                    "courtsTab.matchStartedSuccessfully"
-                                  ),
-                                  description: t("courtsTab.matchHasStarted"),
-                                  status: "success",
-                                  duration: 3000,
-                                });
-                              } finally {
-                                setLoadingStartMatchCourtId(null);
-                              }
-                            }}
-                            disabled={isRefreshing}
-                          >
-                            <Box as={Play} boxSize={4} mr={1} />
-                            {t("startMatch")}
-                          </CompatButton>
-                        )}
-
-                      {/* Cancel button: chỉ hiển thị khi sân READY và có currentPlayers */}
-                      {session.status === "IN_PROGRESS" &&
-                        mode === "manage" &&
-                        court.status === "READY" &&
-                        court.currentPlayers.length > 0 && (
-                          <CompatButton
-                            size="sm"
-                            colorScheme="red"
-                            variant="outline"
-                            loading={loadingCancelCourtId === court.id}
-                            onClick={async () => {
-                              setLoadingCancelCourtId(court.id);
-                              try {
-                                await CourtService.deselectPlayers(court.id);
-                                if (onDataRefresh) onDataRefresh();
-                                toast.toast({
-                                  title: t("courtsTab.playersDeselected"),
-                                  description: t(
-                                    "courtsTab.courtAvailableForPlay"
-                                  ),
-                                  status: "success",
-                                  duration: 3000,
-                                });
-                              } catch (error) {
-                                console.error(
-                                  "Error deselecting players:",
-                                  error
-                                );
-                              } finally {
-                                setLoadingCancelCourtId(null);
-                              }
-                            }}
-                            disabled={isRefreshing}
-                          >
-                            <Box as={X} boxSize={4} mr={1} />
-                            {t("courtsTab.cancel")}
-                          </CompatButton>
-                        )}
-
-                      {/* End Match button: chỉ hiển thị khi có match đang diễn ra và không phải READY */}
-                      {session.status === "IN_PROGRESS" &&
-                        mode === "manage" &&
-                        court.currentMatchId &&
-                        court.status !== "READY" && (
-                          <CompatButton
-                            size="sm"
-                            colorScheme="red"
-                            onClick={() => {
-                              const currentMatch = getCurrentMatch(court.id);
-                              console.log(court.id, currentMatch);
-                              if (currentMatch) {
-                                setSelectedMatch(currentMatch);
-                                setMatchResultModalOpen(true);
-                              }
-                            }}
-                            loading={loadingEndMatchId === court.currentMatchId}
-                            disabled={isRefreshing}
-                          >
-                            <Box as={Square} boxSize={4} mr={1} />
-                            {t("courtsTab.endMatch")}
-                          </CompatButton>
-                        )}
-                    </VStack>
-                  </VStack>
-                ) : (
-                  <VStack
-                    gap={4}
-                    pb={4}
-                    align="center"
-                    justify="center"
-                    minH="200px"
+                        ? "green.50"
+                        : "gray.50"
+                    }
+                    p={4}
+                    // borderRadius="lg"
+                    boxShadow="md"
+                    transition="all 0.2s ease-in-out"
+                    _hover={{
+                      boxShadow: "lg",
+                      borderColor: isCourtReady
+                        ? "yellow.300"
+                        : isActive
+                        ? "green.300"
+                        : "gray.300",
+                      transform: "translateY(-1px)",
+                    }}
                   >
-                    <BadmintonCourt
-                      players={[]}
-                      isActive={false}
-                      courtName={getCourtDisplayName(
-                        court.courtName,
-                        court.courtNumber
-                      )}
-                      width="100%"
-                      //   height="180px"
-                      showTimeInCenter={false}
-                      isLoading={isRefreshing}
-                      status="EMPTY"
-                    />
-                    {session.status === "IN_PROGRESS" && mode === "manage" ? (
-                      <VStack gap={2}>
-                        <CompatButton
-                          colorScheme="green"
-                          onClick={() => handleAutoAssignClick(court)}
-                          size="sm"
-                          width="full"
-                          disabled={waitingPlayers.length < 4 || isRefreshing}
-                          // loading={
-                          //   selectedAutoAssignCourt?.id === court.id &&
-                          //   loadingAutoAssign
-                          // }
+                    <Flex justifyContent="space-between" alignItems="center">
+                      <Box display="flex" alignItems="center" gap={3}>
+                        <Box
+                          w={8}
+                          h={8}
+                          borderRadius="full"
+                          bg={
+                            isCourtReady
+                              ? "yellow.500"
+                              : isActive
+                              ? "green.500"
+                              : "gray.500"
+                          }
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          color="white"
+                          fontWeight="bold"
+                          fontSize="sm"
+                          boxShadow="sm"
                         >
-                          <Box as={Shuffle} boxSize={4} mr={1} />
-                          {t("courtsTab.autoAssignMatch")}
-                        </CompatButton>
-                        {startManualMatchCreation && (
-                          <CompatButton
-                            colorScheme="blue"
-                            onClick={() => handleManualSelectionClick(court)}
-                            size="sm"
-                            width="full"
-                            variant="outline"
-                            disabled={waitingPlayers.length < 4 || isRefreshing}
+                          {court.courtNumber}
+                        </Box>
+                        <Heading
+                          size="md"
+                          fontWeight="semibold"
+                          color={
+                            isCourtReady
+                              ? "yellow.700"
+                              : isActive
+                              ? "green.700"
+                              : "gray.700"
+                          }
+                        >
+                          {t("courtsTab.courtNumber", {
+                            number: court.courtNumber,
+                          })}
+                        </Heading>
+                      </Box>
+
+                      <HStack gap={2} alignItems="center">
+                        {currentMatch && court.status === "IN_USE" && (
+                          <Badge
+                            colorPalette="blue"
+                            variant="solid"
+                            display="flex"
+                            alignItems="center"
+                            gap={1}
+                            fontSize="xs"
+                            px={1.5}
+                            py={0.5}
+                            borderRadius="md"
+                            minWidth="48px"
+                            minHeight="20px"
+                            lineHeight={1.2}
+                            style={{ letterSpacing: 0.2 }}
                           >
-                            <Box as={Plus} boxSize={4} mr={1} />
-                            {t("courtsTab.manualSelection")}
-                          </CompatButton>
+                            <Box as={Clock} boxSize={3} />
+                            {currentMatch.startTime
+                              ? formatCourtElapsedTime(currentMatch.startTime)
+                              : "-"}
+                          </Badge>
                         )}
+                        <Badge
+                          colorPalette={
+                            isCourtReady
+                              ? "yellow"
+                              : isActive
+                              ? "green"
+                              : "gray"
+                          }
+                          variant="solid"
+                          fontSize="xs"
+                          px={1.5}
+                          py={0.5}
+                          borderRadius="md"
+                          fontWeight="semibold"
+                          minWidth="48px"
+                          minHeight="20px"
+                          lineHeight={1.2}
+                          style={{ letterSpacing: 0.2 }}
+                        >
+                          {isCourtReady
+                            ? t("courtsTab.ready")
+                            : isActive
+                            ? t("courtsTab.inUse")
+                            : t("courtsTab.empty")}
+                        </Badge>
+                      </HStack>
+                    </Flex>
+                  </CardHeader>
+                  <CardBody pt={0} pb={0} px={0}>
+                    {isActive && court.currentPlayers.length > 0 ? (
+                      <VStack gap={4}>
+                        <BadmintonCourt
+                          players={court.currentPlayers}
+                          isActive={isActive}
+                          elapsedTime={
+                            currentMatch
+                              ? formatCourtElapsedTime(currentMatch.startTime)
+                              : t("courtsTab.playing")
+                          }
+                          courtName={getCourtDisplayName(
+                            court.courtName,
+                            court.courtNumber
+                          )}
+                          width="100%"
+                          //   height="180px"
+                          showTimeInCenter={true}
+                          isLoading={isRefreshing}
+                          status={court.status}
+                          mode={mode}
+                          // courtColor="#9fbcba"
+                        />
+                        {/* Action buttons for courts with players */}
+                        <VStack gap={2} pb={4} width="100%">
+                          {/* Start Match button: only shown when court is READY and no match is in progress */}
+                          {session.status === "IN_PROGRESS" &&
+                            mode === "manage" &&
+                            court.status === "READY" &&
+                            !court.currentMatchId && (
+                              <CompatButton
+                                size="sm"
+                                colorScheme="green"
+                                loading={loadingStartMatchCourtId === court.id}
+                                onClick={async () => {
+                                  setLoadingStartMatchCourtId(court.id);
+                                  try {
+                                    await CourtService.startMatch(court.id);
+                                    if (onDataRefresh) onDataRefresh();
+                                    toast.toast({
+                                      title: t(
+                                        "courtsTab.matchStartedSuccessfully"
+                                      ),
+                                      description: t(
+                                        "courtsTab.matchHasStarted"
+                                      ),
+                                      status: "success",
+                                      duration: 3000,
+                                    });
+                                  } finally {
+                                    setLoadingStartMatchCourtId(null);
+                                  }
+                                }}
+                                disabled={isRefreshing}
+                              >
+                                <Box as={Play} boxSize={4} mr={1} />
+                                {t("startMatch")}
+                              </CompatButton>
+                            )}
+
+                          {/* Cancel button: only shown when court is READY and has currentPlayers */}
+                          {session.status === "IN_PROGRESS" &&
+                            mode === "manage" &&
+                            court.status === "READY" &&
+                            court.currentPlayers.length > 0 && (
+                              <CompatButton
+                                size="sm"
+                                colorScheme="red"
+                                variant="outline"
+                                loading={loadingCancelCourtId === court.id}
+                                onClick={async () => {
+                                  setLoadingCancelCourtId(court.id);
+                                  try {
+                                    await CourtService.deselectPlayers(
+                                      court.id
+                                    );
+                                    if (onDataRefresh) onDataRefresh();
+                                    toast.toast({
+                                      title: t("courtsTab.playersDeselected"),
+                                      description: t(
+                                        "courtsTab.courtAvailableForPlay"
+                                      ),
+                                      status: "success",
+                                      duration: 3000,
+                                    });
+                                  } catch (error) {
+                                    console.error(
+                                      "Error deselecting players:",
+                                      error
+                                    );
+                                  } finally {
+                                    setLoadingCancelCourtId(null);
+                                  }
+                                }}
+                                disabled={isRefreshing}
+                              >
+                                <Box as={X} boxSize={4} mr={1} />
+                                {t("courtsTab.cancel")}
+                              </CompatButton>
+                            )}
+
+                          {/* End Match button: only shown when there is a match in progress and not READY */}
+                          {session.status === "IN_PROGRESS" &&
+                            mode === "manage" &&
+                            court.currentMatchId &&
+                            court.status !== "READY" && (
+                              <CompatButton
+                                size="sm"
+                                colorScheme="red"
+                                onClick={() => {
+                                  const currentMatch = getCurrentMatch(
+                                    court.id
+                                  );
+                                  console.log(court.id, currentMatch);
+                                  if (currentMatch) {
+                                    setSelectedMatch(currentMatch);
+                                    setMatchResultModalOpen(true);
+                                  }
+                                }}
+                                loading={
+                                  loadingEndMatchId === court.currentMatchId
+                                }
+                                disabled={isRefreshing}
+                              >
+                                <Box as={Square} boxSize={4} mr={1} />
+                                {t("courtsTab.endMatch")}
+                              </CompatButton>
+                            )}
+                        </VStack>
                       </VStack>
-                    ) : session.status === "IN_PROGRESS" ? (
-                      <Text
-                        fontSize="sm"
-                        color="gray.500"
-                        textAlign="center"
-                        mt={2}
+                    ) : (
+                      <VStack
+                        gap={4}
+                        pb={4}
+                        align="center"
+                        justify="center"
+                        minH="200px"
                       >
-                        {t("courtsTab.courtAvailableForPlay")}
-                      </Text>
-                    ) : null}
-                  </VStack>
-                )}
-              </CardBody>
-            </Card>
-          );
-        })}
-      </SimpleGrid>
+                        <BadmintonCourt
+                          players={[]}
+                          isActive={false}
+                          courtName={getCourtDisplayName(
+                            court.courtName,
+                            court.courtNumber
+                          )}
+                          width="100%"
+                          //   height="180px"
+                          showTimeInCenter={false}
+                          isLoading={isRefreshing}
+                          status="EMPTY"
+                        />
+                        {session.status === "IN_PROGRESS" &&
+                        mode === "manage" ? (
+                          <VStack gap={2}>
+                            <CompatButton
+                              colorScheme="green"
+                              onClick={() => handleAutoAssignClick(court)}
+                              size="sm"
+                              width="full"
+                              disabled={
+                                waitingPlayers.length < 4 || isRefreshing
+                              }
+                              // loading={
+                              //   selectedAutoAssignCourt?.id === court.id &&
+                              //   loadingAutoAssign
+                              // }
+                            >
+                              <Box as={Shuffle} boxSize={4} mr={1} />
+                              {t("courtsTab.autoAssignMatch")}
+                            </CompatButton>
+                            {startManualMatchCreation && (
+                              <CompatButton
+                                colorScheme="blue"
+                                onClick={() =>
+                                  handleManualSelectionClick(court)
+                                }
+                                size="sm"
+                                width="full"
+                                variant="outline"
+                                disabled={
+                                  waitingPlayers.length < 4 || isRefreshing
+                                }
+                              >
+                                <Box as={Plus} boxSize={4} mr={1} />
+                                {t("courtsTab.manualSelection")}
+                              </CompatButton>
+                            )}
+                          </VStack>
+                        ) : session.status === "IN_PROGRESS" ? (
+                          <Text
+                            fontSize="sm"
+                            color="gray.500"
+                            textAlign="center"
+                            mt={2}
+                          >
+                            {t("courtsTab.courtAvailableForPlay")}
+                          </Text>
+                        ) : null}
+                      </VStack>
+                    )}
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </SimpleGrid>
+        </Collapsible.Content>
+      </Collapsible.Root>
 
       {/* Auto Assign Match Modal */}
       <MatchPreviewModal

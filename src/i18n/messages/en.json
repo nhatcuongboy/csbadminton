@@ -477,12 +477,16 @@
     "errorAutoAssigningPlayers": "Error auto-assigning players",
     "playersAutoAssignedSuccessfully": "Players auto-assigned successfully",
     "selectExactly4Players": "Please select exactly 4 players",
+    "confirmEndSession": "Confirm End Session",
+    "confirmEndSessionMessage": "Are you sure you want to end this session? This action cannot be undone and will finish all active matches.",
+    "cancel": "Cancel",
+    "endSession": "End Session",
     "failedToSavePlayerChanges": "Failed to save player changes",
     "failedToUpdatePlayer": "Failed to update player",
     "unknownError": "Unknown error",
     "failedToDeletePlayer": "Failed to delete player",
     "courtsTab": {
-      "activeCourts": "Active Courts",
+      "activeCourts": "Courts Status",
       "startSessionToBeginMatches": "Start the session to begin matches",
       "sessionHasEnded": "Session has ended",
       "courtNumber": "Court {number}",
@@ -520,6 +524,7 @@
       "startMatchCount": "Start Match ({count}/4)",
       "balancedPairs": "Balanced Pairs",
       "playersToConsider": "Players to consider",
+      "longestWait": "(longest wait)",
       "players": "players",
       "loadingSuggestedPlayers": "Loading suggested players...",
       "waitingPlayers": "Waiting Players",
@@ -544,6 +549,15 @@
       "selectWinnerInstruction": "Click on a team to select the winner (optional if draw)"
     },
     "startMatch": "Start Match",
+    "playersTab": {
+      "players": "Players",
+      "all": "All",
+      "playing": "Playing",
+      "waiting": "Waiting",
+      "ready": "Ready",
+      "playerStatistics": "Player Statistics",
+      "noPlayersFound": "No players found for {status} status"
+    },
     "matchs": {
       "tabTitle": "Matches"
     }

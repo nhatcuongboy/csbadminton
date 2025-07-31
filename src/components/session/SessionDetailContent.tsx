@@ -122,6 +122,8 @@ export default function SessionDetailContent({
   const [playerFilter, setPlayerFilter] = useState<PlayerFilter>("ALL");
   const [isToggleStatusLoading, setIsToggleStatusLoading] =
     useState<boolean>(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [pendingAction, setPendingAction] = useState<string>("");
 
   const toast = useToast();
 
@@ -155,8 +157,14 @@ export default function SessionDetailContent({
 
   // Helper function to get current match for a court
   const getCurrentMatch = (courtId: string): Match | null => {
+    // Ensure session.matches is an array before using find
+    if (!Array.isArray(session.matches)) {
+      console.warn("session.matches is not an array:", session.matches);
+      return null;
+    }
+
     // First try to find by courtId and status
-    let match = session.matches?.find(
+    let match = session.matches.find(
       (match) => match.courtId === courtId && match.status === "IN_PROGRESS"
     );
 
@@ -164,7 +172,7 @@ export default function SessionDetailContent({
     if (!match) {
       const courtData = session.courts.find((c) => c.id === courtId);
       if (courtData?.currentMatchId) {
-        match = session.matches?.find(
+        match = session.matches.find(
           (match) => match.id === courtData.currentMatchId
         );
       }
@@ -180,11 +188,16 @@ export default function SessionDetailContent({
       // Get session and matches to match SessionData shape
       const data = await SessionService.getSession(session.id);
       // Fetch matches if not present (api.ts Session type may not include matches)
-      let matches: any = [];
+      let matches: any[] = [];
       try {
-        matches = await SessionService.getSessionMatches(session.id);
+        const matchesResult = await SessionService.getSessionMatches(
+          session.id
+        );
+        // Ensure matches is always an array
+        matches = Array.isArray(matchesResult) ? matchesResult : [];
       } catch (error) {
         console.error("Error fetching matches:", error);
+        matches = [];
       }
       // Convert startTime/endTime to string for SessionData
       setSession({
@@ -201,7 +214,7 @@ export default function SessionDetailContent({
           ? new Date(data.startTime).toISOString()
           : null,
         endTime: data.endTime ? new Date(data.endTime).toISOString() : null,
-        matches: matches || [],
+        matches: matches,
       });
       setLastRefreshed(new Date());
     } catch (error) {
@@ -235,35 +248,69 @@ export default function SessionDetailContent({
 
   // Toggle session status (Start/End session)
   const toggleSessionStatus = async () => {
+    // Determine the next status
+    let nextStatus = session.status;
+    if (session.status === "PREPARING") {
+      nextStatus = "IN_PROGRESS";
+    } else if (session.status === "IN_PROGRESS") {
+      nextStatus = "FINISHED";
+    } else {
+      return; // No change if already FINISHED
+    }
+
+    // Show confirmation dialog for ending session
+    if (nextStatus === "FINISHED") {
+      setPendingAction("end");
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // Execute the status change directly for starting session
+    await executeStatusChange(nextStatus);
+  };
+
+  // Execute the actual status change
+  const executeStatusChange = async (nextStatus: string) => {
     try {
       setIsToggleStatusLoading(true);
-      // Xác định trạng thái tiếp theo
-      let nextStatus = session.status;
-      if (session.status === "PREPARING") {
-        nextStatus = "IN_PROGRESS";
-      } else if (session.status === "IN_PROGRESS") {
-        nextStatus = "FINISHED";
+
+      if (nextStatus === "FINISHED") {
+        // Use endSession API for comprehensive cleanup
+        const result = await SessionService.endSession(session.id);
+
+        // Update state with session data from endSession result
+        setSession((prev) => ({
+          ...prev,
+          status: result.session.status,
+          startTime: result.session.startTime
+            ? new Date(result.session.startTime).toISOString()
+            : null,
+          endTime: result.session.endTime
+            ? new Date(result.session.endTime).toISOString()
+            : null,
+        }));
+
+        // Refresh session data to get updated players, courts, matches
+        await refreshSessionData();
       } else {
-        return; // Không thay đổi nếu đã FINISHED
+        // For starting session, use updateSessionStatus
+        const updatedSession = await SessionService.updateSessionStatus(
+          session.id,
+          nextStatus
+        );
+
+        // Update state with new data from server
+        setSession((prev) => ({
+          ...prev,
+          status: updatedSession.status,
+          startTime: updatedSession.startTime
+            ? new Date(updatedSession.startTime).toISOString()
+            : null,
+          endTime: updatedSession.endTime
+            ? new Date(updatedSession.endTime).toISOString()
+            : null,
+        }));
       }
-
-      // Gọi API cập nhật trạng thái
-      const updatedSession = await SessionService.updateSessionStatus(
-        session.id,
-        nextStatus
-      );
-
-      // Cập nhật state với dữ liệu mới từ server
-      setSession((prev) => ({
-        ...prev,
-        status: updatedSession.status,
-        startTime: updatedSession.startTime
-          ? new Date(updatedSession.startTime).toISOString()
-          : null,
-        endTime: updatedSession.endTime
-          ? new Date(updatedSession.endTime).toISOString()
-          : null,
-      }));
 
       toast.toast({
         title:
@@ -283,6 +330,20 @@ export default function SessionDetailContent({
     } finally {
       setIsToggleStatusLoading(false);
     }
+  };
+
+  // Handle confirmation dialog
+  const handleConfirmAction = async () => {
+    setShowConfirmDialog(false);
+    if (pendingAction === "end") {
+      await executeStatusChange("FINISHED");
+    }
+    setPendingAction("");
+  };
+
+  const handleCancelAction = () => {
+    setShowConfirmDialog(false);
+    setPendingAction("");
   };
 
   // Map session status to UI text
@@ -665,6 +726,13 @@ export default function SessionDetailContent({
 
         {/* Bottom Navigation Bar for Tabs */}
         <Box minH="60vh" pb="80px">
+          {session.status !== "IN_PROGRESS" && (
+            <Text fontSize="lg" color="gray.500" textAlign="center" mt={4}>
+              {session.status === "PREPARING"
+                ? t("courtsTab.startSessionToBeginMatches")
+                : t("courtsTab.sessionHasEnded")}
+            </Text>
+          )}
           {activeTab === 0 && (
             <CourtsTab
               session={session}
@@ -701,6 +769,7 @@ export default function SessionDetailContent({
               playerFilter={playerFilter}
               setPlayerFilter={setPlayerFilter}
               formatWaitTime={formatWaitTime}
+              sessionId={session.id}
             />
           )}
           {activeTab === 2 && <SessionHistoryList sessionId={session.id} />}
@@ -785,6 +854,57 @@ export default function SessionDetailContent({
           </Box>
         </Box>
       </Container>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="blackAlpha.600"
+          zIndex={9999}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={handleCancelAction}
+        >
+          <Box
+            bg="white"
+            _dark={{ bg: "gray.800" }}
+            borderRadius="lg"
+            boxShadow="xl"
+            p={6}
+            maxW="md"
+            mx={4}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Heading size="md" mb={4} color="red.500">
+              {t("confirmEndSession")}
+            </Heading>
+            <Text mb={6} color="gray.600" _dark={{ color: "gray.300" }}>
+              {t("confirmEndSessionMessage")}
+            </Text>
+            <Flex gap={3} justifyContent="flex-end">
+              <Button
+                variant="outline"
+                onClick={handleCancelAction}
+                disabled={isToggleStatusLoading}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleConfirmAction}
+                loading={isToggleStatusLoading}
+              >
+                {t("endSession")}
+              </Button>
+            </Flex>
+          </Box>
+        </Box>
+      )}
     </>
   );
 }

@@ -132,7 +132,31 @@ export interface MatchPlayer {
 }
 
 // Session service
+// Player statistics response type
+export interface PlayerStatistics {
+  playerId: string;
+  playerNumber: number;
+  name?: string;
+  gender?: string;
+  level?: string;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  averageScore: number;
+  status: string;
+}
+
 export const SessionService = {
+  // Get player statistics for a session
+  getPlayerStatistics: async (
+    sessionId: string
+  ): Promise<{ sessionId: string; playerStats: PlayerStatistics[]; lastUpdated: string }> => {
+    const response = await api.get<
+      ApiResponse<{ sessionId: string; playerStats: PlayerStatistics[]; lastUpdated: string }>
+    >(`/sessions/${sessionId}/players/statistics`);
+    return response.data.data!;
+  },
   // Get all sessions
   getAllSessions: async (): Promise<Session[]> => {
     const response = await api.get<ApiResponse<Session[]>>("/sessions");
@@ -190,6 +214,29 @@ export const SessionService = {
     return response.data.data!;
   },
 
+  // Migrate/fix old ended sessions
+  migrateEndedSession: async (
+    id: string
+  ): Promise<{
+    session: Session;
+    statistics: any;
+    migrationResults: {
+      unfinishedMatchesFixed: number;
+      playersUpdated: number;
+      courtsUpdated: number;
+    };
+  }> => {
+    const response = await api.post<
+      ApiResponse<{
+        session: Session;
+        statistics: any;
+        migrationResults: any;
+      }>
+    >(`/sessions/${id}/migrate-end`);
+    toast.success("Session migration completed successfully");
+    return response.data.data!;
+  },
+
   // Update session status
   updateSessionStatus: async (id: string, status: string): Promise<Session> => {
     const response = await api.patch<ApiResponse<Session>>(
@@ -230,10 +277,49 @@ export const SessionService = {
 
   // Get session matches
   getSessionMatches: async (id: string): Promise<Match[]> => {
-    const response = await api.get<ApiResponse<Match[]>>(
-      `/sessions/${id}/matches`
-    );
-    return response.data.data || [];
+    const response = await api.get<
+      ApiResponse<{
+        matches: Match[];
+        totalMatches: number;
+        filters: {
+          playerId: string | null;
+          courtId: string | null;
+        };
+      }>
+    >(`/sessions/${id}/matches`);
+    // Handle the new API response format that returns an object with matches array
+    return response.data.data?.matches || [];
+  },
+
+  // Get session matches with filters
+  getSessionMatchesWithFilters: async (
+    id: string,
+    filters?: { playerId?: string; courtId?: string }
+  ): Promise<{
+    matches: Match[];
+    totalMatches: number;
+    filters: {
+      playerId: string | null;
+      courtId: string | null;
+    };
+  }> => {
+    const params = new URLSearchParams();
+    if (filters?.playerId) params.append("playerId", filters.playerId);
+    if (filters?.courtId) params.append("courtId", filters.courtId);
+
+    const url = params.toString()
+      ? `/sessions/${id}/matches?${params.toString()}`
+      : `/sessions/${id}/matches`;
+
+    const response = await api.get<
+      ApiResponse<{
+        matches: Match[];
+        totalMatches: number;
+        filters: any;
+      }>
+    >(url);
+
+    return response.data.data!;
   },
 };
 

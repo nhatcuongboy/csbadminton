@@ -42,7 +42,7 @@ interface PlayerTooltipProps {
   index: number;
   isVisible: boolean;
   position: { left: string; top: string };
-  mode?: "manage" | "view";
+  mode?: "manage" | "view" | "selection";
   playerRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -52,46 +52,46 @@ export default function PlayerTooltip({
   isVisible,
   position,
   mode = "manage",
-  playerRef
+  playerRef,
 }: PlayerTooltipProps) {
   const [tooltipPosition, setTooltipPosition] = useState(position);
-  
+
   // Update tooltip position for better placement
   useEffect(() => {
     if (isVisible && playerRef?.current) {
       const updatePosition = () => {
         const rect = playerRef.current?.getBoundingClientRect();
         if (!rect) return;
-        
+
         // Calculate more precise position - closer to the player circle
         const tooltipWidth = 280;
         const tooltipHeight = 150;
         let left = rect.left + rect.width / 2 - tooltipWidth / 2;
         let top = rect.top - tooltipHeight - 5; // Closer gap
-        
+
         // Adjust if tooltip goes outside viewport
         if (left < 10) left = 10;
         if (left + tooltipWidth > window.innerWidth - 10) {
           left = window.innerWidth - tooltipWidth - 10;
         }
-        
+
         // If not enough space above, position below but very close
         if (top < 10) {
           top = rect.bottom + 5;
         }
-        
+
         setTooltipPosition({
           left: `${left}px`,
           top: `${top}px`,
         });
       };
-      
+
       updatePosition();
-      window.addEventListener('resize', updatePosition);
-      return () => window.removeEventListener('resize', updatePosition);
+      window.addEventListener("resize", updatePosition);
+      return () => window.removeEventListener("resize", updatePosition);
     }
   }, [isVisible, playerRef]);
-  
+
   if (!isVisible) return null;
 
   // Calculate player's pair info

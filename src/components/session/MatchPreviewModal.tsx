@@ -220,7 +220,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                 <Text fontSize="sm" fontWeight="medium" color="gray.700">
                   {t("courtsTab.playersToConsider")}:
                 </Text>
-                <Box flex="1" maxW="120px">
+                <Box flex="1" maxW="130px">
                   <select
                     style={{
                       fontSize: "14px",
@@ -249,14 +249,9 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                     ))}
                   </select>
                 </Box>
-                {isLoading && (
-                  <Box
-                    as={RefreshCw}
-                    boxSize={4}
-                    color="gray.500"
-                    className="animate-spin"
-                  />
-                )}
+                <Box fontSize="sm" color="gray.500">
+                  {t("courtsTab.longestWait")}
+                </Box>
               </HStack>
             </Box>
           )}

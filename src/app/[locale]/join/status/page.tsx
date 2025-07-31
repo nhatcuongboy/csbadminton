@@ -806,6 +806,7 @@ function StatusPageContent() {
                 setPlayerFilter={setPlayerFilter}
                 formatWaitTime={formatWaitTime}
                 mode="view"
+                sessionId={session.id}
               />
             )}
           </Box>

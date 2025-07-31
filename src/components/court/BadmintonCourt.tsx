@@ -15,7 +15,7 @@ interface BadmintonCourtProps {
   showTimeInCenter?: boolean;
   isLoading?: boolean;
   status?: "IN_USE" | "READY" | "EMPTY";
-  mode?: "manage" | "view";
+  mode?: "manage" | "view" | "selection";
   courtColor?: string;
 }
 

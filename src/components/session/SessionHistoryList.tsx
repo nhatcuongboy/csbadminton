@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionService } from "@/lib/api";
+import { parseScoreData } from "@/utils/match-result-utils";
 import {
   Box,
   Center,
@@ -14,7 +15,6 @@ import {
 } from "@chakra-ui/react";
 import { Clock, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
-import { parseScoreData } from "@/utils/match-result-utils";
 
 const formatTime = (dateString: string | Date): string => {
   const date = new Date(dateString);
@@ -22,6 +22,28 @@ const formatTime = (dateString: string | Date): string => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const formatDuration = (
+  startTime?: string | Date,
+  endTime?: string | Date
+): string => {
+  if (!startTime || !endTime) return "";
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const durationMs = end.getTime() - start.getTime();
+  const durationMinutes = Math.floor(durationMs / (1000 * 60));
+
+  if (durationMinutes < 1) return "< 1 min";
+
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 };
 
 // New implementation: Show all completed matches, not just sessions
@@ -84,10 +106,18 @@ const HistoryMatchCard = ({ match }: { match: HistoryMatch }) => {
         <Stack gap={2}>
           <Flex align="center" gap={2}>
             <Icon as={Clock} boxSize={5} color="gray.500" />
-            <Text>
-              {match.startTime ? `${formatTime(match.startTime)}` : "..."}
-              {match.endTime ? ` - ${formatTime(match.endTime)}` : "..."}
-            </Text>
+            <Box display={"flex"} gap={2}>
+              <Text>
+                {match.startTime ? `${formatTime(match.startTime)}` : "..."}
+                {match.endTime ? ` - ${formatTime(match.endTime)}` : "..."}
+              </Text>
+              {match.startTime && match.endTime && (
+                <Text color="gray.500">{`(${formatDuration(
+                  match.startTime,
+                  match.endTime
+                )})`}</Text>
+              )}
+            </Box>
           </Flex>
         </Stack>
 
@@ -181,16 +211,59 @@ export default function SessionHistoryList({
   const [matches, setMatches] = useState<HistoryMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [selectedCourtId, setSelectedCourtId] = useState<string>("");
+  const [players, setPlayers] = useState<any[]>([]);
+  const [courts, setCourts] = useState<any[]>([]);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
+  useEffect(() => {
+    async function fetchInitialData() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch players and courts for filter dropdowns
+        const [playersData, courtsData] = await Promise.all([
+          SessionService.getSessionPlayers(sessionId),
+          SessionService.getSessionCourts(sessionId),
+        ]);
+
+        setPlayers(playersData);
+        setCourts(courtsData);
+        setInitialDataLoaded(true);
+      } catch (err) {
+        setError("Failed to load initial data. Please try again later.");
+        console.error("Error fetching initial data:", err);
+        setLoading(false);
+      }
+      // Don't set loading to false here - let the matches fetch do it
+    }
+
+    fetchInitialData();
+  }, [sessionId]);
 
   useEffect(() => {
     async function fetchCompletedMatches() {
+      // Only proceed if initial data is loaded
+      if (!initialDataLoaded) return;
+
       try {
         setLoading(true);
+        setError(null);
         let allMatches: HistoryMatch[] = [];
 
-        const sessionMatches = await SessionService.getSessionMatches(
-          sessionId
-        ); // Only completed matches (status === 'COMPLETED' or similar)
+        // Use the new API with filters
+        const filters: { playerId?: string; courtId?: string } = {};
+        if (selectedPlayerId) filters.playerId = selectedPlayerId;
+        if (selectedCourtId) filters.courtId = selectedCourtId;
+
+        const result = await SessionService.getSessionMatchesWithFilters(
+          sessionId,
+          Object.keys(filters).length > 0 ? filters : undefined
+        );
+
+        const sessionMatches = result.matches; // Only completed matches (status === 'COMPLETED' or similar)
         const completedMatches = sessionMatches.filter(
           (m: any) => m.status === "COMPLETED" || m.status === "FINISHED"
         );
@@ -338,67 +411,143 @@ export default function SessionHistoryList({
         setLoading(false);
       }
     }
+
     fetchCompletedMatches();
-  }, []);
-
-  if (loading) {
-    return (
-      <Center py={10}>
-        <Spinner size="xl" color="blue.500" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        p={4}
-        bg="red.50"
-        color="red.600"
-        borderRadius="md"
-        mb={6}
-        borderWidth="1px"
-        borderColor="red.200"
-      >
-        <Text fontWeight="medium">{error}</Text>
-      </Box>
-    );
-  }
-
-  if (matches.length === 0) {
-    return (
-      <Box
-        textAlign="center"
-        py={10}
-        px={6}
-        borderWidth="1px"
-        borderRadius="lg"
-        bg="white"
-        _dark={{ bg: "gray.800" }}
-      >
-        <Heading size="md" mb={2}>
-          No Completed Matches
-        </Heading>
-        <Text color="gray.500">
-          There are no completed matches yet. Play and complete matches to see
-          them here!
-        </Text>
-      </Box>
-    );
-  }
+  }, [sessionId, selectedPlayerId, selectedCourtId, initialDataLoaded]);
 
   return (
-    <Grid
-      templateColumns={{
-        base: "1fr",
-        md: "repeat(2, 1fr)",
-        lg: "repeat(3, 1fr)",
-      }}
-      gap={6}
-    >
-      {matches.map((match) => (
-        <HistoryMatchCard key={match.id} match={match} />
-      ))}
-    </Grid>
+    <Box>
+      <Text fontWeight="semibold" mb={3}>
+        Matches
+      </Text>
+      {/* Filter Controls */}
+      <Box
+        mb={6}
+        p={4}
+        bg="gray.50"
+        _dark={{ bg: "gray.700" }}
+        borderRadius="lg"
+      >
+        <Flex gap={4} flexWrap="wrap">
+          {/* Player Filter */}
+          <Box minW="150px" maxW="250px" flex="1">
+            <Text
+              fontSize="sm"
+              color="gray.600"
+              _dark={{ color: "gray.400" }}
+              mb={1}
+            >
+              Player
+            </Text>
+            <select
+              value={selectedPlayerId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSelectedPlayerId(e.target.value)
+              }
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                fontSize: "14px",
+                backgroundColor: "white",
+              }}
+            >
+              <option value="">All players</option>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  #{player.playerNumber} - {player.name || "Unnamed"}
+                </option>
+              ))}
+            </select>
+          </Box>
+
+          {/* Court Filter */}
+          <Box minW="150px" maxW="250px" flex="1">
+            <Text
+              fontSize="sm"
+              color="gray.600"
+              _dark={{ color: "gray.400" }}
+              mb={1}
+            >
+              Court
+            </Text>
+            <select
+              value={selectedCourtId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSelectedCourtId(e.target.value)
+              }
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                fontSize: "14px",
+                backgroundColor: "white",
+              }}
+            >
+              <option value="">All courts</option>
+              {courts.map((court) => (
+                <option key={court.id} value={court.id}>
+                  Court {court.courtNumber}
+                  {court.courtName ? ` (${court.courtName})` : ""}
+                </option>
+              ))}
+            </select>
+          </Box>
+        </Flex>
+      </Box>
+
+      {/* Results */}
+      {loading ? (
+        <Center py={10}>
+          <Spinner size="xl" color="blue.500" />
+        </Center>
+      ) : error ? (
+        <Box
+          p={4}
+          bg="red.50"
+          color="red.600"
+          borderRadius="md"
+          mb={6}
+          borderWidth="1px"
+          borderColor="red.200"
+        >
+          <Text fontWeight="medium">{error}</Text>
+        </Box>
+      ) : matches.length === 0 ? (
+        <Box
+          textAlign="center"
+          py={10}
+          px={6}
+          borderWidth="1px"
+          borderRadius="lg"
+          bg="white"
+          _dark={{ bg: "gray.800" }}
+        >
+          <Heading size="md" mb={2}>
+            No Completed Matches
+          </Heading>
+          <Text color="gray.500">
+            {selectedPlayerId || selectedCourtId
+              ? "No matches found with the selected filters. Try adjusting your filters."
+              : "There are no completed matches yet. Play and complete matches to see them here!"}
+          </Text>
+        </Box>
+      ) : (
+        <Grid
+          templateColumns={{
+            base: "1fr",
+            md: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)",
+          }}
+          gap={6}
+        >
+          {matches.map((match) => (
+            <HistoryMatchCard key={match.id} match={match} />
+          ))}
+        </Grid>
+      )}
+    </Box>
   );
 }
