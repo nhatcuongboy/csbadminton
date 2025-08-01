@@ -40,6 +40,26 @@ export async function GET(
                 levelDescription: true,
                 desire: true,
                 requireConfirmInfo: true,
+                status: true,
+                currentCourtId: true,
+                courtPosition: true, // Include court position
+                updatedAt: true,
+              },
+              orderBy: {
+                courtPosition: "asc", // Order by court position instead of updatedAt
+              },
+            },
+            currentMatch: {
+              include: {
+                players: {
+                  select: {
+                    playerId: true,
+                    position: true,
+                  },
+                  orderBy: {
+                    position: "asc",
+                  },
+                },
               },
             },
           },
@@ -92,7 +112,48 @@ export async function GET(
       return errorResponse("Session not found", 404);
     }
 
-    return successResponse(session, "Session retrieved successfully");
+    // Process courts to add position information to currentPlayers
+    const processedCourts = session.courts.map(court => {
+      let playersWithPosition = [...court.currentPlayers];
+
+      // If court has an active match, get positions from MatchPlayer
+      if (court.currentMatch && court.currentMatch.players.length > 0) {
+        const matchPlayerPositions = court.currentMatch.players.reduce((acc, mp) => {
+          acc[mp.playerId] = mp.position;
+          return acc;
+        }, {} as Record<string, number>);
+
+        // Sort players by their match position
+        playersWithPosition = court.currentPlayers
+          .map(player => ({
+            ...player,
+            position: matchPlayerPositions[player.id] ?? 0,
+          }))
+          .sort((a, b) => a.position - b.position);
+      } else {
+        // For READY courts (no active match), use stored courtPosition
+        // Players are already ordered by courtPosition from the query
+        playersWithPosition = court.currentPlayers.map((player) => ({
+          ...player,
+          position: player.courtPosition ?? 0, // Use stored court position
+        }));
+      }
+
+      // Remove currentMatch from the response and add processed players
+      const { currentMatch, ...courtWithoutMatch } = court;
+      return {
+        ...courtWithoutMatch,
+        currentPlayers: playersWithPosition,
+      };
+    });
+
+    // Return session with processed courts
+    const processedSession = {
+      ...session,
+      courts: processedCourts,
+    };
+
+    return successResponse(processedSession, "Session retrieved successfully");
   } catch (error) {
     console.error("Error fetching session:", error);
     return errorResponse("Failed to fetch session");

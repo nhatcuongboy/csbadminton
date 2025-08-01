@@ -27,6 +27,7 @@ interface MatchResultModalProps {
   }) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  direction?: "horizontal" | "vertical"; // Layout direction prop
 }
 
 const MatchResultModal: React.FC<MatchResultModalProps> = ({
@@ -35,6 +36,7 @@ const MatchResultModal: React.FC<MatchResultModalProps> = ({
   onConfirm,
   onCancel,
   isLoading = false,
+  direction = "horizontal", // Default to horizontal like BadmintonCourt
 }) => {
   const t = useTranslations("SessionDetail");
 
@@ -60,9 +62,50 @@ const MatchResultModal: React.FC<MatchResultModalProps> = ({
 
   if (!isOpen || !match) return null;
 
-  // Group players into pairs
-  const pair1 = match.players.slice(0, 2);
-  const pair2 = match.players.slice(2, 4);
+  // Group players into pairs using same logic as BadmintonCourt
+  // Apply visual mapping based on direction prop, then determine pairs by column
+
+  const playersWithPair = match.players.map((matchPlayer) => {
+    // Apply same visual mapping as BadmintonCourt
+    let visualMapping: number[];
+    if (direction === "horizontal") {
+      // Horizontal layout: API position 0→0, 1→2, 2→1, 3→3
+      visualMapping = [0, 2, 1, 3];
+    } else {
+      // Vertical layout: API position 0→0, 1→1, 2→2, 3→3
+      visualMapping = [0, 1, 2, 3];
+    }
+
+    // Use courtPosition instead of position
+    const courtPosition =
+      matchPlayer.player.courtPosition ?? matchPlayer.position;
+    const visualIndex = visualMapping[courtPosition] ?? courtPosition;
+
+    // Determine pair by column: left column (0,2) = pair 1, right column (1,3) = pair 2
+    const pairNumber = visualIndex % 2 === 0 ? 1 : 2;
+
+    return {
+      ...matchPlayer,
+      pairNumber,
+    };
+  });
+
+  const pair1 = playersWithPair
+    .filter((p) => p.pairNumber === 1)
+    .sort((a, b) => {
+      // Sort by courtPosition to maintain top/bottom order within each pair
+      const posA = a.player.courtPosition ?? a.position;
+      const posB = b.player.courtPosition ?? b.position;
+      return posA - posB;
+    });
+  const pair2 = playersWithPair
+    .filter((p) => p.pairNumber === 2)
+    .sort((a, b) => {
+      // Sort by courtPosition to maintain top/bottom order within each pair
+      const posA = a.player.courtPosition ?? a.position;
+      const posB = b.player.courtPosition ?? b.position;
+      return posA - posB;
+    });
 
   const handleConfirm = () => {
     const result: {
@@ -277,7 +320,9 @@ const MatchResultModal: React.FC<MatchResultModalProps> = ({
                       {pair1.map((player) => (
                         <VStack key={player.id} gap={0}>
                           <Text fontSize="xs" fontWeight="medium">
-                            #{player.player.playerNumber} - {player.player.name || `Player ${player.player.playerNumber}`}
+                            #{player.player.playerNumber} -{" "}
+                            {player.player.name ||
+                              `Player ${player.player.playerNumber}`}
                           </Text>
                         </VStack>
                       ))}
@@ -342,7 +387,9 @@ const MatchResultModal: React.FC<MatchResultModalProps> = ({
                       {pair2.map((player) => (
                         <VStack key={player.id} gap={0}>
                           <Text fontSize="xs" fontWeight="medium">
-                            #{player.player.playerNumber} - {player.player.name || `Player ${player.player.playerNumber}`}
+                            #{player.player.playerNumber} -{" "}
+                            {player.player.name ||
+                              `Player ${player.player.playerNumber}`}
                           </Text>
                         </VStack>
                       ))}

@@ -25,7 +25,8 @@ function formatWaitTime(waitTimeInMinutes?: number): string {
 function getPairColor(player?: BadmintonCourtPlayer, playerIndex?: number) {
   let pairNumber = player?.pairNumber;
   if (!pairNumber && playerIndex !== undefined) {
-    pairNumber = playerIndex < 2 ? 1 : 2;
+    // Column-based pairing: left column (0,2) = pair 1, right column (1,3) = pair 2
+    pairNumber = playerIndex % 2 === 0 ? 1 : 2;
   } else if (!pairNumber) {
     pairNumber = 1;
   }
@@ -97,7 +98,8 @@ export default function PlayerTooltip({
   // Calculate player's pair info
   let pairNumber = player.pairNumber;
   if (!pairNumber) {
-    pairNumber = index < 2 ? 1 : 2;
+    // Column-based pairing: left column (0,2) = pair 1, right column (1,3) = pair 2
+    pairNumber = index % 2 === 0 ? 1 : 2;
   }
   const pairColors = getPairColor(player, index);
 

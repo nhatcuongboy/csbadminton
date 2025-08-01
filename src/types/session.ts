@@ -17,6 +17,8 @@ export interface Player {
   confirmedByPlayer: boolean;
   requireConfirmInfo?: boolean;
   phone?: string;
+  position?: number; // Position when assigned to court (0-3) - legacy field
+  courtPosition?: number; // New field: Position on court (0-3), null when not on court
 }
 
 export interface Court {

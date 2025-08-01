@@ -30,7 +30,8 @@ function getGenderIcon(gender?: string) {
 function getPairColor(player?: BadmintonCourtPlayer, playerIndex?: number) {
   let pairNumber = player?.pairNumber;
   if (!pairNumber && playerIndex !== undefined) {
-    pairNumber = playerIndex < 2 ? 1 : 2;
+    // Column-based pairing: left column (0,2) = pair 1, right column (1,3) = pair 2
+    pairNumber = playerIndex % 2 === 0 ? 1 : 2;
   } else if (!pairNumber) {
     pairNumber = 1;
   }
@@ -50,7 +51,7 @@ interface CourtPlayerProps {
   mode: "manage" | "view" | "selection";
   isClicked: boolean;
   onPlayerClick: (id: string | null) => void;
-  onRemovePlayer?: (id: string) => void; // Add optional remove callback
+  onRemovePlayer?: (position: number) => void; // Remove callback with position
 }
 
 export default function CourtPlayer({
@@ -70,41 +71,22 @@ export default function CourtPlayer({
     return null;
   }
 
-  // Calculate player position
-  let pairNumber = player.pairNumber;
-  if (!pairNumber) {
-    pairNumber = index < 2 ? 1 : 2;
-  }
-
-  const playersInPair = players.filter((p, i) => {
-    if (!p) return false;
-    const playerPairNumber = p.pairNumber || (i < 2 ? 1 : 2);
-    return playerPairNumber === pairNumber;
-  });
-  const indexInPair = playersInPair.findIndex((p) => p?.id === player.id);
-
-  let positionIndex;
-  if (pairNumber === 1) {
-    positionIndex = indexInPair === 0 ? 0 : 2;
-  } else {
-    positionIndex = indexInPair === 0 ? 1 : 3;
-  }
-
-  if (positionIndex < 0 || positionIndex > 3) {
-    console.warn(
-      `Invalid position index ${positionIndex} for player ${player.id}, using fallback`
-    );
-    positionIndex = index % 4;
+  // In selection mode, always use index as position
+  let positionIndex = index;
+  // For other modes, simply use the index (since BadmintonCourt already handles the mapping)
+  if (mode !== "selection") {
+    positionIndex = index;
   }
 
   // Calculate positions: 4 centers of 4 equal parts of the court
   // Each part: width 50%, height 50%
-  // Centers: (25%,25%), (25%,75%), (75%,25%), (75%,75%)
+  // Centers: (25%,25%), (75%,25%), (25%,75%), (75%,75%)
+  // index 0: top-left, 1: top-right, 2: bottom-left, 3: bottom-right
   const positions = [
-    { top: "30%", left: "25%" }, // Top-left
-    { top: "30%", left: "75%" }, // Top-right
-    { top: "72%", left: "25%" }, // Bottom-left
-    { top: "72%", left: "75%" }, // Bottom-right
+    { top: "30%", left: "25%" }, // Top-left (1)
+    { top: "30%", left: "75%" }, // Top-right (2)
+    { top: "72%", left: "25%" }, // Bottom-left (3)
+    { top: "72%", left: "75%" }, // Bottom-right (4)
   ];
   const position = positions[positionIndex] || positions[0];
   const pairColors = getPairColor(player, index);
@@ -198,8 +180,8 @@ export default function CourtPlayer({
           >
             <Box as={GenderIcon} boxSize="14px" />
           </Box>
-          {/* Current player effect */}
-          {player.isCurrentPlayer && (
+          {/* Current player effect - hidden in selection mode */}
+          {player.isCurrentPlayer && mode !== "selection" && (
             <>
               <Box
                 position="absolute"
@@ -290,7 +272,7 @@ export default function CourtPlayer({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              onRemovePlayer?.(player.id);
+              onRemovePlayer?.(index);
             }}
           >
             <Box as={X} boxSize="12px" />

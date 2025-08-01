@@ -61,6 +61,7 @@ model Player {
   matchesPlayed     Int           @default(0)
   status            PlayerStatus  @default(WAITING)
   currentCourtId    String?
+  courtPosition     Int?          // Position on court (0-3), null when not on court
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   matchPlayers      MatchPlayer[]

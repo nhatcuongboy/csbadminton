@@ -66,6 +66,7 @@ export async function POST(
             data: {
               status: "WAITING",
               currentCourtId: null, // Remove court assignment
+              courtPosition: null, // Clear court position
             },
           });
         });

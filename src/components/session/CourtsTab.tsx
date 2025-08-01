@@ -64,6 +64,7 @@ interface CourtsTabProps {
   onDataRefresh?: () => void;
   isRefreshing?: boolean;
   formatWaitTime: (waitTimeInMinutes: number) => string;
+  direction?: "horizontal" | "vertical"; // Layout direction for court display
 }
 
 const CourtsTab: React.FC<
@@ -99,6 +100,7 @@ const CourtsTab: React.FC<
   onDataRefresh,
   isRefreshing = false,
   formatWaitTime,
+  direction = "horizontal", // Default to horizontal layout
 }) => {
   const t = useTranslations("SessionDetail");
   const [loadingEndMatchId, setLoadingEndMatchId] = React.useState<
@@ -199,15 +201,44 @@ const CourtsTab: React.FC<
 
   // Select players for court (used by both auto-assign and manual selection)
   const handleChoosePlayersForCourt = async (
-    playerIds: string[],
+    playersData: string[] | Array<{ playerId: string; position: number }>,
     courtId: string
   ) => {
     try {
       setLoadingConfirmAutoAssign(true);
       setConfirmingManualMatch(true);
 
-      // Select the players for the specified court
-      await CourtService.selectPlayers(courtId, playerIds);
+      // Handle different data formats
+      let playerIds: string[];
+      let playersWithPosition:
+        | Array<{ playerId: string; position: number }>
+        | undefined;
+
+      if (Array.isArray(playersData) && playersData.length > 0) {
+        if (typeof playersData[0] === "string") {
+          // Old format: array of player IDs
+          playerIds = playersData as string[];
+          playersWithPosition = undefined;
+        } else {
+          // New format: array of objects with playerId and position
+          const playersWithPos = playersData as Array<{
+            playerId: string;
+            position: number;
+          }>;
+          // Sort by position to ensure correct order
+          const sortedPlayers = playersWithPos.sort(
+            (a, b) => a.position - b.position
+          );
+          playerIds = sortedPlayers.map((p) => p.playerId);
+          playersWithPosition = sortedPlayers;
+        }
+      } else {
+        playerIds = [];
+        playersWithPosition = undefined;
+      }
+
+      // Select the players for the specified court with position info
+      await CourtService.selectPlayers(courtId, playerIds, playersWithPosition);
 
       // Close modals and reset state
       setAutoAssignModalOpen(false);
@@ -326,15 +357,14 @@ const CourtsTab: React.FC<
 
   return (
     <>
-      <Collapsible.Root
-        open={isCourtsSectionOpen}
-        onOpenChange={(details) => setIsCourtsSectionOpen(details.open)}
-      >
-        <Collapsible.Trigger paddingY="3" width="100%">
+      {/* Temporarily disabled Collapsible functionality */}
+      <Box>
+        <Box paddingY="3" width="100%">
           <Flex justifyContent="space-between" alignItems="center">
             <HStack gap={2} alignItems="center">
               <Heading size="md">{t("courtsTab.activeCourts")}</Heading>
-              <Box
+              {/* Disabled chevron icon */}
+              {/* <Box
                 as={ChevronDown}
                 boxSize={5}
                 color="gray.500"
@@ -342,14 +372,14 @@ const CourtsTab: React.FC<
                   isCourtsSectionOpen ? "rotate(180deg)" : "rotate(0deg)"
                 }
                 transition="transform 0.2s ease-in-out"
-              />
+              /> */}
             </HStack>
             <HStack gap={2}>
               {session.status === "IN_PROGRESS" && <HStack gap={2}></HStack>}
             </HStack>
           </Flex>
-        </Collapsible.Trigger>
-        <Collapsible.Content>
+        </Box>
+        <Box>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} mt={4} p={1}>
             {session.courts.map((court: Court) => {
               const currentMatch = getCurrentMatch(court.id);
@@ -492,12 +522,11 @@ const CourtsTab: React.FC<
                             court.courtNumber
                           )}
                           width="100%"
-                          //   height="180px"
                           showTimeInCenter={true}
                           isLoading={isRefreshing}
                           status={court.status}
                           mode={mode}
-                          // courtColor="#9fbcba"
+                          direction={direction}
                         />
                         {/* Action buttons for courts with players */}
                         <VStack gap={2} pb={4} width="100%">
@@ -626,6 +655,7 @@ const CourtsTab: React.FC<
                           showTimeInCenter={false}
                           isLoading={isRefreshing}
                           status="EMPTY"
+                          direction={direction}
                         />
                         {session.status === "IN_PROGRESS" &&
                         mode === "manage" ? (
@@ -681,8 +711,8 @@ const CourtsTab: React.FC<
               );
             })}
           </SimpleGrid>
-        </Collapsible.Content>
-      </Collapsible.Root>
+        </Box>
+      </Box>
 
       {/* Auto Assign Match Modal */}
       <MatchPreviewModal
@@ -710,16 +740,16 @@ const CourtsTab: React.FC<
         waitingPlayers={waitingPlayers}
         selectedPlayers={manualSelectedPlayers}
         onPlayerToggle={handleManualPlayerToggle}
-        onConfirm={() => {
+        onConfirm={(playersWithPosition) => {
           if (selectedManualCourt) {
             handleChoosePlayersForCourt(
-              manualSelectedPlayers,
+              playersWithPosition,
               selectedManualCourt.id
             );
           }
         }}
         onCancel={handleCancelManualSelection}
-        isLoading={confirmingManualMatch} // Pass loading state for manual selection
+        isLoading={confirmingManualMatch}
         formatWaitTime={(minutes) => {
           const hours = Math.floor(minutes / 60);
           const mins = minutes % 60;
@@ -737,6 +767,7 @@ const CourtsTab: React.FC<
         onConfirm={handleMatchResultSubmit}
         onCancel={handleMatchResultCancel}
         isLoading={loadingEndMatchId === selectedMatch?.id}
+        direction={direction}
       />
 
       {/* Waiting Players Grid */}

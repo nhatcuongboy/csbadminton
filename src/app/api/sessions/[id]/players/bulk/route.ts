@@ -10,7 +10,15 @@ interface BulkPlayerData {
   playerNumber: number;
   name?: string;
   gender?: "MALE" | "FEMALE";
-  level?: "Y_MINUS" | "Y" | "Y_PLUS" | "TBY" | "TB_MINUS" | "TB" | "TB_PLUS" | "K";
+  level?:
+    | "Y_MINUS"
+    | "Y"
+    | "Y_PLUS"
+    | "TBY"
+    | "TB_MINUS"
+    | "TB"
+    | "TB_PLUS"
+    | "K";
   levelDescription?: string;
   phone?: string;
   requireConfirmInfo?: boolean;
@@ -21,9 +29,20 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<SessionParams> }
 ) {
+  let body: any;
+  let sessionId: string = "";
+
   try {
-    const { id: sessionId } = await params;
-    const body = await request.json();
+    const resolvedParams = await params;
+    sessionId = resolvedParams.id;
+    body = await request.json();
+
+    console.log("Bulk players request:", {
+      sessionId,
+      bodyType: typeof body,
+      isArray: Array.isArray(body),
+      playersCount: Array.isArray(body) ? body.length : "Not an array",
+    });
 
     if (!Array.isArray(body)) {
       return errorResponse("Body must be an array of player data", 400);
@@ -40,8 +59,16 @@ export async function POST(
     });
 
     if (!session) {
+      console.log("Session not found:", sessionId);
       return errorResponse("Session does not exist", 404);
     }
+
+    console.log("Session found:", {
+      id: session.id,
+      numberOfCourts: session.numberOfCourts,
+      maxPlayersPerCourt: session.maxPlayersPerCourt,
+      existingPlayersCount: session.players.length,
+    });
 
     // Calculate max players allowed
     const maxPlayers = session.numberOfCourts * session.maxPlayersPerCourt;
@@ -65,7 +92,9 @@ export async function POST(
       // Validate playerNumber range
       if (playerData.playerNumber < 1 || playerData.playerNumber > maxPlayers) {
         errors.push(
-          `Player ${index + 1}: playerNumber must be between 1 and ${maxPlayers}`
+          `Player ${
+            index + 1
+          }: playerNumber must be between 1 and ${maxPlayers}`
         );
         continue;
       }
@@ -92,9 +121,16 @@ export async function POST(
       // Validate level
       if (
         playerData.level &&
-        !["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"].includes(
-          playerData.level
-        )
+        ![
+          "Y_MINUS",
+          "Y",
+          "Y_PLUS",
+          "TBY",
+          "TB_MINUS",
+          "TB",
+          "TB_PLUS",
+          "K",
+        ].includes(playerData.level)
       ) {
         errors.push(`Player ${index + 1}: level is not valid`);
       }
@@ -106,8 +142,11 @@ export async function POST(
     }
 
     if (errors.length > 0) {
+      console.log("Validation errors:", errors);
       return errorResponse(`Invalid data: ${errors.join(", ")}`, 400);
     }
+
+    console.log("Validation passed, checking for existing players...");
 
     // Check for existing players with same playerNumber
     const existingPlayers = await prisma.player.findMany({
@@ -119,18 +158,30 @@ export async function POST(
       },
     });
 
+    console.log("Existing players check:", {
+      requestedNumbers: Array.from(playerNumbers),
+      existingPlayers: existingPlayers.map((p) => ({
+        id: p.id,
+        playerNumber: p.playerNumber,
+      })),
+    });
+
     if (existingPlayers.length > 0) {
       const conflictNumbers = existingPlayers
         .map((p: any) => p.playerNumber)
         .join(", ");
+      console.log("Player number conflicts:", conflictNumbers);
       return errorResponse(
         `The following playerNumbers already exist: ${conflictNumbers}`,
         409
       );
     }
 
+    console.log("No conflicts found, creating players...");
+
     // Create players in bulk
-    const createPromises = playersData.map((playerData) => {
+    const createPromises = playersData.map((playerData, index) => {
+      console.log(`Creating player ${index + 1}:`, playerData);
       return prisma.player.create({
         data: {
           sessionId,
@@ -148,7 +199,9 @@ export async function POST(
       });
     });
 
+    console.log("Executing bulk create...");
     const createdPlayers = await Promise.all(createPromises);
+    console.log("Players created successfully:", createdPlayers.length);
 
     // Get updated session with all players
     const updatedSession = await prisma.session.findUnique({
@@ -174,6 +227,15 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error creating bulk players:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      sessionId: typeof sessionId !== "undefined" ? sessionId : "undefined",
+      playersCount:
+        typeof body !== "undefined" && Array.isArray(body)
+          ? body.length
+          : "Not an array or undefined",
+    });
     return errorResponse("An error occurred while creating players", 500);
   }
 }

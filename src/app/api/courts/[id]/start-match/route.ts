@@ -64,12 +64,12 @@ export async function POST(
         // Prepare batch updates for players
         const playerUpdatePromises = court.currentPlayers.map(
           async (player, i) => {
-            // Create match player
+            // Create match player with position based on order (0-based index from frontend)
             await tx.matchPlayer.create({
               data: {
                 matchId: match.id,
                 playerId: player.id,
-                position: i + 1, // Position 1-4
+                position: i, // Position 0-3 (matching frontend position system)
               },
             });
 

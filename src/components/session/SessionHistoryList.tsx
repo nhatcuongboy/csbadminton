@@ -62,10 +62,33 @@ type HistoryMatch = {
   winningPair?: 1 | 2;
 };
 
-const HistoryMatchCard = ({ match }: { match: HistoryMatch }) => {
-  // Assume match.players is an array of 4 player names, order: [A1, A2, B1, B2]
-  const pair1 = match.players.slice(0, 2);
-  const pair2 = match.players.slice(2, 4);
+const HistoryMatchCard = ({ 
+  match, 
+  direction = "horizontal" 
+}: { 
+  match: HistoryMatch; 
+  direction?: "horizontal" | "vertical";
+}) => {
+  // For the pairing logic, we need to consider the courtPosition values and direction
+  // According to the user: with direction="horizontal" (default):
+  // #8 (courtPosition=0) pairs with #14 (courtPosition=1) = Pair 1
+  // #7 (courtPosition=2) pairs with #11 (courtPosition=3) = Pair 2
+  
+  // The match.players array should be sorted by courtPosition for proper pairing
+  // We'll assume the players are already properly ordered based on courtPosition
+  
+  let pair1: string[], pair2: string[];
+  
+  if (direction === "horizontal") {
+    // Horizontal layout: courtPosition 0,1 = Pair 1, courtPosition 2,3 = Pair 2
+    pair1 = match.players.slice(0, 2); // courtPosition 0, 1
+    pair2 = match.players.slice(2, 4); // courtPosition 2, 3
+  } else {
+    // Vertical layout: courtPosition 0,2 = Pair 1, courtPosition 1,3 = Pair 2
+    // This matches the visual mapping from BadmintonCourt.tsx
+    pair1 = [match.players[0], match.players[2]]; // courtPosition 0, 2
+    pair2 = [match.players[1], match.players[3]]; // courtPosition 1, 3
+  }
 
   // Determine which pair is the winner
   const winningPair = match.winningPair;
@@ -203,10 +226,12 @@ const HistoryMatchCard = ({ match }: { match: HistoryMatch }) => {
 
 interface SessionHistoryListProps {
   sessionId: string; // Optional prop to filter by session
+  direction?: "horizontal" | "vertical"; // Layout direction for court display
 }
 
 export default function SessionHistoryList({
   sessionId,
+  direction = "horizontal", // Default to horizontal layout
 }: SessionHistoryListProps) {
   const [matches, setMatches] = useState<HistoryMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -286,14 +311,19 @@ export default function SessionHistoryList({
           } else if (matchData.courtId) {
             courtName = `Court ${matchData.courtId}`;
           }
-          // Get player names (match.players is array of { player: { name } })
-          const playerNames = Array.isArray(matchData.players)
-            ? matchData.players.map((mp: any) => mp.player?.name || "?")
-            : [];
+          // Get player names sorted by courtPosition
+          let playerNames: string[] = [];
+          if (Array.isArray(matchData.players)) {
+            // Sort players by courtPosition to ensure correct pairing
+            const sortedMatchPlayers = [...matchData.players].sort((a, b) => {
+              const posA = a.player?.courtPosition ?? a.position ?? 0;
+              const posB = b.player?.courtPosition ?? b.position ?? 0;
+              return posA - posB;
+            });
+            playerNames = sortedMatchPlayers.map((mp: any) => mp.player?.name || "?");
+          }
 
-          // Log the match object to check the structure
-          console.log("Match data:", matchData);
-
+          
           // Extract match results using the new utility function
           let scores;
           let winningPair;
@@ -302,7 +332,7 @@ export default function SessionHistoryList({
           const playersWithPosition = Array.isArray(matchData.players)
             ? matchData.players.map((mp: any, index: number) => ({
                 playerId: mp.player?.id || mp.playerId,
-                position: mp.position || index + 1,
+                position: mp.player?.courtPosition ?? mp.position ?? index,
               }))
             : [];
 
@@ -544,7 +574,11 @@ export default function SessionHistoryList({
           gap={6}
         >
           {matches.map((match) => (
-            <HistoryMatchCard key={match.id} match={match} />
+            <HistoryMatchCard 
+              key={match.id} 
+              match={match} 
+              direction={direction}
+            />
           ))}
         </Grid>
       )}

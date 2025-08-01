@@ -549,6 +549,7 @@
       "selectWinnerInstruction": "Click on a team to select the winner (optional if draw)"
     },
     "startMatch": "Start Match",
+    "selectPlayersForCourt": "Select Players for Court",
     "playersTab": {
       "players": "Players",
       "all": "All",

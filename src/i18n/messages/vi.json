@@ -549,6 +549,7 @@
       "selectWinnerInstruction": "Nhấn vào một đội để chọn đội thắng (tùy chọn nếu hòa)"
     },
     "startMatch": "Bắt đầu",
+    "selectPlayersForCourt": "Chọn người chơi cho sân",
     "playersTab": {
       "players": "Người chơi",
       "all": "Tất cả",

@@ -1,21 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Flex,
   Heading,
   Text,
-  VStack,
-  HStack,
-  Badge,
-  SimpleGrid,
 } from "@chakra-ui/react";
-import { X, Check, Users } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
-import { getLevelLabel } from "@/utils/level-mapping";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
-import MatchPreviewModal from "./MatchPreviewModal";
 import { useTranslations } from "next-intl";
 
 interface ManualSelectPlayersModalProps {
@@ -24,7 +18,7 @@ interface ManualSelectPlayersModalProps {
   waitingPlayers: Player[];
   selectedPlayers: string[];
   onPlayerToggle: (playerId: string) => void;
-  onConfirm: () => void;
+  onConfirm: (playersWithPosition: Array<{playerId: string, position: number}>) => void;
   onCancel: () => void;
   formatWaitTime: (waitTimeInMinutes: number) => string;
   isLoading?: boolean; // Add loading prop
@@ -48,57 +42,75 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
 }) => {
   const t = useTranslations("SessionDetail");
   const [showPreview, setShowPreview] = useState(false);
+  const [currentPlayerPosition, setCurrentPlayerPosition] = useState(0);
   // Remove local isLoading state since we're using the prop
   // const [isLoading, setIsLoading] = useState(false);
 
-  if (!isOpen || !court) return null;
-
-  // Group selected players into pairs for court preview
-  const getSelectedPlayersData = () => {
-    return selectedPlayers
-      .map((playerId, index) => {
+  // Create selectedPositions array for BadmintonCourt
+  const selectedPositions = useMemo(() => {
+    const positions: (Player | undefined)[] = [undefined, undefined, undefined, undefined];
+    
+    // Fill positions sequentially based on selectedPlayers order
+    selectedPlayers.forEach((playerId, index) => {
+      if (index < 4) {
         const player = waitingPlayers.find((p) => p.id === playerId);
         if (player) {
-          // Assign pair numbers: first 2 players = pair 1, next 2 = pair 2
-          const pairNumber = Math.floor(index / 2) + 1;
-          return {
-            ...player,
-            pairNumber,
-          };
+          positions[index] = player;
         }
-        return null;
-      })
-      .filter(Boolean) as (Player & { pairNumber: number })[];
-  };
-
-  // Get pair assignments for display
-  const getPairAssignments = () => {
-    const selectedPlayersData = getSelectedPlayersData();
-    const pairs: { pair1: Player[]; pair2: Player[] } = {
-      pair1: [],
-      pair2: [],
-    };
-
-    selectedPlayersData.forEach((player, index) => {
-      if (index < 2) {
-        pairs.pair1.push(player);
-      } else {
-        pairs.pair2.push(player);
       }
     });
+    
+    return positions;
+  }, [selectedPlayers, waitingPlayers]);
 
-    return pairs;
+  // Update current position to next empty slot
+  const updateCurrentPosition = () => {
+    // If all 4 positions are filled, don't change current position
+    if (selectedPlayers.length >= 4) {
+      return;
+    }
+    
+    // Find first empty position
+    for (let i = 0; i < 4; i++) {
+      if (!selectedPositions[i]) {
+        setCurrentPlayerPosition(i);
+        return;
+      }
+    }
+    
+    // If somehow all positions are filled, reset to 0
+    setCurrentPlayerPosition(0);
   };
 
-  const handleConfirmSelection = () => {
-    console.log(selectedPlayers);
-    if (selectedPlayers.length === 4) {
-      onConfirm();
+  // Handle removing player from specific position
+  const handleRemoveFromPosition = (position: number) => {
+    const playerAtPosition = selectedPositions[position];
+    if (playerAtPosition) {
+      onPlayerToggle(playerAtPosition.id);
+      setCurrentPlayerPosition(position);
     }
   };
 
-  const pairs = getPairAssignments();
-  const selectedPlayersData = getSelectedPlayersData();
+  // Update current position when selectedPlayers changes
+  useEffect(() => {
+    updateCurrentPosition();
+  }, [selectedPlayers, selectedPositions]);
+
+  // Early return after all hooks have been called
+  if (!isOpen || !court) return null;
+
+  const handleConfirmSelection = () => {
+    // Send players with their visual position info
+    if (selectedPlayers.length === 4) {
+      const playersWithPosition = selectedPlayers.map((playerId, index) => ({
+        playerId,
+        position: index // 0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right
+      }));
+      if (typeof onConfirm === "function") {
+        onConfirm(playersWithPosition);
+      }
+    }
+  };
 
   return (
     <>
@@ -152,160 +164,27 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
 
           <Box flexShrink={0} p={4}>
             {/* Court Preview and Selected Players Section */}
-            {/* Selected Players Summary */}
-            <Box flex={{ base: "1", lg: "0 0 280px" }} minW="0">
+            <Box flex={{ base: "1", lg: "0 0 400px" }} minW="0">
               <Text fontSize="sm" fontWeight="medium" mb={3}>
                 {t("courtsTab.selectedPlayersCount", {
                   count: selectedPlayers.length,
                 })}
               </Text>
 
-              {/* 2x2 Grid for Selected Players */}
-              <SimpleGrid columns={2} gap={2} maxW="280px">
-                {/* Create 4 slots for players */}
-                {Array.from({ length: 4 }, (_, index) => {
-                  const player = selectedPlayersData[index];
-                  const pairNumber = Math.floor(index / 2) + 1;
-                  const positionInPair = (index % 2) + 1;
-                  const pairColor = pairNumber === 1 ? "blue" : "orange";
-
-                  if (player) {
-                    // Filled slot with player
-                    return (
-                      <Box
-                        key={player.id}
-                        borderWidth="2px"
-                        borderColor={`${pairColor}.300`}
-                        borderRadius="md"
-                        p={3}
-                        bg={`${pairColor}.50`}
-                        cursor="pointer"
-                        onClick={() => onPlayerToggle(player.id)}
-                        _hover={{ bg: `${pairColor}.100` }}
-                        minH="100px"
-                        boxShadow="sm"
-                        display="flex"
-                        flexDirection="column"
-                        justifyContent="center"
-                        alignItems="center"
-                        position="relative"
-                      >
-                        {/* Remove button */}
-                        <Box
-                          position="absolute"
-                          top={1}
-                          right={1}
-                          as="button"
-                          bg={`${pairColor}.200`}
-                          color={`${pairColor}.700`}
-                          fontSize="sm"
-                          fontWeight="bold"
-                          _hover={{
-                            bg: `${pairColor}.300`,
-                            color: `${pairColor}.900`,
-                          }}
-                          w={5}
-                          h={5}
-                          borderRadius="full"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          boxShadow="sm"
-                        >
-                          ×
-                        </Box>
-
-                        {/* Player info */}
-                        <Text
-                          fontSize="md"
-                          fontWeight="bold"
-                          textAlign="center"
-                          mb={1}
-                        >
-                          #{player.playerNumber}
-                        </Text>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          textAlign="center"
-                          color="gray.800"
-                          mb={1}
-                          maxW="100%"
-                          overflow="hidden"
-                        >
-                          {player.name ||
-                            t("courtsTab.playerNumber", {
-                              number: player.playerNumber,
-                            })}
-                        </Text>
-                        <Badge
-                          colorScheme={pairColor}
-                          mb={1}
-                          fontSize="xs"
-                          px={2}
-                          py={0.5}
-                          borderRadius="md"
-                        >
-                          P{pairNumber}-{positionInPair}
-                        </Badge>
-                        {player.level && (
-                          <Badge
-                            colorScheme="green"
-                            fontSize="xs"
-                            px={2}
-                            variant="outline"
-                          >
-                            {getLevelLabel(player.level)}
-                          </Badge>
-                        )}
-                      </Box>
-                    );
-                  } else {
-                    // Empty slot
-                    return (
-                      <Box
-                        key={`empty-${index}`}
-                        borderWidth="2px"
-                        borderStyle="dashed"
-                        borderColor={`${pairColor}.200`}
-                        borderRadius="md"
-                        p={3}
-                        textAlign="center"
-                        minH="100px"
-                        display="flex"
-                        flexDirection="column"
-                        justifyContent="center"
-                        alignItems="center"
-                        bg="gray.50"
-                      >
-                        <Badge
-                          variant="subtle"
-                          colorScheme={pairColor}
-                          mb={2}
-                          fontSize="xs"
-                          px={2}
-                          py={0.5}
-                        >
-                          {t("courtsTab.pairNumber", { number: pairNumber })}
-                        </Badge>
-                        <Text
-                          fontSize="xs"
-                          fontWeight="medium"
-                          color="gray.500"
-                          mb={1}
-                        >
-                          {t("courtsTab.positionNumber", {
-                            number: positionInPair,
-                          })}
-                        </Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          {t("courtsTab.selectPlayer")}
-                        </Text>
-                      </Box>
-                    );
-                  }
-                })}
-              </SimpleGrid>
+              {/* BadmintonCourt for Selected Players */}
+              <Box maxW="400px" mx="auto">
+                <BadmintonCourt
+                  players={[]} // Empty array since we use selectedPositions
+                  isActive={false}
+                  mode="selection"
+                  selectedPositions={selectedPositions}
+                  currentPlayerPosition={currentPlayerPosition}
+                  onPlayerRemove={handleRemoveFromPosition}
+                  courtName={getCourtDisplayName(court.courtName, court.courtNumber)}
+                  width="100%"
+                  showTimeInCenter={false}
+                />
+              </Box>
             </Box>
           </Box>
 

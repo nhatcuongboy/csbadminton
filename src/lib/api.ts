@@ -88,6 +88,8 @@ export interface Player {
   requireConfirmInfo: boolean;
   phone?: string;
   desire?: string;
+  position?: number; // Position when assigned to court (0-3) - legacy field
+  courtPosition?: number; // New field: Position on court (0-3), null when not on court
 }
 
 // Court types
@@ -497,13 +499,21 @@ export const CourtService = {
   // Select players for court
   selectPlayers: async (
     courtId: string,
-    playerIds: string[]
+    playerIds: string[],
+    playersWithPosition?: Array<{playerId: string, position: number}>
   ): Promise<Court> => {
+    const requestBody: any = {
+      playerIds,
+    };
+
+    // If position info is provided, include it in the request
+    if (playersWithPosition && playersWithPosition.length > 0) {
+      requestBody.players = playersWithPosition;
+    }
+
     const response = await api.post<ApiResponse<Court>>(
       `/courts/${courtId}/select-players`,
-      {
-        playerIds,
-      }
+      requestBody
     );
     // toast.success("Players selected successfully");
     return response.data.data!;

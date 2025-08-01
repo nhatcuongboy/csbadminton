@@ -70,8 +70,9 @@ export async function GET(
             if (scores && typeof scores === "object") {
               // If player is in pair1, use pair1Score, else pair2Score
               const mp = match.players.find((mp) => mp.playerId === player.id);
-              if (mp && mp.position && scores.pair1Score !== undefined && scores.pair2Score !== undefined) {
-                const isPair1 = mp.position === 1 || mp.position === 2;
+              if (mp && mp.position !== undefined && scores.pair1Score !== undefined && scores.pair2Score !== undefined) {
+                // Position 0,2 = pair1 (left column), Position 1,3 = pair2 (right column)
+                const isPair1 = mp.position === 0 || mp.position === 2;
                 totalScore += isPair1 ? scores.pair1Score : scores.pair2Score;
                 scoreCount++;
               }

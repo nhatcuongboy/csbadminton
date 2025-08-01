@@ -259,7 +259,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             <BadmintonCourt
               players={allPlayers.map((player: Player, index: number) => ({
                 ...player, // Include all properties from the original player
-                pairNumber: index < 2 ? 1 : 2, // Assign pair numbers based on index
+                pairNumber: index % 2 === 0 ? 1 : 2, // Column-based pairing: left (0,2) = pair 1, right (1,3) = pair 2
                 isCurrentPlayer: false,
               }))}
               isActive={true}

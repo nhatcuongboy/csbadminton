@@ -83,13 +83,13 @@ export async function POST(
           },
         });
 
-        // 2. Create match players (positions 1-4) in parallel
+        // 2. Create match players (positions 0-3) in parallel
         const matchPlayerPromises = playerIds.map((playerId, index) => {
           return tx.matchPlayer.create({
             data: {
               matchId: newMatch.id,
               playerId: playerId,
-              position: index + 1,
+              position: index, // Position 0-3 (matching frontend position system)
             },
           });
         });
