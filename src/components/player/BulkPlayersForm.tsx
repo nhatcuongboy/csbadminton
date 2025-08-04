@@ -144,10 +144,10 @@ export default function BulkPlayersForm({
 
       // Validate gender and level values
       const invalidGender = players.some(
-        (p) => p.gender && !["MALE", "FEMALE"].includes(p.gender)
+        (p) => p.gender && !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
       );
       if (invalidGender) {
-        setErrorMessage("Gender must be either Male or Female");
+        setErrorMessage("Gender must be one of: Male, Female, Other, or Prefer not to say");
         setIsLoading(false);
         return;
       }
@@ -260,7 +260,7 @@ export default function BulkPlayersForm({
 
       // Validate gender and level in CSV data
       const invalidGender = parsedPlayers.some(
-        (p) => p.gender && !["MALE", "FEMALE"].includes(p.gender)
+        (p) => p.gender && !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
       );
 
       const validLevels = ["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"];
@@ -281,7 +281,7 @@ export default function BulkPlayersForm({
         const fixedPlayers = parsedPlayers.map((p) => ({
           ...p,
           gender:
-            p.gender && ["MALE", "FEMALE"].includes(p.gender)
+            p.gender && ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
               ? p.gender
               : undefined,
           level: p.level && validLevels.includes(p.level) ? p.level : undefined,
@@ -606,7 +606,7 @@ export default function BulkPlayersForm({
         </Flex>
         <Box mt={2}>
           <Text fontSize="xs" color="gray.600">
-            <strong>Valid gender values:</strong> MALE, FEMALE
+            <strong>Valid gender values:</strong> MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY
           </Text>
           <Text fontSize="xs" color="gray.600">
             <strong>Valid level values:</strong> Y_MINUS, Y, Y_PLUS, TBY, TB_MINUS, TB,

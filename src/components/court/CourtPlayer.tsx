@@ -3,7 +3,7 @@
 import { Player } from "@/types/session";
 import { getLevelLabel } from "@/utils/level-mapping";
 import { Box, Text } from "@chakra-ui/react";
-import { Mars, User, Venus, X } from "lucide-react";
+import { Mars, User, Venus, X, HelpCircle, UserX } from "lucide-react";
 import { useRef } from "react";
 import PlayerTooltip from "./PlayerTooltip";
 
@@ -18,12 +18,16 @@ interface BadmintonCourtPlayer extends Player {
 function getGenderColor(gender?: string): string {
   if (gender === "MALE") return "#3182ce";
   if (gender === "FEMALE") return "#d53f8c";
+  if (gender === "OTHER") return "#805ad5";
+  if (gender === "PREFER_NOT_TO_SAY") return "#718096";
   return "#718096";
 }
 
 function getGenderIcon(gender?: string) {
   if (gender === "MALE") return Mars;
   if (gender === "FEMALE") return Venus;
+  if (gender === "OTHER") return User;
+  if (gender === "PREFER_NOT_TO_SAY") return HelpCircle;
   return User;
 }
 

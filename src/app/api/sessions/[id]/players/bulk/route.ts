@@ -9,7 +9,7 @@ interface SessionParams {
 interface BulkPlayerData {
   playerNumber: number;
   name?: string;
-  gender?: "MALE" | "FEMALE";
+  gender?: "MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY";
   level?:
     | "Y_MINUS"
     | "Y"
@@ -113,9 +113,9 @@ export async function POST(
       // Validate gender
       if (
         playerData.gender &&
-        !["MALE", "FEMALE"].includes(playerData.gender)
+        !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(playerData.gender)
       ) {
-        errors.push(`Player ${index + 1}: gender must be MALE or FEMALE`);
+        errors.push(`Player ${index + 1}: gender must be MALE, FEMALE, OTHER, or PREFER_NOT_TO_SAY`);
       }
 
       // Validate level

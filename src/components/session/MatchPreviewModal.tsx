@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Mars,
   Venus,
+  HelpCircle,
 } from "lucide-react";
 import BadmintonCourt from "../court/BadmintonCourt";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
@@ -48,6 +49,31 @@ interface MatchPreviewModalProps {
   ) => string;
   title?: string; // Custom title for the modal
   description?: string; // Custom description text
+}
+
+// Helper functions for gender display
+function getGenderIcon(gender?: string) {
+  if (gender === "MALE") return Mars;
+  if (gender === "FEMALE") return Venus;
+  if (gender === "OTHER") return User;
+  if (gender === "PREFER_NOT_TO_SAY") return HelpCircle;
+  return User;
+}
+
+function getGenderColor(gender?: string): string {
+  if (gender === "MALE") return "blue";
+  if (gender === "FEMALE") return "pink";
+  if (gender === "OTHER") return "purple";
+  if (gender === "PREFER_NOT_TO_SAY") return "gray";
+  return "gray";
+}
+
+function getGenderColorHex(gender?: string): string {
+  if (gender === "MALE") return "#3182ce";
+  if (gender === "FEMALE") return "#d53f8c";
+  if (gender === "OTHER") return "#805ad5";
+  if (gender === "PREFER_NOT_TO_SAY") return "#718096";
+  return "#718096";
 }
 
 const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
@@ -355,21 +381,9 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                           <HStack justify="center" gap={1}>
                             {player.gender && (
                               <Box
-                                as={
-                                  player.gender === "MALE"
-                                    ? Mars
-                                    : player.gender === "FEMALE"
-                                    ? Venus
-                                    : User
-                                }
+                                as={getGenderIcon(player.gender)}
                                 boxSize={3}
-                                color={
-                                  player.gender === "MALE"
-                                    ? "#3182ce"
-                                    : player.gender === "FEMALE"
-                                    ? "#d53f8c"
-                                    : "#718096"
-                                }
+                                color={getGenderColorHex(player.gender)}
                               />
                             )}
                             {player.level && (
@@ -472,21 +486,9 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                           <HStack justify="center" gap={1}>
                             {player.gender && (
                               <Box
-                                as={
-                                  player.gender === "MALE"
-                                    ? Mars
-                                    : player.gender === "FEMALE"
-                                    ? Venus
-                                    : User
-                                }
+                                as={getGenderIcon(player.gender)}
                                 boxSize={3}
-                                color={
-                                  player.gender === "MALE"
-                                    ? "#3182ce"
-                                    : player.gender === "FEMALE"
-                                    ? "#d53f8c"
-                                    : "#718096"
-                                }
+                                color={getGenderColorHex(player.gender)}
                               />
                             )}
                             {player.level && (

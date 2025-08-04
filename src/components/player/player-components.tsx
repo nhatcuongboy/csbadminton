@@ -32,7 +32,7 @@ export function AddPlayerForm({
       const formData = new FormData(e.currentTarget);
       const playerData = {
         name: formData.get("name") as string,
-        gender: formData.get("gender") as "MALE" | "FEMALE",
+        gender: formData.get("gender") as "MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY",
         level: formData.get("level") as
           | "Y"
           | "Y_PLUS"
@@ -92,6 +92,8 @@ export function AddPlayerForm({
                 <option value="">Select Gender</option>
                 <option value="MALE">Male</option>
                 <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
               </select>
             </div>
 

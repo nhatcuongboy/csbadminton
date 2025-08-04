@@ -1,13 +1,12 @@
 import { PlayerStatistics, SessionService } from "@/lib/api";
-import { 
-  Box, 
-  Center, 
-  Spinner, 
-  Text, 
-  Flex,
+import {
+  Box,
   Button,
-  HStack,
-  Table
+  Center,
+  Flex,
+  Spinner,
+  Table,
+  Text,
 } from "@chakra-ui/react";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
@@ -24,11 +23,11 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  
+
   // Filter and sort states
-  const [sortBy, setSortBy] = useState<string>('playerNumber');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [genderFilter, setGenderFilter] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>("playerNumber");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [genderFilter, setGenderFilter] = useState<string>("");
 
   const fetchStats = async () => {
     setLoading(true);
@@ -53,87 +52,103 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
   }, [sessionId, sortBy, sortOrder, genderFilter]);
 
   const sortOptions = [
-    { value: 'playerNumber', label: t('columnNo') },
-    { value: 'name', label: t('columnName') },
-    { value: 'totalMatches', label: t('columnTotalMatches') },
-    { value: 'regularMatches', label: t('columnRegularMatches') },
-    { value: 'extraMatches', label: t('columnExtraMatches') },
-    { value: 'wins', label: t('columnWins') },
-    { value: 'losses', label: t('columnLosses') },
-    { value: 'winRate', label: t('columnWinRate') },
-    { value: 'averageScore', label: t('columnAvgScore') },
+    { value: "playerNumber", label: t("columnNo") },
+    { value: "name", label: t("columnName") },
+    { value: "totalMatches", label: t("columnTotalMatches") },
+    { value: "regularMatches", label: t("columnRegularMatches") },
+    { value: "extraMatches", label: t("columnExtraMatches") },
+    { value: "wins", label: t("columnWins") },
+    { value: "losses", label: t("columnLosses") },
+    { value: "winRate", label: t("columnWinRate") },
+    { value: "averageScore", label: t("columnAvgScore") },
   ];
 
   return (
     <Box>
       {/* Filter and Sort Controls */}
       <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="gray.50">
-        <Text fontWeight="bold" mb={3}>{t("filtersAndSorting")}</Text>
+        <Text fontWeight="bold" mb={3}>
+          {t("filtersAndSorting")}
+        </Text>
         <Flex direction={{ base: "column", md: "row" }} gap={3} align="end">
           <Box>
-            <Text fontSize="sm" mb={1}>{t("sortBy")}</Text>
-            <select 
-              value={sortBy} 
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
+            <Text fontSize="sm" mb={1}>
+              {t("sortBy")}
+            </Text>
+            <select
+              value={sortBy}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSortBy(e.target.value)
+              }
               style={{
-                fontSize: '14px',
-                minWidth: '150px',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #CBD5E0'
+                fontSize: "14px",
+                minWidth: "150px",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid #CBD5E0",
               }}
             >
-              {sortOptions.map(option => (
+              {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
             </select>
           </Box>
-          
+
           <Box>
-            <Text fontSize="sm" mb={1}>{t("sortOrder")}</Text>
-            <select 
-              value={sortOrder} 
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortOrder(e.target.value as 'asc' | 'desc')}
+            <Text fontSize="sm" mb={1}>
+              {t("sortOrder")}
+            </Text>
+            <select
+              value={sortOrder}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSortOrder(e.target.value as "asc" | "desc")
+              }
               style={{
-                fontSize: '14px',
-                minWidth: '120px',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #CBD5E0'
+                fontSize: "14px",
+                minWidth: "120px",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid #CBD5E0",
               }}
             >
               <option value="asc">{t("ascending")}</option>
               <option value="desc">{t("descending")}</option>
             </select>
           </Box>
-          
+
           <Box>
-            <Text fontSize="sm" mb={1}>{t("filterByGender")}</Text>
-            <select 
-              value={genderFilter} 
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setGenderFilter(e.target.value)}
+            <Text fontSize="sm" mb={1}>
+              {t("filterByGender")}
+            </Text>
+            <select
+              value={genderFilter}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setGenderFilter(e.target.value)
+              }
               style={{
-                fontSize: '14px',
-                minWidth: '120px',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #CBD5E0'
+                fontSize: "14px",
+                minWidth: "120px",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid #CBD5E0",
               }}
             >
               <option value="">{t("allGenders")}</option>
               <option value="MALE">{t("male")}</option>
               <option value="FEMALE">{t("female")}</option>
+              <option value="OTHER">{t("other")}</option>
+              <option value="PREFER_NOT_TO_SAY">{t("preferNotToSay")}</option>
             </select>
           </Box>
-          
-          <Button 
-            size="sm" 
+
+          <Button
+            size="sm"
             onClick={() => {
-              setSortBy('playerNumber');
-              setSortOrder('asc');
-              setGenderFilter('');
+              setSortBy("playerNumber");
+              setSortOrder("asc");
+              setGenderFilter("");
             }}
             variant="outline"
           >
@@ -158,14 +173,22 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
               <Table.Row>
                 <Table.ColumnHeader>{t("columnNo")}</Table.ColumnHeader>
                 <Table.ColumnHeader>{t("columnName")}</Table.ColumnHeader>
-                <Table.ColumnHeader>{t("columnTotalMatches")}</Table.ColumnHeader>
                 <Table.ColumnHeader>
-                  <span title={t("regularMatchesTooltip")} style={{ cursor: "help" }}>
+                  {t("columnTotalMatches")}
+                </Table.ColumnHeader>
+                <Table.ColumnHeader>
+                  <span
+                    title={t("regularMatchesTooltip")}
+                    style={{ cursor: "help" }}
+                  >
                     {t("columnRegularMatches")}
                   </span>
                 </Table.ColumnHeader>
                 <Table.ColumnHeader>
-                  <span title={t("extraMatchesTooltip")} style={{ cursor: "help" }}>
+                  <span
+                    title={t("extraMatchesTooltip")}
+                    style={{ cursor: "help" }}
+                  >
                     {t("columnExtraMatches")}
                   </span>
                 </Table.ColumnHeader>

@@ -138,6 +138,8 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
                   <option value="">Gender</option>
                   <option value="MALE">Male</option>
                   <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                  <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
                 </select>
                 <select
                   value={player.level || ''}

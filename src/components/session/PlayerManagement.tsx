@@ -27,6 +27,10 @@ import {
   Users,
   UserCheck,
   AlertCircle,
+  Mars,
+  Venus,
+  User,
+  HelpCircle,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
@@ -45,6 +49,39 @@ interface Player {
   confirmedByPlayer: boolean;
   levelDescription?: string; // New field
   requireConfirmInfo?: boolean; // New field
+}
+
+// Helper functions for gender display
+function getGenderIcon(gender?: string) {
+  if (gender === "MALE") return Mars;
+  if (gender === "FEMALE") return Venus;
+  if (gender === "OTHER") return User;
+  if (gender === "PREFER_NOT_TO_SAY") return HelpCircle;
+  return User;
+}
+
+function getGenderColor(gender?: string): string {
+  if (gender === "MALE") return "blue";
+  if (gender === "FEMALE") return "pink";
+  if (gender === "OTHER") return "purple";
+  if (gender === "PREFER_NOT_TO_SAY") return "gray";
+  return "gray";
+}
+
+function getGenderSymbol(gender?: string): string {
+  if (gender === "MALE") return "♂";
+  if (gender === "FEMALE") return "♀";
+  if (gender === "OTHER") return "◈";
+  if (gender === "PREFER_NOT_TO_SAY") return "?";
+  return "?";
+}
+
+function getGenderLabel(gender?: string): string {
+  if (gender === "MALE") return "M";
+  if (gender === "FEMALE") return "F";
+  if (gender === "OTHER") return "O";
+  if (gender === "PREFER_NOT_TO_SAY") return "P";
+  return "?";
 }
 
 interface PlayerManagementProps {
@@ -622,6 +659,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                             >
                               <option value="MALE">Male</option>
                               <option value="FEMALE">Female</option>
+                              <option value="OTHER">Other</option>
+                              <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
                             </select>
                           </Box>
                           <Box>
@@ -947,6 +986,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                   >
                                     <option value="MALE">Male</option>
                                     <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                    <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
                                   </select>
                                 </Box>
                                 <Box>
@@ -1123,22 +1164,19 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                   >
                                     {/* Gender badge */}
                                     <Badge
-                                      colorScheme={
-                                        player.gender === "MALE"
-                                          ? "blue"
-                                          : "pink"
-                                      }
+                                      colorScheme={getGenderColor(player.gender)}
                                       variant="subtle"
                                       borderRadius="md"
                                       px={2}
                                       py={1}
                                     >
                                       <HStack spacing={1}>
-                                        <Text fontSize="sm">
-                                          {player.gender === "MALE" ? "♂" : "♀"}
-                                        </Text>
+                                        <Box
+                                          as={getGenderIcon(player.gender)}
+                                          boxSize="12px"
+                                        />
                                         <Text fontSize="xs">
-                                          {player.gender === "MALE" ? "M" : "F"}
+                                          {getGenderLabel(player.gender)}
                                         </Text>
                                       </HStack>
                                     </Badge>
@@ -1208,22 +1246,19 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                 flexWrap="wrap"
                               >
                                 <Badge
-                                  colorScheme={
-                                    player.gender === "MALE" ? "blue" : "pink"
-                                  }
+                                  colorScheme={getGenderColor(player.gender)}
                                   variant="subtle"
                                   borderRadius="md"
                                   px={2}
                                   py={1}
                                 >
                                   <HStack spacing={1}>
-                                    <Text fontSize="sm">
-                                      {player.gender === "MALE" ? "♂" : "♀"}
-                                    </Text>
+                                    <Box
+                                      as={getGenderIcon(player.gender)}
+                                      boxSize="12px"
+                                    />
                                     <Text fontSize="xs">
-                                      {player.gender === "MALE"
-                                        ? "Male"
-                                        : "Female"}
+                                      {player.gender || "Unknown"}
                                     </Text>
                                   </HStack>
                                 </Badge>
