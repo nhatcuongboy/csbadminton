@@ -1,5 +1,5 @@
 // Common types for the session management components
-import { Level } from "@/lib/api";
+import { Level, CourtDirection } from "@/lib/api";
 
 export interface Player {
   id: string;
@@ -25,9 +25,15 @@ export interface Court {
   id: string;
   courtNumber: number;
   courtName?: string;
+  direction?: CourtDirection;
   status: "IN_USE" | "READY" | "EMPTY";
   currentMatchId?: string;
   currentPlayers: Player[];
+  preSelectedPlayers?: Array<{
+    playerId: string;
+    position: number;
+    player?: Player;
+  }>;
 }
 
 export interface MatchPlayer {

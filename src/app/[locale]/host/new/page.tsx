@@ -2,7 +2,7 @@
 
 import NextLinkButton from "@/components/ui/NextLinkButton";
 import TopBar from "@/components/ui/TopBar";
-import { SessionService } from "@/lib/api";
+import { SessionService, CourtDirection } from "@/lib/api";
 import {
   Box,
   Button,
@@ -57,7 +57,13 @@ function NewSessionPageContent() {
   const params = useParams();
   const locale = params.locale as string;
   const [isLoading, setIsLoading] = useState(false);
-  const [courts, setCourts] = useState([{ courtNumber: 1, courtName: "" }]);
+  const [courts, setCourts] = useState([
+    {
+      courtNumber: 1,
+      courtName: "",
+      direction: CourtDirection.HORIZONTAL,
+    },
+  ]);
 
   // Translations
   const t = useTranslations("session");
@@ -155,6 +161,7 @@ function NewSessionPageContent() {
         courts: courts.map((court) => ({
           courtNumber: court.courtNumber,
           courtName: court.courtName || undefined,
+          direction: court.direction,
         })), // Pass courts configuration
       });
 
@@ -182,6 +189,7 @@ function NewSessionPageContent() {
     const newCourt = {
       courtNumber: newCourtNumber,
       courtName: "",
+      direction: CourtDirection.HORIZONTAL,
     };
     setCourts([...courts, newCourt]);
   };
@@ -203,8 +211,8 @@ function NewSessionPageContent() {
   // Handle court info change
   const handleCourtChange = (
     index: number,
-    field: "courtNumber" | "courtName",
-    value: string | number
+    field: "courtNumber" | "courtName" | "direction",
+    value: string | number | CourtDirection
   ) => {
     const newCourts = [...courts];
 
@@ -223,6 +231,12 @@ function NewSessionPageContent() {
           setCourts(newCourts);
         }
       }
+    } else if (field === "direction") {
+      newCourts[index] = {
+        ...newCourts[index],
+        direction: value as CourtDirection,
+      };
+      setCourts(newCourts);
     } else {
       newCourts[index] = {
         ...newCourts[index],
@@ -628,7 +642,7 @@ function NewSessionPageContent() {
                             <Grid
                               templateColumns={{
                                 base: "1fr",
-                                md: "1fr 2fr",
+                                md: "1fr 1.5fr 1fr",
                               }}
                               gap={4}
                             >
@@ -698,9 +712,7 @@ function NewSessionPageContent() {
                                       e.target.value
                                     )
                                   }
-                                  placeholder={`e.g., Court A, VIP Court, ${t(
-                                    "courtNamePlaceholder"
-                                  )}`}
+                                  placeholder={`${t("courtNamePlaceholder")}`}
                                   size="lg"
                                   borderWidth={2}
                                   borderColor="gray.200"
@@ -709,6 +721,59 @@ function NewSessionPageContent() {
                                 />
                                 <Text fontSize="xs" color="gray.500" mt={1}>
                                   Custom name to help identify this court
+                                </Text>
+                              </GridItem>
+
+                              {/* Court Direction */}
+                              <GridItem>
+                                <Text
+                                  fontWeight="medium"
+                                  color="gray.700"
+                                  mb={2}
+                                >
+                                  {t("courtDirection")} *
+                                </Text>
+                                <Box position="relative">
+                                  <select
+                                    value={court.direction}
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLSelectElement>
+                                    ) =>
+                                      handleCourtChange(
+                                        index,
+                                        "direction",
+                                        e.target.value as CourtDirection
+                                      )
+                                    }
+                                    style={{
+                                      width: "100%",
+                                      height: "48px",
+                                      padding: "0 12px",
+                                      border: "2px solid #E2E8F0",
+                                      borderRadius: "6px",
+                                      fontSize: "16px",
+                                      backgroundColor: "white",
+                                      cursor: "pointer",
+                                      transition: "all 0.2s",
+                                    }}
+                                    onFocus={(e) => {
+                                      e.target.style.borderColor = "#3182CE";
+                                      e.target.style.outline = "none";
+                                    }}
+                                    onBlur={(e) => {
+                                      e.target.style.borderColor = "#E2E8F0";
+                                    }}
+                                  >
+                                    <option value={CourtDirection.HORIZONTAL}>
+                                      Horizontal
+                                    </option>
+                                    <option value={CourtDirection.VERTICAL}>
+                                      Vertical
+                                    </option>
+                                  </select>
+                                </Box>
+                                <Text fontSize="xs" color="gray.500" mt={1}>
+                                  Court orientation for better gameplay
                                 </Text>
                               </GridItem>
                             </Grid>
@@ -775,6 +840,20 @@ function NewSessionPageContent() {
                           <Text fontSize="xs" color="blue.600">
                             {courts.length} courts • Max {courts.length * 4}{" "}
                             players simultaneously
+                          </Text>
+                          <Text fontSize="xs" color="blue.500" mt={1}>
+                            {
+                              courts.filter(
+                                (c) => c.direction === CourtDirection.HORIZONTAL
+                              ).length
+                            }{" "}
+                            horizontal,{" "}
+                            {
+                              courts.filter(
+                                (c) => c.direction === CourtDirection.VERTICAL
+                              ).length
+                            }{" "}
+                            vertical
                           </Text>
                         </Box>
                         <Box textAlign="right">
@@ -913,6 +992,21 @@ function NewSessionPageContent() {
                   />
                   <Text fontSize="sm" color="blue.700">
                     {t("playerInfoHelps")}
+                  </Text>
+                </Box>
+                <Box display="flex" alignItems="start">
+                  <Box
+                    w={2}
+                    h={2}
+                    bg="blue.400"
+                    rounded="full"
+                    mt={2}
+                    mr={3}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="sm" color="blue.700">
+                    💡 Court direction helps optimize player placement and
+                    lighting conditions
                   </Text>
                 </Box>
               </Stack>

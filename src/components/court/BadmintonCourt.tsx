@@ -1,5 +1,6 @@
 "use client";
 
+import { CourtDirection } from "@/lib/api";
 import { Box, Spinner } from "@chakra-ui/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -22,7 +23,12 @@ interface BadmintonCourtProps {
   onPlayerRemove?: (position: number) => void;
   currentPlayerPosition?: number; // 0-3, which position is currently being selected
   selectedPositions?: (BadmintonCourtPlayer | undefined)[]; // For selection mode
-  direction?: "horizontal" | "vertical"; // Layout direction
+  direction?: CourtDirection; // Layout direction from API
+  preSelectedPlayers?: Array<{
+    playerId: string;
+    position: number;
+    player?: BadmintonCourtPlayer;
+  }>; // Pre-selected players for next match
 }
 
 export default function BadmintonCourt({
@@ -41,7 +47,8 @@ export default function BadmintonCourt({
   onPlayerRemove,
   currentPlayerPosition = 0,
   selectedPositions = [],
-  direction = "horizontal",
+  direction = CourtDirection.HORIZONTAL,
+  preSelectedPlayers = [],
 }: BadmintonCourtProps) {
   const t = useTranslations("SessionDetail");
   const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
@@ -59,7 +66,7 @@ export default function BadmintonCourt({
 
       // Visual mapping based on direction prop
       let visualMapping: number[];
-      if (direction === "horizontal") {
+      if (direction === CourtDirection.HORIZONTAL) {
         // Horizontal layout (columns first)
         // API position 0 → Visual index 0 (top-left)
         // API position 1 → Visual index 2 (bottom-left)
@@ -87,7 +94,7 @@ export default function BadmintonCourt({
           const pairNumber = visualIndex % 2 === 0 ? 1 : 2;
           remappedPlayers[visualIndex] = {
             ...player,
-            pairNumber, // Left column = pair 1, right column = pair 2
+            // pairNumber, // Left column = pair 1, right column = pair 2
           };
         }
       });
@@ -105,7 +112,7 @@ export default function BadmintonCourt({
     ];
 
     let mapping: number[];
-    if (direction === "horizontal") {
+    if (direction === CourtDirection.HORIZONTAL) {
       mapping = [0, 2, 1, 3];
     } else {
       mapping = [0, 1, 2, 3];
@@ -316,7 +323,7 @@ export default function BadmintonCourt({
               // Render placeholder for empty position
               // Map index back to selection order for correct number
               let reverseMapping: number[];
-              if (direction === "horizontal") {
+              if (direction === CourtDirection.HORIZONTAL) {
                 reverseMapping = [0, 2, 1, 3];
               } else {
                 reverseMapping = [0, 1, 2, 3];
@@ -437,7 +444,7 @@ export default function BadmintonCourt({
               />
             )
           )}
-      ){/* Loading indicator */}
+      )
       {isLoading && (
         <Box
           position="absolute"

@@ -454,7 +454,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
             border="1px solid #38a169"
             boxShadow="none"
             _hover={{ bg: "#f0fff4" }}
-            disabled={isMaxPlayersReached}
+            // disabled={isMaxPlayersReached}
             width={{ base: "auto", md: "auto" }}
             title={
               isMaxPlayersReached
@@ -740,7 +740,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                   onClick={handleAddNewPlayer}
                   colorScheme="green"
                   variant="outline"
-                  disabled={isMaxPlayersReached}
+                  // disabled={isMaxPlayersReached}
                   title={
                     isMaxPlayersReached
                       ? `Maximum players reached (${maxPlayers})`

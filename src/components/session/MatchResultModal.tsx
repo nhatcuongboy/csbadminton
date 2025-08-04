@@ -15,6 +15,7 @@ import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Match } from "@/types/session";
 import { getLevelLabel } from "@/utils/level-mapping";
 import { useTranslations } from "next-intl";
+import { CourtDirection } from "@/lib/api";
 
 interface MatchResultModalProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ interface MatchResultModalProps {
   }) => void;
   onCancel: () => void;
   isLoading?: boolean;
-  direction?: "horizontal" | "vertical"; // Layout direction prop
+  direction?: CourtDirection; // Layout direction prop
 }
 
 const MatchResultModal: React.FC<MatchResultModalProps> = ({
@@ -36,7 +37,7 @@ const MatchResultModal: React.FC<MatchResultModalProps> = ({
   onConfirm,
   onCancel,
   isLoading = false,
-  direction = "horizontal", // Default to horizontal like BadmintonCourt
+  direction = CourtDirection.HORIZONTAL, // Default to horizontal like BadmintonCourt
 }) => {
   const t = useTranslations("SessionDetail");
 
@@ -68,7 +69,7 @@ const MatchResultModal: React.FC<MatchResultModalProps> = ({
   const playersWithPair = match.players.map((matchPlayer) => {
     // Apply same visual mapping as BadmintonCourt
     let visualMapping: number[];
-    if (direction === "horizontal") {
+    if (direction === CourtDirection.HORIZONTAL) {
       // Horizontal layout: API position 0→0, 1→2, 2→1, 3→3
       visualMapping = [0, 2, 1, 3];
     } else {

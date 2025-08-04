@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Flex,
@@ -22,7 +22,12 @@ import {
 import BadmintonCourt from "../court/BadmintonCourt";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
-import { Level, SuggestedPlayersResponse, CourtService } from "@/lib/api";
+import {
+  Level,
+  SuggestedPlayersResponse,
+  CourtService,
+  CourtDirection,
+} from "@/lib/api";
 import { getLevelLabel } from "@/utils/level-mapping";
 import { useTranslations } from "next-intl";
 
@@ -31,7 +36,10 @@ interface MatchPreviewModalProps {
   court: Court | null;
   waitingPlayersCount?: number; // Total number of waiting players (optional if no topCount selection)
   currentTopCount?: number; // Current topCount value
-  onConfirm: (suggestedPlayers: SuggestedPlayersResponse) => void; // Updated to pass suggestedPlayers
+  onConfirm: (
+    suggestedPlayers: SuggestedPlayersResponse,
+    direction?: CourtDirection
+  ) => void; // Updated to pass suggestedPlayers
   onCancel: () => void;
   onBack?: () => void; // Optional back button for manual selection flow
   getCourtDisplayName: (
@@ -58,13 +66,13 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
 
   // Internal state for managing suggested players and loading
   const [suggestedPlayers, setSuggestedPlayers] =
-    React.useState<SuggestedPlayersResponse | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [topCount, setTopCount] = React.useState(currentTopCount);
-  const [isConfirming, setIsConfirming] = React.useState(false);
+    useState<SuggestedPlayersResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [topCount, setTopCount] = useState(currentTopCount);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Fetch suggested players when modal opens or topCount changes
-  const fetchSuggestedPlayers = React.useCallback(
+  const fetchSuggestedPlayers = useCallback(
     async (courtId: string, count: number) => {
       try {
         setIsLoading(true);
@@ -83,8 +91,28 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
     []
   );
 
+  // Combine players from both pairs
+  const allPlayers = useMemo(() => {
+    return suggestedPlayers
+      ? [
+          ...suggestedPlayers.pair1.players.map((player: Player, index) => ({
+            ...player,
+            pairNumber: 1,
+            isCurrentPlayer: false,
+            courtPosition: index,
+          })),
+          ...suggestedPlayers.pair2.players.map((player: Player, index) => ({
+            ...player,
+            pairNumber: 2,
+            isCurrentPlayer: false,
+            courtPosition: index + 2,
+          })),
+        ]
+      : [];
+  }, [suggestedPlayers]);
+
   // Effect to fetch data when modal opens or court changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen && court?.id) {
       setTopCount(currentTopCount);
       fetchSuggestedPlayers(court.id, currentTopCount);
@@ -116,50 +144,6 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   };
 
   if (!isOpen || !court) return null;
-
-  // Show loading state if no data yet
-  // if (!suggestedPlayers) {
-  //   return (
-  //     <Box
-  //       position="fixed"
-  //       top={0}
-  //       left={0}
-  //       right={0}
-  //       bottom={0}
-  //       bg="blackAlpha.600"
-  //       zIndex={1000}
-  //       display="flex"
-  //       alignItems="center"
-  //       justifyContent="center"
-  //       p={4}
-  //     >
-  //       <Box
-  //         bg="white"
-  //         borderRadius="lg"
-  //         boxShadow="xl"
-  //         maxW="md"
-  //         w="full"
-  //         p={8}
-  //         textAlign="center"
-  //       >
-  //         <VStack gap={4}>
-  //           <Box
-  //             as={RefreshCw}
-  //             boxSize={8}
-  //             color="blue.500"
-  //             className="animate-spin"
-  //           />
-  //           <Text>{t("courtsTab.loadingSuggestedPlayers")}</Text>
-  //         </VStack>
-  //       </Box>
-  //     </Box>
-  //   );
-  // }
-
-  // Combine players from both pairs
-  const allPlayers = suggestedPlayers
-    ? [...suggestedPlayers.pair1.players, ...suggestedPlayers.pair2.players]
-    : [];
 
   const modalTitle =
     title ||
@@ -257,11 +241,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
           )}
           <Box>
             <BadmintonCourt
-              players={allPlayers.map((player: Player, index: number) => ({
-                ...player, // Include all properties from the original player
-                pairNumber: index % 2 === 0 ? 1 : 2, // Column-based pairing: left (0,2) = pair 1, right (1,3) = pair 2
-                isCurrentPlayer: false,
-              }))}
+              players={allPlayers}
               isActive={true}
               courtName={getCourtDisplayName(
                 court.courtName,
@@ -270,6 +250,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               width="100%"
               showTimeInCenter={false}
               isLoading={isLoading}
+              direction={court?.direction || CourtDirection.HORIZONTAL}
             />
           </Box>
           {/* Display pair information */}

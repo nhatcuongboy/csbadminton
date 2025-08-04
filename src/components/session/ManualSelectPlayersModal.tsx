@@ -11,6 +11,7 @@ import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import { useTranslations } from "next-intl";
+import { CourtDirection } from "@/lib/api";
 
 interface ManualSelectPlayersModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ interface ManualSelectPlayersModalProps {
     courtName: string | undefined,
     courtNumber: number
   ) => string;
+  title?: string; // Custom title for different modes
 }
 
 const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
@@ -39,6 +41,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
   formatWaitTime,
   isLoading = false, // Add isLoading prop with default
   getCourtDisplayName = (name, number) => name || `Court ${number}`,
+  title, // Custom title prop
 }) => {
   const t = useTranslations("SessionDetail");
   const [showPreview, setShowPreview] = useState(false);
@@ -147,7 +150,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             flexShrink={0}
           >
             <Heading size="md">
-              {t("courtsTab.manualPlayerSelectionTitle", {
+              {title || t("courtsTab.manualPlayerSelectionTitle", {
                 courtNumber: court.courtNumber,
               })}
             </Heading>
@@ -183,6 +186,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                   courtName={getCourtDisplayName(court.courtName, court.courtNumber)}
                   width="100%"
                   showTimeInCenter={false}
+                  direction={court?.direction || CourtDirection.HORIZONTAL}
                 />
               </Box>
             </Box>

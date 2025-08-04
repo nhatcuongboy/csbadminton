@@ -44,7 +44,7 @@
     "removeCourt": "Remove Court",
     "courtNumber": "Court Number",
     "courtName": "Court Name",
-    "courtNamePlaceholder": "Enter court name (optional)",
+    "courtNamePlaceholder": "Enter court name",
     "createNewSession": "Create New Session",
     "setUpYourBadmintonSession": "Set up your badminton session",
     "startYourBadmintonJourney": "Start Your Badminton Journey",
@@ -533,7 +533,18 @@
       "pair2": "Pair 2",
       "gapLabel": "Gap:",
       "playerFallback": "Player {number}",
-      "matchEndedSuccessfully": "Match ended successfully"
+      "matchEndedSuccessfully": "Match ended successfully",
+      "preSelectNext": "Pre-select Next",
+      "cancelPreSelect": "Cancel Pre-select",
+      "preSelectTitle": "Pre-select Next Match - Court {courtNumber}",
+      "nextSelected": "Next Selected",
+      "preSelectSuccess": "Pre-select successful",
+      "nextMatchPlayersSelected": "Next match players selected",
+      "errorPreSelecting": "Error pre-selecting",
+      "preSelectCancelled": "Pre-select cancelled",
+      "preSelectCancelledDesc": "Next match pre-selection has been cancelled",
+      "errorCancellingPreSelect": "Error cancelling pre-select",
+      "errorAssigningPlayers": "Error assigning players"
     },
     "matchResult": {
       "title": "Match Result",

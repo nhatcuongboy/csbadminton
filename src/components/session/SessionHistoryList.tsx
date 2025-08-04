@@ -1,6 +1,6 @@
 "use client";
 
-import { SessionService } from "@/lib/api";
+import { SessionService, CourtDirection } from "@/lib/api";
 import { parseScoreData } from "@/utils/match-result-utils";
 import {
   Box,
@@ -64,10 +64,10 @@ type HistoryMatch = {
 
 const HistoryMatchCard = ({ 
   match, 
-  direction = "horizontal" 
+  direction = CourtDirection.HORIZONTAL 
 }: { 
   match: HistoryMatch; 
-  direction?: "horizontal" | "vertical";
+  direction?: CourtDirection;
 }) => {
   // For the pairing logic, we need to consider the courtPosition values and direction
   // According to the user: with direction="horizontal" (default):
@@ -79,7 +79,7 @@ const HistoryMatchCard = ({
   
   let pair1: string[], pair2: string[];
   
-  if (direction === "horizontal") {
+  if (direction === CourtDirection.HORIZONTAL) {
     // Horizontal layout: courtPosition 0,1 = Pair 1, courtPosition 2,3 = Pair 2
     pair1 = match.players.slice(0, 2); // courtPosition 0, 1
     pair2 = match.players.slice(2, 4); // courtPosition 2, 3
@@ -226,12 +226,10 @@ const HistoryMatchCard = ({
 
 interface SessionHistoryListProps {
   sessionId: string; // Optional prop to filter by session
-  direction?: "horizontal" | "vertical"; // Layout direction for court display
 }
 
 export default function SessionHistoryList({
   sessionId,
-  direction = "horizontal", // Default to horizontal layout
 }: SessionHistoryListProps) {
   const [matches, setMatches] = useState<HistoryMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -577,7 +575,7 @@ export default function SessionHistoryList({
             <HistoryMatchCard 
               key={match.id} 
               match={match} 
-              direction={direction}
+              direction={CourtDirection.HORIZONTAL}
             />
           ))}
         </Grid>

@@ -6,7 +6,11 @@ import {
   SimpleGrid,
   useToast,
 } from "@/components/ui/chakra-compat";
-import { CourtService, SuggestedPlayersResponse } from "@/lib/api";
+import {
+  CourtService,
+  SuggestedPlayersResponse,
+  CourtDirection,
+} from "@/lib/api";
 import { Court, Match, Player } from "@/types/session";
 import {
   Badge,
@@ -64,7 +68,6 @@ interface CourtsTabProps {
   onDataRefresh?: () => void;
   isRefreshing?: boolean;
   formatWaitTime: (waitTimeInMinutes: number) => string;
-  direction?: "horizontal" | "vertical"; // Layout direction for court display
 }
 
 const CourtsTab: React.FC<
@@ -100,7 +103,6 @@ const CourtsTab: React.FC<
   onDataRefresh,
   isRefreshing = false,
   formatWaitTime,
-  direction = "horizontal", // Default to horizontal layout
 }) => {
   const t = useTranslations("SessionDetail");
   const [loadingEndMatchId, setLoadingEndMatchId] = React.useState<
@@ -148,6 +150,25 @@ const CourtsTab: React.FC<
   // Collapsible state for courts
   const [isCourtsSectionOpen, setIsCourtsSectionOpen] = React.useState(true);
 
+  // Pre-select modal state
+  const [preSelectModalOpen, setPreSelectModalOpen] = React.useState(false);
+  const [selectedPreSelectCourt, setSelectedPreSelectCourt] =
+    React.useState<Court | null>(null);
+  const [preSelectPlayers, setPreSelectPlayers] = React.useState<string[]>([]);
+  const [confirmingPreSelect, setConfirmingPreSelect] = React.useState(false);
+  const [loadingCancelPreSelect, setLoadingCancelPreSelect] = React.useState<
+    string | null
+  >(null);
+
+  // Helper function to check if court has valid pre-selected players
+  const hasPreSelectedPlayers = (court: Court) => {
+    return (
+      court.preSelectedPlayers &&
+      Array.isArray(court.preSelectedPlayers) &&
+      court.preSelectedPlayers.length > 0
+    );
+  };
+
   // Handle auto-assign match button click
   const handleAutoAssignClick = (court: Court) => {
     setSelectedAutoAssignCourt(court);
@@ -156,7 +177,8 @@ const CourtsTab: React.FC<
 
   // Handle confirm from modal with suggested players
   const handleConfirmAutoAssign = async (
-    suggestedPlayers: SuggestedPlayersResponse
+    suggestedPlayers: SuggestedPlayersResponse,
+    direction: CourtDirection = CourtDirection.HORIZONTAL
   ) => {
     if (!selectedAutoAssignCourt) return;
 
@@ -168,8 +190,38 @@ const CourtsTab: React.FC<
         ...suggestedPlayers.pair2.players.map((p: Player) => p.id),
       ];
 
+      const playersWithPosition: Array<{ playerId: string; position: number }> =
+        [
+          ...suggestedPlayers.pair1.players.map((p: Player, index: number) => ({
+            playerId: p.id,
+            position:
+              direction === CourtDirection.HORIZONTAL
+                ? index
+                : index === 0
+                ? 0
+                : 2,
+          })),
+          ...suggestedPlayers.pair2.players.map((p: Player, index: number) => ({
+            playerId: p.id,
+            position:
+              direction === CourtDirection.HORIZONTAL
+                ? index + 2
+                : index === 0
+                ? 1
+                : 3,
+          })),
+        ];
+      // console.log(
+      //   suggestedPlayers.pair1.players,
+      //   suggestedPlayers.pair2.players
+      // );
+      // console.log(playersWithPosition);
       // Select the players for the specified court
-      await CourtService.selectPlayers(selectedAutoAssignCourt.id, playerIds);
+      await CourtService.selectPlayers(
+        selectedAutoAssignCourt.id,
+        playerIds,
+        playersWithPosition
+      );
 
       // Close modal and reset state
       setAutoAssignModalOpen(false);
@@ -302,6 +354,95 @@ const CourtsTab: React.FC<
     setManualSelectModalOpen(false);
     setSelectedManualCourt(null);
     setManualSelectedPlayers([]);
+  };
+
+  // Handle pre-select button click
+  const handlePreSelectClick = (court: Court) => {
+    setSelectedPreSelectCourt(court);
+    setPreSelectPlayers([]);
+    setPreSelectModalOpen(true);
+  };
+
+  // Handle player toggle in pre-select
+  const handlePreSelectPlayerToggle = (playerId: string) => {
+    setPreSelectPlayers((prev) => {
+      if (prev.includes(playerId)) {
+        return prev.filter((id) => id !== playerId);
+      } else if (prev.length < 4) {
+        return [...prev, playerId];
+      }
+      return prev;
+    });
+  };
+
+  // Confirm pre-select
+  const handleConfirmPreSelect = async (
+    playersWithPosition: Array<{ playerId: string; position: number }>
+  ) => {
+    if (!selectedPreSelectCourt) return;
+
+    try {
+      setConfirmingPreSelect(true);
+      await CourtService.preSelectPlayers(
+        selectedPreSelectCourt.id,
+        playersWithPosition
+      );
+
+      // Close modal and refresh data
+      setPreSelectModalOpen(false);
+      setSelectedPreSelectCourt(null);
+      setPreSelectPlayers([]);
+
+      if (onDataRefresh) {
+        onDataRefresh();
+      }
+    } catch (error) {
+      console.error("Error pre-selecting players:", error);
+      toast.toast({
+        title: t("courtsTab.errorPreSelecting"),
+        description: t("courtsTab.pleaseRetryLater"),
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setConfirmingPreSelect(false);
+    }
+  };
+
+  // Cancel pre-select
+  const handleCancelPreSelect = () => {
+    setPreSelectModalOpen(false);
+    setSelectedPreSelectCourt(null);
+    setPreSelectPlayers([]);
+  };
+
+  // Cancel pre-selection for a court
+  const handleCancelCourtPreSelect = async (courtId: string) => {
+    try {
+      setLoadingCancelPreSelect(courtId);
+      await CourtService.cancelPreSelect(courtId);
+
+      if (onDataRefresh) {
+        onDataRefresh();
+      }
+
+      toast.toast({
+        title: t("courtsTab.preSelectCancelled"),
+        description: t("courtsTab.preSelectCancelledDesc"),
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error cancelling pre-selection:", error);
+      toast.toast({
+        title: t("courtsTab.errorCancellingPreSelect"),
+        description: t("courtsTab.pleaseRetryLater"),
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setLoadingCancelPreSelect(null);
+    }
   };
 
   // Handle match result submission
@@ -503,6 +644,24 @@ const CourtsTab: React.FC<
                             ? t("courtsTab.inUse")
                             : t("courtsTab.empty")}
                         </Badge>
+                        {/* Pre-selected indicator */}
+                        {hasPreSelectedPlayers(court) && (
+                          <Badge
+                            colorPalette="purple"
+                            variant="solid"
+                            fontSize="xs"
+                            px={1.5}
+                            py={0.5}
+                            borderRadius="md"
+                            fontWeight="semibold"
+                            minWidth="48px"
+                            minHeight="20px"
+                            lineHeight={1.2}
+                            style={{ letterSpacing: 0.2 }}
+                          >
+                            {t("courtsTab.nextSelected")}
+                          </Badge>
+                        )}
                       </HStack>
                     </Flex>
                   </CardHeader>
@@ -526,7 +685,9 @@ const CourtsTab: React.FC<
                           isLoading={isRefreshing}
                           status={court.status}
                           mode={mode}
-                          direction={direction}
+                          direction={
+                            court.direction || CourtDirection.HORIZONTAL
+                          }
                         />
                         {/* Action buttons for courts with players */}
                         <VStack gap={2} pb={4} width="100%">
@@ -606,6 +767,47 @@ const CourtsTab: React.FC<
                               </CompatButton>
                             )}
 
+                          {/* Pre-select button: only shown when there is a match in progress and no pre-selection */}
+                          {session.status === "IN_PROGRESS" &&
+                            mode === "manage" &&
+                            court.currentMatchId &&
+                            court.status !== "READY" &&
+                            !hasPreSelectedPlayers(court) && (
+                              <CompatButton
+                                size="sm"
+                                colorScheme="blue"
+                                variant="outline"
+                                onClick={() => handlePreSelectClick(court)}
+                                disabled={
+                                  isRefreshing || waitingPlayers.length < 4
+                                }
+                              >
+                                <Box as={Plus} boxSize={4} mr={1} />
+                                {t("courtsTab.preSelectNext")}
+                              </CompatButton>
+                            )}
+
+                          {/* Cancel pre-select button: only shown when there is a pre-selection */}
+                          {session.status === "IN_PROGRESS" &&
+                            mode === "manage" &&
+                            court.currentMatchId &&
+                            court.status !== "READY" &&
+                            hasPreSelectedPlayers(court) && (
+                              <CompatButton
+                                size="sm"
+                                colorScheme="orange"
+                                variant="outline"
+                                loading={loadingCancelPreSelect === court.id}
+                                onClick={() =>
+                                  handleCancelCourtPreSelect(court.id)
+                                }
+                                disabled={isRefreshing}
+                              >
+                                <Box as={X} boxSize={4} mr={1} />
+                                {t("courtsTab.cancelPreSelect")}
+                              </CompatButton>
+                            )}
+
                           {/* End Match button: only shown when there is a match in progress and not READY */}
                           {session.status === "IN_PROGRESS" &&
                             mode === "manage" &&
@@ -620,7 +822,17 @@ const CourtsTab: React.FC<
                                   );
                                   console.log(court.id, currentMatch);
                                   if (currentMatch) {
-                                    setSelectedMatch(currentMatch);
+                                    // Add court direction to the match object
+                                    const matchWithCourt = {
+                                      ...currentMatch,
+                                      court: {
+                                        ...court,
+                                        direction:
+                                          court.direction ||
+                                          CourtDirection.HORIZONTAL,
+                                      },
+                                    };
+                                    setSelectedMatch(matchWithCourt);
                                     setMatchResultModalOpen(true);
                                   }
                                 }}
@@ -655,7 +867,9 @@ const CourtsTab: React.FC<
                           showTimeInCenter={false}
                           isLoading={isRefreshing}
                           status="EMPTY"
-                          direction={direction}
+                          direction={
+                            court.direction || CourtDirection.HORIZONTAL
+                          }
                         />
                         {session.status === "IN_PROGRESS" &&
                         mode === "manage" ? (
@@ -760,6 +974,33 @@ const CourtsTab: React.FC<
         }}
       />
 
+      {/* Pre-select Players Modal */}
+      <ManualSelectPlayersModal
+        isOpen={preSelectModalOpen}
+        court={selectedPreSelectCourt}
+        waitingPlayers={waitingPlayers}
+        selectedPlayers={preSelectPlayers}
+        onPlayerToggle={handlePreSelectPlayerToggle}
+        onConfirm={handleConfirmPreSelect}
+        onCancel={handleCancelPreSelect}
+        isLoading={confirmingPreSelect}
+        title={
+          selectedPreSelectCourt
+            ? t("courtsTab.preSelectTitle", {
+                courtNumber: selectedPreSelectCourt.courtNumber,
+              })
+            : undefined
+        }
+        formatWaitTime={(minutes) => {
+          const hours = Math.floor(minutes / 60);
+          const mins = minutes % 60;
+          if (hours > 0) {
+            return `${hours}h${mins}m`;
+          }
+          return `${mins}m`;
+        }}
+      />
+
       {/* Match Result Modal */}
       <MatchResultModal
         isOpen={matchResultModalOpen}
@@ -767,7 +1008,7 @@ const CourtsTab: React.FC<
         onConfirm={handleMatchResultSubmit}
         onCancel={handleMatchResultCancel}
         isLoading={loadingEndMatchId === selectedMatch?.id}
-        direction={direction}
+        direction={selectedMatch?.court?.direction || CourtDirection.HORIZONTAL}
       />
 
       {/* Waiting Players Grid */}

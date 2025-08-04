@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!hostId) {
-      return errorResponse("Host ID is required (check DEFAULT_HOST_ID environment variable)");
+      return errorResponse(
+        "Host ID is required (check DEFAULT_HOST_ID environment variable)"
+      );
     }
 
     // Check if host exists
@@ -97,14 +99,16 @@ export async function POST(request: NextRequest) {
     // Create courts for the session
     const courtsConfig = body.courts;
     const courts = [];
-    
+
     if (courtsConfig && Array.isArray(courtsConfig)) {
       // Use provided courts configuration
       for (const courtConfig of courtsConfig) {
         courts.push({
           sessionId: session.id,
           courtNumber: courtConfig.courtNumber,
-          courtName: courtConfig.courtName || generateCourtName(courtConfig.courtNumber),
+          courtName:
+            courtConfig.courtName || generateCourtName(courtConfig.courtNumber),
+          direction: courtConfig.direction || "HORIZONTAL", // TODO: Enable after prisma client regeneration
           status: "EMPTY" as const,
         });
       }
@@ -115,6 +119,7 @@ export async function POST(request: NextRequest) {
           sessionId: session.id,
           courtNumber: i,
           courtName: generateCourtName(i), // Generate court name
+          direction: "HORIZONTAL" as const, // TODO: Enable after prisma client regeneration
           status: "EMPTY" as const,
         });
       }

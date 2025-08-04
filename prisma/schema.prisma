@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -74,14 +75,16 @@ model Player {
 }
 
 model Court {
-  id             String      @id @default(cuid())
+  id             String          @id @default(cuid())
   sessionId      String
   courtNumber    Int
   courtName      String?
-  status         CourtStatus @default(EMPTY)
-  currentMatchId String?     @unique
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  direction      CourtDirection  @default(HORIZONTAL)
+  status         CourtStatus     @default(EMPTY)
+  currentMatchId String?         @unique
+  preSelectedPlayers Json?       // JSON array of pre-selected players with positions
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   currentMatch   Match?      @relation("CurrentMatch", fields: [currentMatchId], references: [id])
   session        Session     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   matches        Match[]     @relation("CourtMatches")
@@ -165,6 +168,11 @@ enum CourtStatus {
   EMPTY
   IN_USE
   READY
+}
+
+enum CourtDirection {
+  HORIZONTAL
+  VERTICAL
 }
 
 enum MatchStatus {

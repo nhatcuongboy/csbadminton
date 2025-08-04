@@ -113,19 +113,22 @@ export async function GET(
     }
 
     // Process courts to add position information to currentPlayers
-    const processedCourts = session.courts.map(court => {
+    const processedCourts = session.courts.map((court) => {
       let playersWithPosition = [...court.currentPlayers];
 
       // If court has an active match, get positions from MatchPlayer
       if (court.currentMatch && court.currentMatch.players.length > 0) {
-        const matchPlayerPositions = court.currentMatch.players.reduce((acc, mp) => {
-          acc[mp.playerId] = mp.position;
-          return acc;
-        }, {} as Record<string, number>);
+        const matchPlayerPositions = court.currentMatch.players.reduce(
+          (acc, mp) => {
+            acc[mp.playerId] = mp.position;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
 
         // Sort players by their match position
         playersWithPosition = court.currentPlayers
-          .map(player => ({
+          .map((player) => ({
             ...player,
             position: matchPlayerPositions[player.id] ?? 0,
           }))
@@ -232,6 +235,7 @@ export async function PUT(
             sessionId: id,
             courtNumber: i,
             courtName: generateCourtName(i), // Generate court name
+            direction: "HORIZONTAL" as any, // Cast to the correct enum type if needed
             status: "EMPTY",
           });
         }
@@ -241,6 +245,7 @@ export async function PUT(
             sessionId: court.sessionId,
             courtNumber: court.courtNumber,
             courtName: court.courtName,
+            direction: "HORIZONTAL" as any, // Cast to the correct enum type if needed
             status: "EMPTY",
           })),
         });
@@ -292,7 +297,10 @@ export async function DELETE(
       where: { id },
     });
 
-    return successResponse(null, "Session and related players deleted successfully");
+    return successResponse(
+      null,
+      "Session and related players deleted successfully"
+    );
   } catch (error) {
     console.error("Error deleting session:", error);
     return errorResponse("Failed to delete session");

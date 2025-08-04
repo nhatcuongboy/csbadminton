@@ -42,8 +42,6 @@ export async function POST(
       // No body or invalid JSON, ignore
     }
 
-    console.log("END MATCH API - Court ID:", id);
-
     // Validate court exists
     const court = await prisma.court.findUnique({
       where: { id },
@@ -53,13 +51,6 @@ export async function POST(
         currentMatch: true,
       },
     });
-
-    console.log("END MATCH API - Court found:", court ? "Yes" : "No");
-    if (court) {
-      console.log("END MATCH API - Court status:", court.status);
-      console.log("END MATCH API - Current match ID:", court.currentMatchId);
-      console.log("END MATCH API - Session status:", court.session.status);
-    }
 
     if (!court) {
       return errorResponse("Court not found", 404);
@@ -113,11 +104,99 @@ export async function POST(
         // Execute all player updates in parallel
         await Promise.all(playerUpdatePromises);
 
+        // Check if there are pre-selected players for the next match
+        let nextCourtStatus: "EMPTY" | "READY" = "EMPTY";
+        let preSelectedData = null;
+
+        if (court.preSelectedPlayers) {
+          try {
+            // Parse pre-selected players data
+            preSelectedData =
+              typeof court.preSelectedPlayers === "string"
+                ? JSON.parse(court.preSelectedPlayers)
+                : court.preSelectedPlayers;
+
+            if (
+              preSelectedData &&
+              Array.isArray(preSelectedData) &&
+              preSelectedData.length > 0
+            ) {
+              // Verify all pre-selected players are still available
+              const preSelectedPlayerIds = preSelectedData.map(
+                (p: any) => p.playerId
+              );
+
+              const availablePlayers = await tx.player.findMany({
+                where: {
+                  id: { in: preSelectedPlayerIds },
+                  status: "WAITING",
+                  currentCourtId: null,
+                },
+              });
+
+              if (availablePlayers.length === preSelectedPlayerIds.length) {
+                nextCourtStatus = "READY";
+                
+                // Use the proper court selection mechanism with positions
+                // Create players with position data (sorted by position)
+                const sortedPreSelectedData = preSelectedData.sort(
+                  (a: any, b: any) => a.position - b.position
+                );
+
+                // Update each player with their court position (same logic as select-players API)
+                for (let i = 0; i < sortedPreSelectedData.length; i++) {
+                  const { playerId, position } = sortedPreSelectedData[i];
+                  await tx.player.update({
+                    where: { id: playerId },
+                    data: {
+                      status: "READY", // Use READY status like select-players API
+                      currentCourtId: id,
+                      courtPosition: position, // Store the court position
+                    },
+                  });
+                }
+
+                // Clear the pre-selected players data since they're now assigned
+                await tx.court.update({
+                  where: { id },
+                  data: {
+                    preSelectedPlayers: [],
+                    updatedAt: new Date(),
+                  },
+                });
+              } else {
+                // Some players are no longer available, clear the pre-selection
+                await tx.court.update({
+                  where: { id },
+                  data: {
+                    preSelectedPlayers: [],
+                    updatedAt: new Date(),
+                  },
+                });
+                preSelectedData = null;
+              }
+            } else {
+              // No valid pre-selected players found
+            }
+          } catch (error) {
+            // Invalid pre-selected data, clear it
+            await tx.court.update({
+              where: { id },
+              data: {
+                preSelectedPlayers: [],
+                updatedAt: new Date(),
+              },
+            });
+          }
+        } else {
+          // No pre-selected players
+        }
+
         // Update court status and remove current match
         const updatedCourt = await tx.court.update({
           where: { id },
           data: {
-            status: "EMPTY",
+            status: nextCourtStatus,
             currentMatchId: null,
           },
           include: {

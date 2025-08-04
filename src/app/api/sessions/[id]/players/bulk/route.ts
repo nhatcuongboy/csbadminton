@@ -90,14 +90,14 @@ export async function POST(
       }
 
       // Validate playerNumber range
-      if (playerData.playerNumber < 1 || playerData.playerNumber > maxPlayers) {
-        errors.push(
-          `Player ${
-            index + 1
-          }: playerNumber must be between 1 and ${maxPlayers}`
-        );
-        continue;
-      }
+      // if (playerData.playerNumber < 1 || playerData.playerNumber > maxPlayers) {
+      //   errors.push(
+      //     `Player ${
+      //       index + 1
+      //     }: playerNumber must be between 1 and ${maxPlayers}`
+      //   );
+      //   continue;
+      // }
 
       // Check for duplicate playerNumber in request
       if (playerNumbers.has(playerData.playerNumber)) {

@@ -105,10 +105,8 @@ interface SessionData {
 
 export default function SessionDetailContent({
   sessionData,
-  direction = "horizontal", // Default direction for court layouts
 }: {
   sessionData: SessionData;
-  direction?: "horizontal" | "vertical";
 }) {
   const t = useTranslations("SessionDetail");
   const [session, setSession] = useState<SessionData>(sessionData);
@@ -763,7 +761,6 @@ export default function SessionDetailContent({
               onDataRefresh={refreshSessionData}
               isRefreshing={isRefreshing}
               formatWaitTime={formatWaitTime}
-              direction={direction}
             />
           )}
           {activeTab === 1 && (
@@ -778,7 +775,6 @@ export default function SessionDetailContent({
           {activeTab === 2 && (
             <SessionHistoryList 
               sessionId={session.id} 
-              direction={direction}
             />
           )}
           {activeTab === 3 && (

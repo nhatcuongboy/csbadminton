@@ -67,6 +67,12 @@ export enum Level {
   K = "K",
 }
 
+// Court Direction enum
+export enum CourtDirection {
+  HORIZONTAL = "HORIZONTAL",
+  VERTICAL = "VERTICAL",
+}
+
 // Player types
 export interface Player {
   id: string;
@@ -98,10 +104,16 @@ export interface Court {
   sessionId: string;
   courtNumber: number;
   courtName?: string;
+  direction: CourtDirection;
   status: "EMPTY" | "IN_USE" | "READY";
   currentPlayers?: Player[];
   currentMatchId?: string;
   currentMatch?: Match;
+  preSelectedPlayers?: Array<{
+    playerId: string;
+    position: number;
+    player?: Player;
+  }>;
 }
 
 // Match types
@@ -153,9 +165,17 @@ export const SessionService = {
   // Get player statistics for a session
   getPlayerStatistics: async (
     sessionId: string
-  ): Promise<{ sessionId: string; playerStats: PlayerStatistics[]; lastUpdated: string }> => {
+  ): Promise<{
+    sessionId: string;
+    playerStats: PlayerStatistics[];
+    lastUpdated: string;
+  }> => {
     const response = await api.get<
-      ApiResponse<{ sessionId: string; playerStats: PlayerStatistics[]; lastUpdated: string }>
+      ApiResponse<{
+        sessionId: string;
+        playerStats: PlayerStatistics[];
+        lastUpdated: string;
+      }>
     >(`/sessions/${sessionId}/players/statistics`);
     return response.data.data!;
   },
@@ -500,7 +520,7 @@ export const CourtService = {
   selectPlayers: async (
     courtId: string,
     playerIds: string[],
-    playersWithPosition?: Array<{playerId: string, position: number}>
+    playersWithPosition?: Array<{ playerId: string; position: number }>
   ): Promise<Court> => {
     const requestBody: any = {
       playerIds,
@@ -562,6 +582,86 @@ export const CourtService = {
       `/courts/${courtId}/current-match`
     );
     return response.data.data || null;
+  },
+
+  // Update court configuration (name, direction)
+  updateCourt: async (
+    courtId: string,
+    data: {
+      courtName?: string;
+      direction?: CourtDirection;
+    }
+  ): Promise<Court> => {
+    const response = await api.patch<ApiResponse<Court>>(
+      `/courts/${courtId}`,
+      data
+    );
+    toast.success("Court updated successfully");
+    return response.data.data!;
+  },
+
+  // Bulk update courts configuration
+  bulkUpdateCourts: async (
+    sessionId: string,
+    courts: Array<{
+      courtId: string;
+      courtName?: string;
+      direction?: CourtDirection;
+    }>
+  ): Promise<Court[]> => {
+    const updatePromises = courts.map((court) =>
+      CourtService.updateCourt(court.courtId, {
+        courtName: court.courtName,
+        direction: court.direction,
+      })
+    );
+    const updatedCourts = await Promise.all(updatePromises);
+    toast.success(`${courts.length} courts updated successfully`);
+    return updatedCourts;
+  },
+
+  // Pre-select players for next match
+  preSelectPlayers: async (
+    courtId: string,
+    playersWithPosition: Array<{ playerId: string; position: number }>
+  ): Promise<Court> => {
+    const response = await api.post<ApiResponse<Court>>(
+      `/courts/${courtId}/pre-select`,
+      { playersWithPosition }
+    );
+    return response.data.data!;
+  },
+
+  // Cancel pre-selection
+  cancelPreSelect: async (courtId: string): Promise<Court> => {
+    const response = await api.delete<ApiResponse<Court>>(
+      `/courts/${courtId}/pre-select`
+    );
+    return response.data.data!;
+  },
+
+  // Get pre-selection info
+  getPreSelect: async (
+    courtId: string
+  ): Promise<{
+    courtId: string;
+    preSelectedPlayers?: Array<{
+      playerId: string;
+      position: number;
+      player?: Player;
+    }>;
+  }> => {
+    const response = await api.get<
+      ApiResponse<{
+        courtId: string;
+        preSelectedPlayers?: Array<{
+          playerId: string;
+          position: number;
+          player?: Player;
+        }>;
+      }>
+    >(`/courts/${courtId}/pre-select`);
+    return response.data.data!;
   },
 };
 
@@ -781,6 +881,7 @@ export const RealTimeService = {
 export interface CourtConfig {
   courtNumber: number;
   courtName?: string;
+  direction?: CourtDirection;
 }
 
 // Session creation interface
