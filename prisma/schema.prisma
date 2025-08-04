@@ -101,6 +101,7 @@ model Match {
   status       MatchStatus   @default(IN_PROGRESS)
   startTime    DateTime      @default(now())
   endTime      DateTime?
+  isExtra      Boolean       @default(false)  // Indicates match started after session endTime
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   currentCourt Court?        @relation("CurrentMatch")

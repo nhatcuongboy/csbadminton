@@ -154,6 +154,8 @@ export interface PlayerStatistics {
   gender?: string;
   level?: string;
   totalMatches: number;
+  regularMatches: number;  // Number of regular matches (within session time)
+  extraMatches: number;    // Number of extra matches (overtime)
   wins: number;
   losses: number;
   winRate: number;
@@ -164,19 +166,48 @@ export interface PlayerStatistics {
 export const SessionService = {
   // Get player statistics for a session
   getPlayerStatistics: async (
-    sessionId: string
+    sessionId: string,
+    options?: {
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+      gender?: string;
+      level?: string;
+      status?: string;
+    }
   ): Promise<{
     sessionId: string;
     playerStats: PlayerStatistics[];
+    filters: {
+      gender?: string;
+      level?: string;
+      status?: string;
+      sortBy: string;
+      sortOrder: string;
+    };
     lastUpdated: string;
   }> => {
+    const params = new URLSearchParams();
+    if (options?.sortBy) params.append('sortBy', options.sortBy);
+    if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
+    if (options?.gender) params.append('gender', options.gender);
+    if (options?.level) params.append('level', options.level);
+    if (options?.status) params.append('status', options.status);
+    
+    const url = `/sessions/${sessionId}/players/statistics${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await api.get<
       ApiResponse<{
         sessionId: string;
         playerStats: PlayerStatistics[];
+        filters: {
+          gender?: string;
+          level?: string;
+          status?: string;
+          sortBy: string;
+          sortOrder: string;
+        };
         lastUpdated: string;
       }>
-    >(`/sessions/${sessionId}/players/statistics`);
+    >(url);
     return response.data.data!;
   },
   // Get all sessions

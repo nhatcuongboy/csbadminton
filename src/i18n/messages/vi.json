@@ -574,5 +574,43 @@
     "matchs": {
       "tabTitle": "Trận đấu"
     }
+  },
+  "SessionPlayerStatistics": {
+    "errorLoadingStats": "Không thể tải thống kê người chơi.",
+    "noDataAvailable": "Không có thống kê người chơi.",
+    "tableCaption": "Thống kê người chơi trong phiên này",
+    "columnNo": "STT",
+    "columnName": "Tên",
+    "columnTotalMatches": "Tổng trận",
+    "columnRegularMatches": "Trận chính",
+    "columnExtraMatches": "Trận thêm",
+    "columnWins": "Thắng",
+    "columnLosses": "Thua",
+    "columnWinRate": "Tỷ lệ thắng",
+    "columnAvgScore": "Điểm TB",
+    "regularMatchesTooltip": "Trận đấu chính thức (trong thời gian phiên)",
+    "extraMatchesTooltip": "Trận đấu thêm giờ (ngoài giờ)",
+    "unnamed": "Chưa đặt tên",
+    "lastUpdated": "Cập nhật lần cuối",
+    "filtersAndSorting": "Bộ lọc & Sắp xếp",
+    "sortBy": "Sắp xếp theo",
+    "sortOrder": "Thứ tự",
+    "ascending": "Tăng dần",
+    "descending": "Giảm dần",
+    "filterByGender": "Lọc theo giới tính",
+    "filterByLevel": "Lọc theo trình độ",
+    "filterByStatus": "Lọc theo trạng thái",
+    "allGenders": "Tất cả giới tính",
+    "allLevels": "Tất cả trình độ",
+    "allStatuses": "Tất cả trạng thái",
+    "male": "Nam",
+    "female": "Nữ",
+    "beginner": "Mới bắt đầu",
+    "intermediate": "Trung bình",
+    "advanced": "Nâng cao",
+    "waiting": "Đang chờ",
+    "playing": "Đang chơi",
+    "resting": "Đang nghỉ",
+    "resetFilters": "Đặt lại"
   }
 }

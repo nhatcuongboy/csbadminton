@@ -51,13 +51,18 @@ export async function POST(
     // All validations passed, create a new match in a transaction
     const result = await prisma.$transaction(
       async (tx) => {
+        // Calculate if this is an extra match (started after session end time)
+        const currentTime = new Date();
+        const isExtra = court.session.endTime ? currentTime > court.session.endTime : false;
+
         // Create new match
         const match = await tx.match.create({
           data: {
             sessionId: court.sessionId,
             courtId: id,
             status: "IN_PROGRESS",
-            startTime: new Date(),
+            startTime: currentTime,
+            isExtra: isExtra, // Set isExtra based on session end time
           },
         });
 

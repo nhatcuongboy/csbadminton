@@ -573,5 +573,43 @@
     "matchs": {
       "tabTitle": "Matches"
     }
+  },
+  "SessionPlayerStatistics": {
+    "errorLoadingStats": "Failed to load player statistics.",
+    "noDataAvailable": "No player statistics available.",
+    "tableCaption": "Player statistics for this session",
+    "columnNo": "No.",
+    "columnName": "Name",
+    "columnTotalMatches": "Total Matches",
+    "columnRegularMatches": "Regular Matches",
+    "columnExtraMatches": "Extra Matches",
+    "columnWins": "Wins",
+    "columnLosses": "Losses",
+    "columnWinRate": "Win Rate",
+    "columnAvgScore": "Avg Score",
+    "regularMatchesTooltip": "Regular matches (within session time)",
+    "extraMatchesTooltip": "Extra matches (overtime)",
+    "unnamed": "Unnamed",
+    "lastUpdated": "Last updated",
+    "filtersAndSorting": "Filters & Sorting",
+    "sortBy": "Sort by",
+    "sortOrder": "Sort order",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "filterByGender": "Filter by gender",
+    "filterByLevel": "Filter by level",
+    "filterByStatus": "Filter by status",
+    "allGenders": "All genders",
+    "allLevels": "All levels",
+    "allStatuses": "All statuses",
+    "male": "Male",
+    "female": "Female",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "waiting": "Waiting",
+    "playing": "Playing",
+    "resting": "Resting",
+    "resetFilters": "Reset"
   }
 }

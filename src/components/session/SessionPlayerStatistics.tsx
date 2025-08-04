@@ -1,5 +1,15 @@
 import { PlayerStatistics, SessionService } from "@/lib/api";
-import { Box, Center, Spinner, Table, Text } from "@chakra-ui/react";
+import { 
+  Box, 
+  Center, 
+  Spinner, 
+  Text, 
+  Flex,
+  Button,
+  HStack,
+  Table
+} from "@chakra-ui/react";
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 
 interface SessionPlayerStatisticsProps {
@@ -9,30 +19,129 @@ interface SessionPlayerStatisticsProps {
 const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
   sessionId,
 }) => {
+  const t = useTranslations("SessionPlayerStatistics");
   const [stats, setStats] = useState<PlayerStatistics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  
+  // Filter and sort states
+  const [sortBy, setSortBy] = useState<string>('playerNumber');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [genderFilter, setGenderFilter] = useState<string>('');
+
+  const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await SessionService.getPlayerStatistics(sessionId, {
+        sortBy,
+        sortOrder,
+        gender: genderFilter || undefined,
+      });
+      setStats(result.playerStats);
+      setLastUpdated(result.lastUpdated);
+    } catch (err) {
+      setError(t("errorLoadingStats"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchStats() {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await SessionService.getPlayerStatistics(sessionId);
-        setStats(result.playerStats);
-        setLastUpdated(result.lastUpdated);
-      } catch (err) {
-        setError("Failed to load player statistics.");
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchStats();
-  }, [sessionId]);
+  }, [sessionId, sortBy, sortOrder, genderFilter]);
+
+  const sortOptions = [
+    { value: 'playerNumber', label: t('columnNo') },
+    { value: 'name', label: t('columnName') },
+    { value: 'totalMatches', label: t('columnTotalMatches') },
+    { value: 'regularMatches', label: t('columnRegularMatches') },
+    { value: 'extraMatches', label: t('columnExtraMatches') },
+    { value: 'wins', label: t('columnWins') },
+    { value: 'losses', label: t('columnLosses') },
+    { value: 'winRate', label: t('columnWinRate') },
+    { value: 'averageScore', label: t('columnAvgScore') },
+  ];
 
   return (
     <Box>
+      {/* Filter and Sort Controls */}
+      <Box mb={4} p={4} borderWidth={1} borderRadius="md" bg="gray.50">
+        <Text fontWeight="bold" mb={3}>{t("filtersAndSorting")}</Text>
+        <Flex direction={{ base: "column", md: "row" }} gap={3} align="end">
+          <Box>
+            <Text fontSize="sm" mb={1}>{t("sortBy")}</Text>
+            <select 
+              value={sortBy} 
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
+              style={{
+                fontSize: '14px',
+                minWidth: '150px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid #CBD5E0'
+              }}
+            >
+              {sortOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Box>
+          
+          <Box>
+            <Text fontSize="sm" mb={1}>{t("sortOrder")}</Text>
+            <select 
+              value={sortOrder} 
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortOrder(e.target.value as 'asc' | 'desc')}
+              style={{
+                fontSize: '14px',
+                minWidth: '120px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid #CBD5E0'
+              }}
+            >
+              <option value="asc">{t("ascending")}</option>
+              <option value="desc">{t("descending")}</option>
+            </select>
+          </Box>
+          
+          <Box>
+            <Text fontSize="sm" mb={1}>{t("filterByGender")}</Text>
+            <select 
+              value={genderFilter} 
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setGenderFilter(e.target.value)}
+              style={{
+                fontSize: '14px',
+                minWidth: '120px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid #CBD5E0'
+              }}
+            >
+              <option value="">{t("allGenders")}</option>
+              <option value="MALE">{t("male")}</option>
+              <option value="FEMALE">{t("female")}</option>
+            </select>
+          </Box>
+          
+          <Button 
+            size="sm" 
+            onClick={() => {
+              setSortBy('playerNumber');
+              setSortOrder('asc');
+              setGenderFilter('');
+            }}
+            variant="outline"
+          >
+            {t("resetFilters")}
+          </Button>
+        </Flex>
+      </Box>
+
       {loading ? (
         <Center py={8}>
           <Spinner size="lg" />
@@ -40,28 +149,40 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
       ) : error ? (
         <Text color="red.500">{error}</Text>
       ) : stats.length === 0 ? (
-        <Text>No player statistics available.</Text>
+        <Text>{t("noDataAvailable")}</Text>
       ) : (
         <Box>
           <Table.Root size="sm" variant="outline" colorScheme="gray">
-            <Table.Caption>Player statistics for this session</Table.Caption>
+            <Table.Caption>{t("tableCaption")}</Table.Caption>
             <Table.Header>
               <Table.Row>
-                <Table.ColumnHeader>No.</Table.ColumnHeader>
-                <Table.ColumnHeader>Name</Table.ColumnHeader>
-                <Table.ColumnHeader>Matches</Table.ColumnHeader>
-                <Table.ColumnHeader>Wins</Table.ColumnHeader>
-                <Table.ColumnHeader>Losses</Table.ColumnHeader>
-                <Table.ColumnHeader>Win Rate</Table.ColumnHeader>
-                <Table.ColumnHeader>Avg Score</Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnNo")}</Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnName")}</Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnTotalMatches")}</Table.ColumnHeader>
+                <Table.ColumnHeader>
+                  <span title={t("regularMatchesTooltip")} style={{ cursor: "help" }}>
+                    {t("columnRegularMatches")}
+                  </span>
+                </Table.ColumnHeader>
+                <Table.ColumnHeader>
+                  <span title={t("extraMatchesTooltip")} style={{ cursor: "help" }}>
+                    {t("columnExtraMatches")}
+                  </span>
+                </Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnWins")}</Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnLosses")}</Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnWinRate")}</Table.ColumnHeader>
+                <Table.ColumnHeader>{t("columnAvgScore")}</Table.ColumnHeader>
               </Table.Row>
             </Table.Header>
             <Table.Body>
               {stats.map((p, idx) => (
                 <Table.Row key={p.playerId}>
                   <Table.Cell>{p.playerNumber}</Table.Cell>
-                  <Table.Cell>{p.name || "Unnamed"}</Table.Cell>
+                  <Table.Cell>{p.name || t("unnamed")}</Table.Cell>
                   <Table.Cell>{p.totalMatches}</Table.Cell>
+                  <Table.Cell>{p.regularMatches || 0}</Table.Cell>
+                  <Table.Cell>{p.extraMatches || 0}</Table.Cell>
                   <Table.Cell>{p.wins}</Table.Cell>
                   <Table.Cell>{p.losses}</Table.Cell>
                   <Table.Cell>{p.winRate}%</Table.Cell>
@@ -71,7 +192,7 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
             </Table.Body>
           </Table.Root>
           <Text fontSize="xs" color="gray.500" mt={2}>
-            Last updated: {new Date(lastUpdated).toLocaleString()}
+            {t("lastUpdated")}: {new Date(lastUpdated).toLocaleString()}
           </Text>
         </Box>
       )}

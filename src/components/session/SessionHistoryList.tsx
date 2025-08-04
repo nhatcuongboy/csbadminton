@@ -3,6 +3,7 @@
 import { SessionService, CourtDirection } from "@/lib/api";
 import { parseScoreData } from "@/utils/match-result-utils";
 import {
+  Badge,
   Box,
   Center,
   Flex,
@@ -60,25 +61,26 @@ type HistoryMatch = {
     pair2Score: number;
   };
   winningPair?: 1 | 2;
+  isExtra?: boolean; // Add isExtra field
 };
 
-const HistoryMatchCard = ({ 
-  match, 
-  direction = CourtDirection.HORIZONTAL 
-}: { 
-  match: HistoryMatch; 
+const HistoryMatchCard = ({
+  match,
+  direction = CourtDirection.HORIZONTAL,
+}: {
+  match: HistoryMatch;
   direction?: CourtDirection;
 }) => {
   // For the pairing logic, we need to consider the courtPosition values and direction
   // According to the user: with direction="horizontal" (default):
   // #8 (courtPosition=0) pairs with #14 (courtPosition=1) = Pair 1
   // #7 (courtPosition=2) pairs with #11 (courtPosition=3) = Pair 2
-  
+
   // The match.players array should be sorted by courtPosition for proper pairing
   // We'll assume the players are already properly ordered based on courtPosition
-  
+
   let pair1: string[], pair2: string[];
-  
+
   if (direction === CourtDirection.HORIZONTAL) {
     // Horizontal layout: courtPosition 0,1 = Pair 1, courtPosition 2,3 = Pair 2
     pair1 = match.players.slice(0, 2); // courtPosition 0, 1
@@ -121,9 +123,24 @@ const HistoryMatchCard = ({
       }}
     >
       <Stack gap={4}>
-        <Flex align="center" gap={2}>
-          <Icon as={MapPin} boxSize={5} color="gray.500" />
-          <Text fontWeight="bold">{match.court}</Text>
+        <Flex align="center" justify="space-between">
+          <Flex align="center" gap={2}>
+            <Icon as={MapPin} boxSize={5} color="gray.500" />
+            <Text fontWeight="bold">{match.court}</Text>
+          </Flex>
+          {/* Extra match badge */}
+          {match.isExtra && (
+            <Badge
+              colorPalette="orange"
+              variant="solid"
+              fontSize="xs"
+              px={2}
+              py={1}
+              borderRadius="md"
+            >
+              Extra
+            </Badge>
+          )}
         </Flex>
 
         <Stack gap={2}>
@@ -318,10 +335,11 @@ export default function SessionHistoryList({
               const posB = b.player?.courtPosition ?? b.position ?? 0;
               return posA - posB;
             });
-            playerNames = sortedMatchPlayers.map((mp: any) => mp.player?.name || "?");
+            playerNames = sortedMatchPlayers.map(
+              (mp: any) => mp.player?.name || "?"
+            );
           }
 
-          
           // Extract match results using the new utility function
           let scores;
           let winningPair;
@@ -422,6 +440,7 @@ export default function SessionHistoryList({
             winner: matchData.winner,
             scores,
             winningPair,
+            isExtra: Boolean(matchData.isExtra), // Include isExtra field
           });
         }
 
@@ -572,9 +591,9 @@ export default function SessionHistoryList({
           gap={6}
         >
           {matches.map((match) => (
-            <HistoryMatchCard 
-              key={match.id} 
-              match={match} 
+            <HistoryMatchCard
+              key={match.id}
+              match={match}
               direction={CourtDirection.HORIZONTAL}
             />
           ))}
