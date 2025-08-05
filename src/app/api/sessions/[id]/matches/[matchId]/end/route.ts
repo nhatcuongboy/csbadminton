@@ -1,6 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
+import { Prisma } from "@/generated/prisma";
 
 interface MatchEndParams {
   id: string;
@@ -127,7 +128,7 @@ export async function PATCH(
               data: {
                 status: "IN_USE",
                 currentMatchId: newMatch.id,
-                preSelectedPlayers: undefined,
+                preSelectedPlayers: Prisma.DbNull,
               },
             });
 
@@ -150,7 +151,7 @@ export async function PATCH(
               where: { id: match.courtId },
               data: {
                 currentMatchId: null,
-                preSelectedPlayers: undefined,
+                preSelectedPlayers: Prisma.DbNull,
               },
             });
           }

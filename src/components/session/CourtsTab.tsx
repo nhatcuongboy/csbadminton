@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React from "react";
+import { createCourtElapsedTimeFormatter } from "@/utils/time-helpers";
 import BadmintonCourt from "../court/BadmintonCourt";
 import { PlayerGrid } from "../player/PlayerGrid";
 import ManualSelectPlayersModal from "./ManualSelectPlayersModal";
@@ -56,7 +57,7 @@ interface CourtsTabProps {
   waitingPlayers: Player[];
   togglePlayerSelection: (id: string) => void;
   getCurrentMatch: (courtId: string) => Match | null;
-  formatCourtElapsedTime: (startTime: string) => string;
+  formatCourtElapsedTime?: (startTime: string) => string;
   getCourtDisplayName: (
     courtName: string | undefined,
     courtNumber: number
@@ -105,6 +106,10 @@ const CourtsTab: React.FC<
   formatWaitTime,
 }) => {
   const t = useTranslations("SessionDetail");
+
+  // Create formatter function if not provided via props
+  const elapsedTimeFormatter =
+    formatCourtElapsedTime || createCourtElapsedTimeFormatter(t);
   const [loadingEndMatchId, setLoadingEndMatchId] = React.useState<
     string | null
   >(null);
@@ -121,16 +126,6 @@ const CourtsTab: React.FC<
     React.useState<Court | null>(null);
   const [loadingConfirmAutoAssign, setLoadingConfirmAutoAssign] =
     React.useState(false);
-  const [currentTopCount, setCurrentTopCount] = React.useState(
-    waitingPlayers.length || 4
-  );
-
-  // Update currentTopCount when waitingPlayers count changes
-  React.useEffect(() => {
-    if (waitingPlayers.length > 0) {
-      setCurrentTopCount(waitingPlayers.length);
-    }
-  }, [waitingPlayers.length]);
 
   // Manual selection modal state
   const [manualSelectModalOpen, setManualSelectModalOpen] =
@@ -615,7 +610,7 @@ const CourtsTab: React.FC<
                           >
                             <Box as={Clock} boxSize={3} />
                             {currentMatch.startTime
-                              ? formatCourtElapsedTime(currentMatch.startTime)
+                              ? elapsedTimeFormatter(currentMatch.startTime)
                               : "-"}
                           </Badge>
                         )}
@@ -673,7 +668,7 @@ const CourtsTab: React.FC<
                           isActive={isActive}
                           elapsedTime={
                             currentMatch
-                              ? formatCourtElapsedTime(currentMatch.startTime)
+                              ? elapsedTimeFormatter(currentMatch.startTime)
                               : t("courtsTab.playing")
                           }
                           courtName={getCourtDisplayName(
@@ -820,7 +815,7 @@ const CourtsTab: React.FC<
                                   const currentMatch = getCurrentMatch(
                                     court.id
                                   );
-                                  console.log(court.id, currentMatch);
+                                  // console.log(court.id, currentMatch);
                                   if (currentMatch) {
                                     // Add court direction to the match object
                                     const matchWithCourt = {
@@ -933,7 +928,7 @@ const CourtsTab: React.FC<
         isOpen={autoAssignModalOpen}
         court={selectedAutoAssignCourt}
         waitingPlayersCount={waitingPlayers.length}
-        currentTopCount={currentTopCount}
+        numberOfCourts={session.numberOfCourts}
         onConfirm={handleConfirmAutoAssign}
         onCancel={handleCancelAutoAssign}
         getCourtDisplayName={getCourtDisplayName}

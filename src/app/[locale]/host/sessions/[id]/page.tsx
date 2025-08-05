@@ -32,24 +32,27 @@ export default function SessionDetailPage({
         setLoading(true);
         const sessionData = await SessionService.getSession(sessionId);
         
-        // Fetch matches separately since the API doesn't include them
-        let matches: any = [];
-        try {
-          matches = await SessionService.getSessionMatches(sessionId);
-        } catch (matchError) {
-          console.error("Error fetching matches on page load:", matchError);
-        }
-        
         // Transform API data format to match what SessionDetailContent expects
         const formattedSession = {
           ...sessionData,
           // SessionDetailContent expects string dates (ISO format)
           startTime: sessionData.startTime ? new Date(sessionData.startTime).toISOString() : null,
           endTime: sessionData.endTime ? new Date(sessionData.endTime).toISOString() : null,
-          // Đảm bảo các mảng tồn tại
-          courts: sessionData.courts || [],
+          // Transform courts and their currentMatch
+          courts: (sessionData.courts || []).map((court: any) => ({
+            ...court,
+            currentPlayers: court.currentPlayers || [],
+            currentMatch: court.currentMatch ? {
+              ...court.currentMatch,
+              startTime: court.currentMatch.startTime 
+                ? new Date(court.currentMatch.startTime).toISOString() 
+                : new Date().toISOString(),
+              endTime: court.currentMatch.endTime 
+                ? new Date(court.currentMatch.endTime).toISOString() 
+                : undefined,
+            } : undefined,
+          })),
           players: sessionData.players || [],
-          matches: matches || [], // Use fetched matches instead of empty array
           waitingQueue: sessionData.players?.filter(
             (p: any) => p.status === "WAITING"
           ) || [],

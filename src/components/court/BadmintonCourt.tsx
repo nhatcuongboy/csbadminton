@@ -467,31 +467,6 @@ export default function BadmintonCourt({
           <Spinner size="md" />
         </Box>
       )}
-      {/* Match Time/Status Display - Center */}
-      {/* {status === "READY" &&
-        showTimeInCenter && ( // Only show badge when status is READY
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            bg="#facc15"
-            color="#92400e"
-            px={3}
-            py={1}
-            borderRadius="full"
-            fontSize="sm"
-            fontWeight="bold"
-            boxShadow="lg"
-            zIndex={2}
-            display="flex"
-            alignItems="center"
-            gap={1}
-          >
-            <Clock size={14} />
-            {t("courtsTab.ready")}
-          </Box>
-        )} */}
     </Box>
   );
 }

@@ -15,6 +15,7 @@ import {
   type Session,
 } from "@/lib/api";
 import { getCourtDisplayName } from "@/lib/api/sessions";
+import { createCourtElapsedTimeFormatter } from "@/utils/time-helpers";
 import {
   Box,
   Center,
@@ -44,6 +45,9 @@ function StatusPageContent() {
   const t = useTranslations("pages.join.status");
   const common = useTranslations("common");
 
+  // Create the bound formatter function
+  const formatCourtElapsedTime = createCourtElapsedTimeFormatter(t, "time.");
+
   const [refreshInterval, setRefreshInterval] = useState(60); // seconds
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [queuePosition, setQueuePosition] = useState(0);
@@ -70,21 +74,6 @@ function StatusPageContent() {
       return t("time.oneMinute");
     } else {
       return t("time.minutes", { count: elapsedMinutes });
-    }
-  };
-
-  // Helper function to format elapsed time for court display (more readable)
-  const formatCourtElapsedTime = (startTime: string | Date): string => {
-    const start = new Date(startTime);
-    const elapsedMs = Date.now() - start.getTime();
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-
-    if (elapsedMinutes === 0) {
-      return "< 1 phút";
-    } else if (elapsedMinutes === 1) {
-      return "1 phút";
-    } else {
-      return `${elapsedMinutes} phút`;
     }
   };
 

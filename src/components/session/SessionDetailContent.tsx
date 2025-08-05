@@ -1,31 +1,15 @@
 "use client";
 
 import { CourtService, Level, MatchService, SessionService } from "@/lib/api";
-import {
-  Box,
-  Container,
-  Flex,
-  Grid,
-  Heading,
-  //   Tab,
-  //   TabList,
-  //   TabPanel,
-  //   TabPanels,
-  //   Tabs,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Container, Flex, Heading, Text } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
 // Import compatibility components
 import CourtsTab from "@/components/session/CourtsTab";
 import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
 import SessionHistoryList from "@/components/session/SessionHistoryList";
+import SessionStatusHeader from "@/components/session/SessionStatusHeader";
 import SettingsTab from "@/components/session/SettingsTab";
-import {
-  Button,
-  IconButton,
-  useToast,
-  VStack,
-} from "@/components/ui/chakra-compat";
+import { Button, IconButton, useToast } from "@/components/ui/chakra-compat";
 import TopBar from "@/components/ui/TopBar";
 import {
   formatDuration,
@@ -33,7 +17,7 @@ import {
   getCourtDisplayName,
 } from "@/lib/api/sessions";
 import dayjs from "@/lib/dayjs";
-import { Clock, Play, RefreshCw, Square, Trophy, Users } from "lucide-react";
+import { RefreshCw, Square, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import WaitTimeUpdater from "./WaitTimeUpdater";
 
@@ -62,6 +46,7 @@ interface Court {
   status: string;
   currentMatchId?: string;
   currentPlayers: Player[];
+  currentMatch?: Match;
 }
 
 interface MatchPlayer {
@@ -99,7 +84,6 @@ interface SessionData {
   requirePlayerInfo: boolean;
   players: Player[];
   courts: Court[];
-  matches: Match[];
   waitingQueue?: Player[];
 }
 
@@ -116,7 +100,6 @@ export default function SessionDetailContent({
   const [activeTab, setActiveTab] = useState<number>(0);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [selectedCourt, setSelectedCourt] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [matchMode, setMatchMode] = useState<"auto" | "manual">("auto");
   const [showMatchCreation, setShowMatchCreation] = useState<boolean>(false);
   const [playerFilter, setPlayerFilter] = useState<PlayerFilter>("ALL");
@@ -140,66 +123,40 @@ export default function SessionDetailContent({
       status: court.status as "READY" | "IN_USE" | "EMPTY",
     }));
 
-  // Helper function to format elapsed time for court display (more readable)
-  const formatCourtElapsedTime = (startTime: string): string => {
-    const start = new Date(startTime);
-    const elapsedMs = currentTime.getTime() - start.getTime();
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-
-    if (elapsedMinutes === 0) {
-      return t("lessThanMinute");
-    } else if (elapsedMinutes === 1) {
-      return t("oneMinute");
-    } else {
-      return t("minutes", { minutes: elapsedMinutes });
-    }
-  };
-
   // Helper function to get current match for a court
   const getCurrentMatch = (courtId: string): Match | null => {
-    // Ensure session.matches is an array before using find
-    if (!Array.isArray(session.matches)) {
-      console.warn("session.matches is not an array:", session.matches);
-      return null;
+    // Find the court first
+    const court = session.courts.find((c) => c.id === courtId);
+
+    // If court has a currentMatch, return it directly (more efficient than filtering all matches)
+    // This optimization uses the currentMatch already included in the court data from API
+    if (court?.currentMatch) {
+      // Convert the currentMatch to our UI format (Date -> string)
+      return {
+        ...court.currentMatch,
+        startTime: court.currentMatch.startTime
+          ? new Date(court.currentMatch.startTime).toISOString()
+          : new Date().toISOString(),
+        endTime: court.currentMatch.endTime
+          ? new Date(court.currentMatch.endTime).toISOString()
+          : undefined,
+      };
     }
 
-    // First try to find by courtId and status
-    let match = session.matches.find(
-      (match) => match.courtId === courtId && match.status === "IN_PROGRESS"
-    );
-
-    // If not found, try to find by currentMatchId from court
-    if (!match) {
-      const courtData = session.courts.find((c) => c.id === courtId);
-      if (courtData?.currentMatchId) {
-        match = session.matches.find(
-          (match) => match.id === courtData.currentMatchId
-        );
-      }
-    }
-
-    return match || null;
+    // Fallback: This should not be needed anymore since we're using court.currentMatch
+    // but keeping for absolute backward compatibility
+    return null;
   };
 
   // Function to refresh session data
   const refreshSessionData = useCallback(async () => {
     try {
       setIsRefreshing(true);
-      // Get session and matches to match SessionData shape
+      // Get complete session data including currentMatch in courts in a single API call
+      // This replaces the previous approach of calling getSession() + getSessionMatches() separately
       const data = await SessionService.getSession(session.id);
-      // Fetch matches if not present (api.ts Session type may not include matches)
-      let matches: any[] = [];
-      try {
-        const matchesResult = await SessionService.getSessionMatches(
-          session.id
-        );
-        // Ensure matches is always an array
-        matches = Array.isArray(matchesResult) ? matchesResult : [];
-      } catch (error) {
-        console.error("Error fetching matches:", error);
-        matches = [];
-      }
-      // Convert startTime/endTime to string for SessionData
+
+      // Convert to SessionData format with proper typing
       setSession({
         ...data,
         players: (data.players || []).map((p: any) => ({
@@ -209,12 +166,23 @@ export default function SessionDetailContent({
         courts: (data.courts || []).map((c: any) => ({
           ...c,
           currentPlayers: c.currentPlayers || [],
+          // Convert currentMatch dates if present
+          currentMatch: c.currentMatch
+            ? {
+                ...c.currentMatch,
+                startTime: c.currentMatch.startTime
+                  ? new Date(c.currentMatch.startTime).toISOString()
+                  : new Date().toISOString(),
+                endTime: c.currentMatch.endTime
+                  ? new Date(c.currentMatch.endTime).toISOString()
+                  : undefined,
+              }
+            : undefined,
         })),
         startTime: data.startTime
           ? new Date(data.startTime).toISOString()
           : null,
         endTime: data.endTime ? new Date(data.endTime).toISOString() : null,
-        matches: matches,
       });
       setLastRefreshed(new Date());
     } catch (error) {
@@ -236,15 +204,6 @@ export default function SessionDetailContent({
       if (intervalId) clearInterval(intervalId);
     };
   }, [session.status, refreshInterval, refreshSessionData]);
-
-  // Update current time every second for elapsed time calculations
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timeInterval);
-  }, []);
 
   // Toggle session status (Start/End session)
   const toggleSessionStatus = async () => {
@@ -344,34 +303,6 @@ export default function SessionDetailContent({
   const handleCancelAction = () => {
     setShowConfirmDialog(false);
     setPendingAction("");
-  };
-
-  // Map session status to UI text
-  const mapSessionStatusToUI = (status: string) => {
-    switch (status) {
-      case "PREPARING":
-        return t("start");
-      case "IN_PROGRESS":
-        return t("end");
-      case "FINISHED":
-        return t("ended");
-      default:
-        return t("unknownStatus");
-    }
-  };
-
-  // Map session status to color scheme
-  const mapSessionStatusToColor = (status: string) => {
-    switch (status) {
-      case "PREPARING":
-        return "green";
-      case "IN_PROGRESS":
-        return "red";
-      case "FINISHED":
-        return "gray";
-      default:
-        return "blue";
-    }
   };
 
   // Format wait time to display in mm:ss format
@@ -543,186 +474,15 @@ export default function SessionDetailContent({
       />
       <Container maxW="7xl" py={20}>
         {/* Session Status Cards */}
-        <Grid templateColumns="repeat(3, 1fr)" gap={{ base: 2, md: 6 }} mb={8}>
-          <Box
-            p={{ base: 3, md: 6 }}
-            bg="white"
-            _dark={{ bg: "gray.800" }}
-            borderRadius="lg"
-            boxShadow="md"
-            borderWidth="1px"
-          >
-            <Flex
-              align="center"
-              justify="space-between"
-              mb={{ base: 1, md: 2 }}
-            >
-              <Flex align="center">
-                <Box
-                  as={Clock}
-                  boxSize={{ base: 4, md: 5 }}
-                  color="blue.500"
-                  mr={{ base: 1, md: 2 }}
-                />
-                <Heading
-                  size={{ base: "sm", md: "md" }}
-                  display={{ base: "none", md: "block" }}
-                >
-                  {t("sessionTime")}
-                </Heading>
-                <Heading size="xs" display={{ base: "block", md: "none" }}>
-                  {t("sessionTime")}
-                </Heading>
-              </Flex>
-              <Button
-                colorScheme={mapSessionStatusToColor(session.status)}
-                onClick={toggleSessionStatus}
-                disabled={session.status === "FINISHED"}
-                loading={isToggleStatusLoading}
-                size={{ base: "xs", md: "sm" }}
-                padding={0}
-              >
-                <Flex alignItems="center">
-                  <Box
-                    as={session.status === "IN_PROGRESS" ? Square : Play}
-                    boxSize={{ base: 3, md: 4 }}
-                    // mr={{ base: 1, md: 2 }}
-                  />
-                </Flex>
-              </Button>
-            </Flex>
-            <Box display={{ base: "none", md: "block" }}>
-              <VStack align="start" spacing={2}>
-                <Text fontWeight="medium">
-                  {`${formatTime(session.startTime!)}-${formatTime(
-                    session.endTime!
-                  )} (${
-                    session.startTime
-                      ? dayjs(session.startTime).format("DD/MM/YY")
-                      : ""
-                  })`}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  {t("duration")}:{" "}
-                  {formatDuration(session.startTime!, session.endTime!)}
-                </Text>
-              </VStack>
-            </Box>
-            {/* Mobile simplified view */}
-            <Box display={{ base: "block", md: "none" }}>
-              <Text fontSize={"xs"}>
-                {`${formatTime(session.startTime!)}-${formatTime(
-                  session.endTime!
-                )} (${
-                  session.startTime
-                    ? dayjs(session.startTime).format("DD/MM/YY")
-                    : ""
-                })`}
-              </Text>
-            </Box>
-          </Box>
-
-          <Box
-            p={{ base: 3, md: 6 }}
-            bg="white"
-            _dark={{ bg: "gray.800" }}
-            borderRadius="lg"
-            boxShadow="md"
-            borderWidth="1px"
-          >
-            <Flex align="center" mb={{ base: 1, md: 2 }}>
-              <Box
-                as={Users}
-                boxSize={{ base: 4, md: 5 }}
-                color="blue.500"
-                mr={{ base: 1, md: 2 }}
-              />
-              <Heading size={{ base: "xs", md: "md" }}>{t("players")}</Heading>
-            </Flex>
-            <Text fontSize={{ base: "sm", md: "lg" }}>
-              {session.players.length} {t("total")}
-            </Text>
-            <Text
-              fontSize={{ base: "xs", md: "sm" }}
-              color="gray.500"
-              display={{ base: "none", md: "block" }}
-            >
-              {session.players.filter((p) => p.status === "PLAYING").length}{" "}
-              {t("playing")} /{" "}
-              {session.players.filter((p) => p.status === "WAITING").length}{" "}
-              {t("waiting")}
-            </Text>
-            {/* Mobile simplified view */}
-            <Text
-              fontSize="xs"
-              color="gray.500"
-              display={{ base: "block", md: "none" }}
-            >
-              {session.players.filter((p) => p.status === "PLAYING").length}P/{" "}
-              {session.players.filter((p) => p.status === "WAITING").length}W
-            </Text>
-          </Box>
-
-          <Box
-            p={{ base: 3, md: 6 }}
-            bg="white"
-            _dark={{ bg: "gray.800" }}
-            borderRadius="lg"
-            boxShadow="md"
-            borderWidth="1px"
-          >
-            <Flex
-              align="center"
-              mb={{ base: 1, md: 2 }}
-              justifyContent="space-between"
-            >
-              <Flex align="center">
-                <Box
-                  as={RefreshCw}
-                  boxSize={{ base: 4, md: 5 }}
-                  color="blue.500"
-                  mr={{ base: 1, md: 2 }}
-                />
-                <Heading
-                  size={{ base: "xs", md: "md" }}
-                  display={{ base: "none", md: "block" }}
-                >
-                  {t("updates")}
-                </Heading>
-                <Heading size="xs" display={{ base: "block", md: "none" }}>
-                  {t("refresh")}
-                </Heading>
-              </Flex>
-              {session.status === "IN_PROGRESS" && (
-                <IconButton
-                  aria-label="Refresh"
-                  icon={<Box as={RefreshCw} boxSize={{ base: 3, md: 4 }} />}
-                  size={{ base: "xs", md: "sm" }}
-                  isLoading={isRefreshing}
-                  onClick={refreshSessionData}
-                />
-              )}
-            </Flex>
-            <Box display={{ base: "none", md: "block" }}>
-              <Text fontSize="lg">
-                {session.status === "IN_PROGRESS"
-                  ? t("autoRefresh", { seconds: refreshInterval })
-                  : t("autoRefreshDisabled")}
-              </Text>
-              <Text fontSize="sm" color="gray.500">
-                {t("lastUpdated")}: {lastRefreshed.toLocaleTimeString()}
-              </Text>
-            </Box>
-            {/* Mobile simplified view */}
-            <Box display={{ base: "block", md: "none" }}>
-              <Text fontSize="xs" color="gray.500">
-                {session.status === "IN_PROGRESS"
-                  ? `${refreshInterval}s`
-                  : t("off")}
-              </Text>
-            </Box>
-          </Box>
-        </Grid>
+        <SessionStatusHeader
+          session={session}
+          refreshInterval={refreshInterval}
+          lastRefreshed={lastRefreshed}
+          isRefreshing={isRefreshing}
+          isToggleStatusLoading={isToggleStatusLoading}
+          onToggleSessionStatus={toggleSessionStatus}
+          onRefreshData={refreshSessionData}
+        />
 
         {/* Bottom Navigation Bar for Tabs */}
         <Box minH="60vh" pb="80px">
@@ -747,7 +507,6 @@ export default function SessionDetailContent({
               setSelectedCourt={setSelectedCourt}
               waitingPlayers={waitingPlayers}
               getCurrentMatch={getCurrentMatch}
-              formatCourtElapsedTime={formatCourtElapsedTime}
               getCourtDisplayName={getCourtDisplayName}
               cancelMatchCreation={cancelMatchCreation}
               confirmManualMatch={confirmManualMatch}
@@ -773,8 +532,12 @@ export default function SessionDetailContent({
             />
           )}
           {activeTab === 2 && (
-            <SessionHistoryList 
-              sessionId={session.id} 
+            <SessionHistoryList
+              sessionId={session.id}
+              sessionData={{
+                players: session.players,
+                courts: session.courts,
+              }}
             />
           )}
           {activeTab === 3 && (

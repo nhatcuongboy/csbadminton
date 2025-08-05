@@ -1,6 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
+import { Prisma } from "@/generated/prisma";
 
 interface CourtParams {
   id: string;
@@ -160,7 +161,7 @@ export async function POST(
                 await tx.court.update({
                   where: { id },
                   data: {
-                    preSelectedPlayers: [],
+                    preSelectedPlayers: Prisma.DbNull,
                     updatedAt: new Date(),
                   },
                 });
@@ -169,7 +170,7 @@ export async function POST(
                 await tx.court.update({
                   where: { id },
                   data: {
-                    preSelectedPlayers: [],
+                    preSelectedPlayers: Prisma.DbNull,
                     updatedAt: new Date(),
                   },
                 });
@@ -183,7 +184,7 @@ export async function POST(
             await tx.court.update({
               where: { id },
               data: {
-                preSelectedPlayers: [],
+                preSelectedPlayers: Prisma.DbNull,
                 updatedAt: new Date(),
               },
             });

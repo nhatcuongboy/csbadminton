@@ -108,6 +108,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
     [key: string]: Player;
   }>({});
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [showMaxPlayersWarning, setShowMaxPlayersWarning] = useState<boolean>(false);
 
   const toast = useToast();
 
@@ -341,7 +342,23 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
   // Override addNewPlayerRow to use the next available player number
   const handleAddNewPlayer = () => {
+    // Check if we're at or exceeding the recommended limit
+    if (isMaxPlayersReached) {
+      setShowMaxPlayersWarning(true);
+    } else {
+      addNewPlayerRow();
+    }
+  };
+
+  // Function to confirm adding player despite warning
+  const confirmAddPlayerDespiteWarning = () => {
+    setShowMaxPlayersWarning(false);
     addNewPlayerRow();
+  };
+
+  // Function to cancel adding player
+  const cancelAddPlayer = () => {
+    setShowMaxPlayersWarning(false);
   };
 
   // Track the last player count to know when a new player is added
@@ -491,13 +508,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
             border="1px solid #38a169"
             boxShadow="none"
             _hover={{ bg: "#f0fff4" }}
-            // disabled={isMaxPlayersReached}
             width={{ base: "auto", md: "auto" }}
-            title={
-              isMaxPlayersReached
-                ? `Maximum players reached (${maxPlayers})`
-                : `Add new player`
-            }
+            title="Add new player"
           >
             Add Player
           </Button>
@@ -512,12 +524,12 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
               <Box as={AlertCircle} boxSize={5} color="orange.500" />
               <VStack align="start" spacing={1}>
                 <Text fontSize="sm" fontWeight="semibold" color="orange.700">
-                  Maximum players reached!
+                  Recommended player limit reached
                 </Text>
                 <Text fontSize="sm" color="orange.600">
                   You have {currentPlayerCount} players for{" "}
                   {session.numberOfCourts} courts ({session.maxPlayersPerCourt}{" "}
-                  players per court). Remove existing players to add new ones.
+                  players per court). Adding more players may increase waiting times.
                 </Text>
               </VStack>
             </HStack>
@@ -779,12 +791,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                   onClick={handleAddNewPlayer}
                   colorScheme="green"
                   variant="outline"
-                  // disabled={isMaxPlayersReached}
-                  title={
-                    isMaxPlayersReached
-                      ? `Maximum players reached (${maxPlayers})`
-                      : `Add another player`
-                  }
+                  title="Add another player"
                 >
                   Add Another
                 </Button>
@@ -855,7 +862,6 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                       leftIcon={<Box as={Plus} boxSize={4} />}
                       onClick={handleAddNewPlayer}
                       colorScheme="green"
-                      disabled={isMaxPlayersReached}
                     >
                       Add Your First Player
                     </Button>
@@ -1379,6 +1385,83 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
           </VStack>
         </CardBody>
       </Card>
+
+      {/* Warning popup for exceeding recommended player limit */}
+      {showMaxPlayersWarning && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="blackAlpha.600"
+          zIndex={9999}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={cancelAddPlayer}
+        >
+          <Box
+            bg="white"
+            _dark={{ bg: "gray.800" }}
+            borderRadius="lg"
+            boxShadow="xl"
+            p={6}
+            maxW="md"
+            mx={4}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VStack spacing={4} align="stretch">
+              <HStack spacing={3}>
+                <Box as={AlertCircle} boxSize={6} color="orange.500" />
+                <Heading size="md" color="orange.600">
+                  Player Limit Warning
+                </Heading>
+              </HStack>
+              
+              <Text color="gray.600" _dark={{ color: "gray.300" }} lineHeight="1.6">
+                You currently have <strong>{currentPlayerCount} players</strong> for{" "}
+                <strong>{session.numberOfCourts} courts</strong> ({session.maxPlayersPerCourt} players per court).
+                <br /><br />
+                Adding more players may result in:
+              </Text>
+              
+              <VStack align="start" spacing={2} pl={4}>
+                <Text fontSize="sm" color="gray.600">
+                  • Longer waiting times for players
+                </Text>
+                <Text fontSize="sm" color="gray.600">
+                  • More complex match scheduling
+                </Text>
+                <Text fontSize="sm" color="gray.600">
+                  • Potential player dissatisfaction
+                </Text>
+              </VStack>
+
+              <Text fontSize="sm" color="gray.600" fontStyle="italic">
+                Are you sure you want to continue adding more players?
+              </Text>
+
+              <Flex gap={3} justifyContent="flex-end" pt={2}>
+                <Button
+                  variant="outline"
+                  onClick={cancelAddPlayer}
+                  size="sm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  colorScheme="orange"
+                  onClick={confirmAddPlayerDespiteWarning}
+                  size="sm"
+                >
+                  Add Anyway
+                </Button>
+              </Flex>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </VStack>
   );
 };

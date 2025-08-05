@@ -52,9 +52,15 @@ export async function GET(
             currentMatch: {
               include: {
                 players: {
-                  select: {
-                    playerId: true,
-                    position: true,
+                  include: {
+                    player: {
+                      select: {
+                        id: true,
+                        playerNumber: true,
+                        name: true,
+                        courtPosition: true,
+                      },
+                    },
                   },
                   orderBy: {
                     position: "asc",
@@ -85,24 +91,10 @@ export async function GET(
             requireConfirmInfo: true,
           },
         },
-        matches: {
-          where: {
-            status: "IN_PROGRESS",
-          },
-          include: {
-            players: {
-              include: {
-                player: true,
-              },
-            },
-            court: true,
-          },
-        },
         _count: {
           select: {
             players: true,
             courts: true,
-            matches: true,
           },
         },
       },
@@ -142,10 +134,9 @@ export async function GET(
         }));
       }
 
-      // Remove currentMatch from the response and add processed players
-      const { currentMatch, ...courtWithoutMatch } = court;
+      // Keep currentMatch in the response and add processed players
       return {
-        ...courtWithoutMatch,
+        ...court,
         currentPlayers: playersWithPosition,
       };
     });

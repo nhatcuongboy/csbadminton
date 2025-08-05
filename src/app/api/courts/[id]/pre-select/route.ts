@@ -1,6 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
+import { Prisma } from "@/generated/prisma";
 
 interface CourtParams {
   id: string;
@@ -129,7 +130,7 @@ export async function DELETE(
     const updatedCourt = await prisma.court.update({
       where: { id: courtId },
       data: {
-        preSelectedPlayers: undefined,
+        preSelectedPlayers: Prisma.DbNull,
         updatedAt: new Date(),
       },
       include: {

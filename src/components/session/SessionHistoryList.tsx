@@ -242,11 +242,24 @@ const HistoryMatchCard = ({
 };
 
 interface SessionHistoryListProps {
-  sessionId: string; // Optional prop to filter by session
+  sessionId: string;
+  sessionData?: {
+    players: Array<{
+      id: string;
+      playerNumber: number;
+      name: string;
+    }>;
+    courts: Array<{
+      id: string;
+      courtNumber: number;
+      courtName?: string;
+    }>;
+  };
 }
 
 export default function SessionHistoryList({
   sessionId,
+  sessionData,
 }: SessionHistoryListProps) {
   const [matches, setMatches] = useState<HistoryMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -263,15 +276,23 @@ export default function SessionHistoryList({
         setLoading(true);
         setError(null);
 
-        // Fetch players and courts for filter dropdowns
-        const [playersData, courtsData] = await Promise.all([
-          SessionService.getSessionPlayers(sessionId),
-          SessionService.getSessionCourts(sessionId),
-        ]);
+        // Use sessionData if provided, otherwise fetch from API
+        // This optimization avoids redundant API calls when session data is already available
+        if (sessionData) {
+          setPlayers(sessionData.players || []);
+          setCourts(sessionData.courts || []);
+          setInitialDataLoaded(true);
+        } else {
+          // Fallback to API calls if sessionData is not provided
+          const [playersData, courtsData] = await Promise.all([
+            SessionService.getSessionPlayers(sessionId),
+            SessionService.getSessionCourts(sessionId),
+          ]);
 
-        setPlayers(playersData);
-        setCourts(courtsData);
-        setInitialDataLoaded(true);
+          setPlayers(playersData);
+          setCourts(courtsData);
+          setInitialDataLoaded(true);
+        }
       } catch (err) {
         setError("Failed to load initial data. Please try again later.");
         console.error("Error fetching initial data:", err);
@@ -281,7 +302,7 @@ export default function SessionHistoryList({
     }
 
     fetchInitialData();
-  }, [sessionId]);
+  }, [sessionId, sessionData]);
 
   useEffect(() => {
     async function fetchCompletedMatches() {

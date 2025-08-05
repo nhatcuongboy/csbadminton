@@ -36,6 +36,7 @@ interface MatchPreviewModalProps {
   isOpen: boolean;
   court: Court | null;
   waitingPlayersCount?: number; // Total number of waiting players (optional if no topCount selection)
+  numberOfCourts?: number; // Number of courts in the session
   currentTopCount?: number; // Current topCount value
   onConfirm: (
     suggestedPlayers: SuggestedPlayersResponse,
@@ -80,7 +81,8 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   isOpen,
   court,
   waitingPlayersCount,
-  currentTopCount = waitingPlayersCount || 4,
+  numberOfCourts = 1,
+  currentTopCount,
   onConfirm,
   onCancel,
   onBack,
@@ -90,11 +92,23 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
 }) => {
   const t = useTranslations("SessionDetail");
 
+  // Calculate default topCount: 4 * numberOfCourts, but not more than waitingPlayersCount
+  const defaultTopCount = useMemo(() => {
+    if (!numberOfCourts || !waitingPlayersCount) {
+      return waitingPlayersCount || 4;
+    }
+    const calculatedDefault = 4 * numberOfCourts;
+    return Math.min(calculatedDefault, waitingPlayersCount);
+  }, [numberOfCourts, waitingPlayersCount]);
+
+  // Use currentTopCount if provided, otherwise use calculated default
+  const initialTopCount = currentTopCount || defaultTopCount;
+
   // Internal state for managing suggested players and loading
   const [suggestedPlayers, setSuggestedPlayers] =
     useState<SuggestedPlayersResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [topCount, setTopCount] = useState(currentTopCount);
+  const [topCount, setTopCount] = useState(initialTopCount);
   const [isConfirming, setIsConfirming] = useState(false);
 
   // Fetch suggested players when modal opens or topCount changes
@@ -140,15 +154,15 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   // Effect to fetch data when modal opens or court changes
   useEffect(() => {
     if (isOpen && court?.id) {
-      setTopCount(currentTopCount);
-      fetchSuggestedPlayers(court.id, currentTopCount);
+      setTopCount(initialTopCount);
+      fetchSuggestedPlayers(court.id, initialTopCount);
     } else if (!isOpen) {
       // Reset state when modal closes
       setSuggestedPlayers(null);
       setIsLoading(false);
       setIsConfirming(false);
     }
-  }, [isOpen, court?.id, currentTopCount, fetchSuggestedPlayers]);
+  }, [isOpen, court?.id, initialTopCount, fetchSuggestedPlayers]);
 
   // Handle topCount change
   const handleTopCountChange = (newTopCount: number) => {
