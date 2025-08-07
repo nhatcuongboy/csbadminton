@@ -1,11 +1,10 @@
-// Server-side utilities for sessions
-// No "use client" directive to allow usage in API routes
+// Session-related utility functions
 
 // Function to create court name from order number
 export function generateCourtName(courtNumber: number): string {
   const courtNames = [
     "Court A",
-    "Court B", 
+    "Court B",
     "Court C",
     "Court D",
     "Court E",
@@ -21,8 +20,22 @@ export function generateCourtName(courtNumber: number): string {
   return `Court ${courtNumber}`;
 }
 
-// Function to create a default court name
+// Function to create a default court name (server-side)
 export function getCourtDisplayName(
+  courtName?: string,
+  courtNumber?: number
+): string {
+  if (courtName) {
+    return courtName;
+  }
+  if (courtNumber) {
+    return `Court ${courtNumber}`;
+  }
+  return "Court";
+}
+
+// Function to create a default court name (client-side with Vietnamese)
+export function getCourtDisplayNameVi(
   courtName?: string,
   courtNumber?: number
 ): string {

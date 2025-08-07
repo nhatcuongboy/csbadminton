@@ -14,7 +14,7 @@ import {
   type Player,
   type Session,
 } from "@/lib/api";
-import { getCourtDisplayName } from "@/lib/api/sessions";
+import { getCourtDisplayName } from "@/utils/session-helpers";
 import { createCourtElapsedTimeFormatter } from "@/utils/time-helpers";
 import {
   Box,

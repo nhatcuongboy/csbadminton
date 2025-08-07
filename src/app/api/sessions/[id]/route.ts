@@ -1,6 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
-import { generateCourtName } from "@/lib/server/sessions";
+import { generateCourtName } from "@/utils/session-helpers";
 import { NextRequest } from "next/server";
 
 interface SessionParams {

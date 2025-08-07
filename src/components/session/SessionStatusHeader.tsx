@@ -2,7 +2,7 @@
 
 import { Box, Flex, Grid, Heading, Text, VStack } from "@chakra-ui/react";
 import { Button, IconButton } from "@/components/ui/chakra-compat";
-import { formatDuration, formatTime } from "@/lib/api/sessions";
+import { formatDuration, formatTime } from "@/utils/session-helpers";
 import dayjs from "@/lib/dayjs";
 import { Clock, Play, RefreshCw, Square, Users } from "lucide-react";
 import { useTranslations } from "next-intl";

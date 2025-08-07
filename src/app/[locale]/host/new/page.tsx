@@ -149,7 +149,7 @@ function NewSessionPageContent() {
       // Use the state values for startTime, endTime, and sessionDuration
       // instead of reading from form
 
-      // Sử dụng SessionService để tạo session mới
+      // Use SessionService to create new session
       const session = await SessionService.createSession({
         name,
         numberOfCourts,

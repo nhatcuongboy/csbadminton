@@ -2,7 +2,7 @@
 
 import { ChakraProvider, createSystem, defaultConfig } from "@chakra-ui/react";
 
-// Tùy chỉnh system cho ứng dụng badminton
+// Custom system configuration for badminton app
 const system = createSystem(defaultConfig, {
   theme: {
     tokens: {

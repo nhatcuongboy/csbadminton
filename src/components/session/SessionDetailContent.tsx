@@ -9,14 +9,9 @@ import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
 import SessionHistoryList from "@/components/session/SessionHistoryList";
 import SessionStatusHeader from "@/components/session/SessionStatusHeader";
 import SettingsTab from "@/components/session/SettingsTab";
-import { Button, IconButton, useToast } from "@/components/ui/chakra-compat";
+import { Button, useToast } from "@/components/ui/chakra-compat";
 import TopBar from "@/components/ui/TopBar";
-import {
-  formatDuration,
-  formatTime,
-  getCourtDisplayName,
-} from "@/lib/api/sessions";
-import dayjs from "@/lib/dayjs";
+import { getCourtDisplayName } from "@/utils/session-helpers";
 import { RefreshCw, Square, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import WaitTimeUpdater from "./WaitTimeUpdater";

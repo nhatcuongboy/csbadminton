@@ -1,4 +1,4 @@
-// PrismaClient singleton để tránh nhiều connections trong development
+// PrismaClient singleton to avoid multiple connections in development
 import { PrismaClient } from "../../generated/prisma";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };

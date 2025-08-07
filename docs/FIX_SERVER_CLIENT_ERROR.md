@@ -1,31 +1,37 @@
 # ✅ Fix: Server/Client Function Error
 
-## 🚨 Lỗi gặp phải:
+## 🚨 Error encountered:
+
 ```
 Error creating session: Error: Attempted to call generateCourtName() from the server but generateCourtName is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.
 ```
 
-## 🔍 Nguyên nhân:
-- Function `generateCourtName` được định nghĩa trong file có `"use client"` directive
-- Nhưng lại được gọi từ server-side API routes
-- Next.js không cho phép gọi client functions từ server
+## 🔍 Root cause:
 
-## 🛠️ Giải pháp:
-1. **Tạo file server-side utilities**: `src/lib/server/sessions.ts`
-   - Không có `"use client"` directive
-   - Chứa các functions cần thiết cho server-side
+- Function `generateCourtName` is defined in a file with `"use client"` directive
+- But it's being called from server-side API routes
+- Next.js doesn't allow calling client functions from server
 
-2. **Giữ lại file client-side**: `src/lib/api/sessions.ts`
-   - Có `"use client"` directive  
-   - Chứa functions cho client components
+## 🛠️ Solution:
 
-3. **Cập nhật imports**:
-   - API routes sử dụng: `@/lib/server/sessions`
-   - Client components sử dụng: `@/lib/api/sessions`
+1. **Create centralized utilities file**: `src/utils/session-helpers.ts`
 
-## 📁 Cấu trúc file sau khi fix:
+   - No `"use client"` directive
+   - Contains functions that can be used on both server and client-side
 
-### Server-side: `src/lib/server/sessions.ts`
+2. **Keep client-side file**: `src/lib/api/sessions.ts`
+
+   - Has `"use client"` directive
+   - Re-exports functions from utils with client-side customizations
+
+3. **Update imports**:
+   - API routes use: `@/utils/session-helpers`
+   - Client components use: `@/lib/api/sessions`
+
+## 📁 File structure after fix:
+
+### Utils: `src/utils/session-helpers.ts`
+
 ```typescript
 // NO "use client" directive
 export function generateCourtName(courtNumber: number): string { ... }
@@ -37,6 +43,7 @@ export function formatDuration(...): string { ... }
 ```
 
 ### Client-side: `src/lib/api/sessions.ts`
+
 ```typescript
 "use client";
 export function getCourtDisplayName(...): string { ... }
@@ -46,29 +53,34 @@ export function formatTime(...): string { ... }
 export function formatDuration(...): string { ... }
 ```
 
-## 🔧 Files được cập nhật:
+## 🔧 Updated files:
 
 ### API Routes (Server-side):
+
 - `src/app/api/sessions/route.ts`
 - `src/app/api/sessions/[id]/route.ts`
 
 ### Client Components:
+
 - `src/components/session/SessionDetailContent.tsx`
 - `src/app/join/status/page.tsx`
 
-## ✅ Kết quả:
-- ✅ Lỗi server/client function đã được fix
-- ✅ API routes hoạt động bình thường
-- ✅ Client components vẫn sử dụng được các utility functions
-- ✅ Court name tự động tạo: "Sân A", "Sân B", "Sân C"...
-- ✅ Session tạo thành công với court names
+## ✅ Results:
 
-## 🎯 Test thành công:
-- Tạo session mới: ✅
-- Hiển thị court names: ✅
+- ✅ Server/client function error has been fixed
+- ✅ API routes work normally
+- ✅ Client components can still use utility functions
+- ✅ Court names auto-generated: "Court A", "Court B", "Court C"...
+- ✅ Session created successfully with court names
+
+## 🎯 Successful tests:
+
+- Create new session: ✅
+- Display court names: ✅
 - BadmintonCourt component: ✅
-- Host và Player UI: ✅
+- Host and Player UI: ✅
 
 ---
-*Fixed: July 4, 2025*
-*Issue: Server/Client function separation in Next.js*
+
+_Fixed: July 4, 2025_
+_Issue: Server/Client function separation in Next.js_

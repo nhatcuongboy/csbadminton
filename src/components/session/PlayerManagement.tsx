@@ -408,7 +408,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
     }
   };
 
-  // Hàm hủy thêm players (xóa hết newPlayers)
+  // Function to cancel adding players (clear all newPlayers)
   const cancelAddPlayers = () => {
     console.log(
       "cancelAddPlayers called, newPlayers.length:",
@@ -417,7 +417,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
     console.log("clearAllNewPlayers prop:", clearAllNewPlayers);
 
     if (newPlayers.length > 0) {
-      // Nếu có prop clearAllNewPlayers thì dùng nó (clear tất cả cùng lúc)
+      // If clearAllNewPlayers prop exists, use it (clear all at once)
       if (clearAllNewPlayers) {
         console.log("Using clearAllNewPlayers prop");
         clearAllNewPlayers();
@@ -425,14 +425,15 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
         setNewPlayerErrors({});
       } else {
         console.log("Using fallback removeNewPlayerRow loop");
-        // Fallback: xóa tất cả bằng cách gọi removeNewPlayerRow nhiều lần
-        // Tạo copy của array để tránh vấn đề với index thay đổi
+        // Fallback: remove all by calling removeNewPlayerRow multiple times
+        // Create copy of array to avoid issues with changing indices
         const playerCount = newPlayers.length;
-        console.log("Will remove", playerCount, "players");
-        // Xóa từ cuối lên đầu để tránh index shift
+
+        // Remove from end to beginning to avoid index shift
         for (let i = playerCount - 1; i >= 0; i--) {
-          console.log("Removing player at index", i);
-          removeNewPlayerRow(i);
+          if (removeNewPlayerRow) {
+            removeNewPlayerRow(i);
+          }
         }
         // Clear validation errors
         setNewPlayerErrors({});

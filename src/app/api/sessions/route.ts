@@ -1,6 +1,5 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
-import { generateCourtName } from "@/lib/server/sessions";
 import { NextRequest } from "next/server";
 
 // GET /api/sessions - Retrieve list of all sessions
@@ -106,8 +105,7 @@ export async function POST(request: NextRequest) {
         courts.push({
           sessionId: session.id,
           courtNumber: courtConfig.courtNumber,
-          courtName:
-            courtConfig.courtName || generateCourtName(courtConfig.courtNumber),
+          courtName: courtConfig.courtName, // Use only provided court name
           direction: courtConfig.direction || "HORIZONTAL", // TODO: Enable after prisma client regeneration
           status: "EMPTY" as const,
         });
@@ -118,7 +116,7 @@ export async function POST(request: NextRequest) {
         courts.push({
           sessionId: session.id,
           courtNumber: i,
-          courtName: generateCourtName(i), // Generate court name
+          courtName: null, // No auto-generated court name
           direction: "HORIZONTAL" as const, // TODO: Enable after prisma client regeneration
           status: "EMPTY" as const,
         });

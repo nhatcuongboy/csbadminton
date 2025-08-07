@@ -1,19 +1,25 @@
 // src/lib/dayjs.ts
 import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import vi from "dayjs/locale/vi";
+import relativeTime from "dayjs/plugin/relativeTime";
+import updateLocale from "dayjs/plugin/updateLocale";
+import "dayjs/locale/vi";
 
-// Kích hoạt các plugin
+// Activate plugins
+dayjs.extend(duration);
 dayjs.extend(utc);
 dayjs.extend(timezone);
-dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
+dayjs.extend(updateLocale);
 
-// Thiết lập locale mặc định là tiếng Việt
-dayjs.locale(vi);
+// Set default locale to Vietnamese
+dayjs.locale("vi");
 
-// (Tùy chọn) Thiết lập timezone mặc định, ví dụ: Asia/Ho_Chi_Minh
+// (Optional) Set default timezone, example: Asia/Ho_Chi_Minh
 dayjs.tz.setDefault("Asia/Ho_Chi_Minh");
 
 export default dayjs;
