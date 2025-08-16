@@ -764,26 +764,14 @@ function StatusPageContent() {
             {activeTab === 1 && (
               <CourtsTab
                 session={session}
-                activeCourts={getActiveCourts()}
-                showMatchCreation={false}
-                setShowMatchCreation={() => {}}
-                matchMode="auto"
-                setMatchMode={() => {}}
-                selectedPlayers={[]}
-                setSelectedPlayers={() => {}}
-                selectedCourt={null}
-                setSelectedCourt={() => {}}
                 waitingPlayers={getWaitingPlayers()}
                 getCurrentMatch={getCurrentMatch}
                 formatCourtElapsedTime={formatCourtElapsedTime}
                 getCourtDisplayName={getCourtDisplayName}
-                cancelMatchCreation={() => {}}
-                confirmManualMatch={() => {}}
-                togglePlayerSelection={() => {}}
-                autoAssignPlayers={() => {}}
                 onDataRefresh={() => fetchPlayerData(true)} // Use background refresh
                 mode="view" // Set to view mode for player status page
                 formatWaitTime={formatWaitTime}
+                selectedPlayers={[]}
               />
             )}
 

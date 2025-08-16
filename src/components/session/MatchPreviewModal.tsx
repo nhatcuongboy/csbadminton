@@ -1,36 +1,32 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import {
+  CourtDirection,
+  CourtService,
+  SuggestedPlayersResponse,
+} from "@/lib/api";
+import { Court, Player } from "@/types/session";
+import { getLevelLabel } from "@/utils/level-mapping";
+import {
+  Badge,
   Box,
   Flex,
   Heading,
+  HStack,
   Text,
   VStack,
-  HStack,
-  Badge,
-  Spinner,
 } from "@chakra-ui/react";
 import {
-  Play,
-  X,
   ArrowLeft,
-  User,
-  UserCheck,
-  RefreshCw,
-  Mars,
-  Venus,
   HelpCircle,
+  Mars,
+  Play,
+  User,
+  Venus,
+  X,
 } from "lucide-react";
-import BadmintonCourt from "../court/BadmintonCourt";
-import { Button as CompatButton } from "@/components/ui/chakra-compat";
-import { Player, Court } from "@/types/session";
-import {
-  Level,
-  SuggestedPlayersResponse,
-  CourtService,
-  CourtDirection,
-} from "@/lib/api";
-import { getLevelLabel } from "@/utils/level-mapping";
 import { useTranslations } from "next-intl";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import BadmintonCourt from "../court/BadmintonCourt";
 
 interface MatchPreviewModalProps {
   isOpen: boolean;
@@ -50,6 +46,7 @@ interface MatchPreviewModalProps {
   ) => string;
   title?: string; // Custom title for the modal
   description?: string; // Custom description text
+  isLoadingConfirm?: boolean; // External loading state
 }
 
 // Helper functions for gender display
@@ -59,14 +56,6 @@ function getGenderIcon(gender?: string) {
   if (gender === "OTHER") return User;
   if (gender === "PREFER_NOT_TO_SAY") return HelpCircle;
   return User;
-}
-
-function getGenderColor(gender?: string): string {
-  if (gender === "MALE") return "blue";
-  if (gender === "FEMALE") return "pink";
-  if (gender === "OTHER") return "purple";
-  if (gender === "PREFER_NOT_TO_SAY") return "gray";
-  return "gray";
 }
 
 function getGenderColorHex(gender?: string): string {
@@ -89,6 +78,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   getCourtDisplayName,
   title,
   description,
+  isLoadingConfirm: externalLoading = false,
 }) => {
   const t = useTranslations("SessionDetail");
 
@@ -107,9 +97,14 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   // Internal state for managing suggested players and loading
   const [suggestedPlayers, setSuggestedPlayers] =
     useState<SuggestedPlayersResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingConfirm, setIsLoading] = useState(false);
   const [topCount, setTopCount] = useState(initialTopCount);
-  const [isConfirming, setIsConfirming] = useState(false);
+  const [direction, setDirection] = useState<CourtDirection>(
+    CourtDirection.HORIZONTAL
+  );
+
+  // Use external loading state for confirming
+  const isConfirming = externalLoading;
 
   // Fetch suggested players when modal opens or topCount changes
   const fetchSuggestedPlayers = useCallback(
@@ -160,7 +155,6 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
       // Reset state when modal closes
       setSuggestedPlayers(null);
       setIsLoading(false);
-      setIsConfirming(false);
     }
   }, [isOpen, court?.id, initialTopCount, fetchSuggestedPlayers]);
 
@@ -175,11 +169,10 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
   const handleConfirm = async () => {
     if (!suggestedPlayers) return;
 
-    setIsConfirming(true);
     try {
-      await onConfirm(suggestedPlayers);
-    } finally {
-      setIsConfirming(false);
+      await onConfirm(suggestedPlayers, direction);
+    } catch (error) {
+      console.error("Error confirming match:", error);
     }
   };
 
@@ -254,14 +247,14 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                       borderRadius: "6px",
                       padding: "8px",
                       width: "100%",
-                      cursor: isLoading ? "not-allowed" : "pointer",
-                      opacity: isLoading ? 0.6 : 1,
+                      cursor: isLoadingConfirm ? "not-allowed" : "pointer",
+                      opacity: isLoadingConfirm ? 0.6 : 1,
                     }}
                     value={topCount}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                       handleTopCountChange(parseInt(e.target.value))
                     }
-                    disabled={isLoading}
+                    disabled={isLoadingConfirm}
                   >
                     {Array.from(
                       { length: Math.max(0, waitingPlayersCount - 3) },
@@ -289,13 +282,13 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               )}
               width="100%"
               showTimeInCenter={false}
-              isLoading={isLoading}
+              isLoading={isLoadingConfirm}
               direction={court?.direction || CourtDirection.HORIZONTAL}
             />
           </Box>
           {/* Display pair information */}
           <VStack gap={2} mt={2}>
-            {!isLoading && suggestedPlayers && (
+            {!isLoadingConfirm && suggestedPlayers && (
               <HStack
                 justify="space-between"
                 width="full"
@@ -326,7 +319,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
               </HStack>
             )}
 
-            {!isLoading && suggestedPlayers ? (
+            {!isLoadingConfirm && suggestedPlayers ? (
               <Box
                 bg="gray.50"
                 borderRadius="lg"
@@ -522,11 +515,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                   </Box>
                 </HStack>
               </Box>
-            ) : (
-              <Flex justify="center" py={4}>
-                <Spinner color="blue.500" />
-              </Flex>
-            )}
+            ) : null}
           </VStack>
         </Box>
 
@@ -545,7 +534,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             <CompatButton
               variant="outline"
               onClick={onBack}
-              disabled={isLoading}
+              disabled={isLoadingConfirm}
             >
               <Box as={ArrowLeft} boxSize={4} mr={1} />
               {t("courtsTab.back")}
@@ -554,7 +543,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
           <CompatButton
             variant="outline"
             onClick={onCancel}
-            disabled={isLoading || isConfirming}
+            disabled={isLoadingConfirm || isConfirming}
           >
             {t("courtsTab.cancel")}
           </CompatButton>
@@ -562,7 +551,7 @@ const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
             // colorPalette="green"
             onClick={handleConfirm}
             loading={isConfirming}
-            disabled={isLoading}
+            disabled={isLoadingConfirm}
           >
             <Box as={Play} boxSize={4} mr={1} />
             {t("courtsTab.confirmMatch")}

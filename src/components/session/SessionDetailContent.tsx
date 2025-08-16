@@ -491,30 +491,14 @@ export default function SessionDetailContent({
           {activeTab === 0 && (
             <CourtsTab
               session={session}
-              activeCourts={activeCourts}
-              showMatchCreation={showMatchCreation}
-              setShowMatchCreation={setShowMatchCreation}
-              matchMode={matchMode}
-              setMatchMode={setMatchMode}
-              selectedPlayers={selectedPlayers}
-              setSelectedPlayers={setSelectedPlayers}
-              selectedCourt={selectedCourt}
-              setSelectedCourt={setSelectedCourt}
               waitingPlayers={waitingPlayers}
               getCurrentMatch={getCurrentMatch}
               getCourtDisplayName={getCourtDisplayName}
-              cancelMatchCreation={cancelMatchCreation}
-              confirmManualMatch={confirmManualMatch}
-              togglePlayerSelection={togglePlayerSelection}
-              autoAssignPlayers={autoAssignPlayers}
-              endMatch={endMatch}
-              autoAssignPlayersToSpecificCourt={
-                autoAssignPlayersToSpecificCourt
-              }
               startManualMatchCreation={startManualMatchCreation}
               onDataRefresh={refreshSessionData}
               isRefreshing={isRefreshing}
               formatWaitTime={formatWaitTime}
+              selectedPlayers={selectedPlayers}
             />
           )}
           {activeTab === 1 && (

@@ -39,6 +39,7 @@
     "maxPlayersPerCourt": "Max Players Per Court",
     "requirePlayerInfo": "Require Player Information",
     "courtInformation": "Court Information",
+    "courtDirection": "Court Direction",
     "numberOfCourts": "Number of Courts",
     "addCourt": "Add Court",
     "removeCourt": "Remove Court",

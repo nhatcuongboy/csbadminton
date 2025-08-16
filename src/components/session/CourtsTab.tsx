@@ -15,20 +15,7 @@ import { useCourtsTabActions } from "@/hooks/useCourtsTabActions";
 
 interface CourtsTabProps {
   session: any;
-  activeCourts: Court[];
-  showMatchCreation: boolean;
-  setShowMatchCreation: (show: boolean) => void;
-  matchMode: "auto" | "manual";
-  setMatchMode: (mode: "auto" | "manual") => void;
-  selectedPlayers: string[];
-  setSelectedPlayers: (ids: string[]) => void;
-  selectedCourt: string | null;
-  setSelectedCourt: (id: string | null) => void;
-  autoAssignPlayers: () => void;
-  cancelMatchCreation: () => void;
-  confirmManualMatch: () => void;
   waitingPlayers: Player[];
-  togglePlayerSelection: (id: string) => void;
   getCurrentMatch: (courtId: string) => Match | null;
   formatCourtElapsedTime?: (startTime: string) => string;
   getCourtDisplayName: (
@@ -36,43 +23,21 @@ interface CourtsTabProps {
     courtNumber: number
   ) => string;
   mode?: "manage" | "view"; // New prop: "manage" (default) allows actions, "view" is read-only
-  endMatch?: (matchId: string) => void;
-  autoAssignPlayersToSpecificCourt?: (courtId: string) => void;
   startManualMatchCreation?: (courtId: string) => void;
   onDataRefresh?: () => void;
   isRefreshing?: boolean;
   formatWaitTime: (waitTimeInMinutes: number) => string;
+  selectedPlayers: string[]; // Only needed for WaitingPlayers component
 }
 
-const CourtsTab: React.FC<
-  CourtsTabProps & {
-    endMatch?: (matchId: string) => void;
-    autoAssignPlayersToSpecificCourt?: (courtId: string) => void;
-    startManualMatchCreation?: (courtId: string) => void;
-    onDataRefresh?: () => void;
-  }
-> = ({
+const CourtsTab: React.FC<CourtsTabProps> = ({
   session,
-  activeCourts,
-  showMatchCreation,
-  setShowMatchCreation,
-  matchMode,
-  setMatchMode,
-  selectedPlayers,
-  setSelectedPlayers,
-  selectedCourt,
-  setSelectedCourt,
-  autoAssignPlayers,
-  cancelMatchCreation,
-  confirmManualMatch,
   waitingPlayers,
-  togglePlayerSelection,
+  selectedPlayers,
   getCurrentMatch,
   formatCourtElapsedTime,
   getCourtDisplayName,
   mode = "manage",
-  endMatch,
-  autoAssignPlayersToSpecificCourt,
   startManualMatchCreation,
   onDataRefresh,
   isRefreshing = false,
@@ -231,6 +196,7 @@ const CourtsTab: React.FC<
         onConfirm={handleConfirmAutoAssign}
         onCancel={modals.closeAutoAssignModal}
         getCourtDisplayName={getCourtDisplayName}
+        isLoadingConfirm={modals.loadingConfirmAutoAssign}
         title={
           modals.selectedAutoAssignCourt
             ? t("courtsTab.autoAssignMatchTitle", {
