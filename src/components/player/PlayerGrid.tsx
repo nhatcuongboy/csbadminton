@@ -7,6 +7,7 @@ import { getLevelLabel } from "@/utils/level-mapping";
 import { Mars, Pause, Play, User, UserCheck, Users, Venus } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 // Color constants for different player states
 const PLAYER_COLORS = {
@@ -87,6 +88,7 @@ export const PlayerGrid = ({
     action: string;
   }>({ isOpen: false, playerId: "", playerName: "", action: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlayerForDetail, setSelectedPlayerForDetail] = useState<Player | null>(null);
 
   const handleToggleInactive = async (playerId: string) => {
     if (!sessionId) return;
@@ -184,12 +186,16 @@ export const PlayerGrid = ({
               transition="all 0.2s"
               minH="140px"
               position="relative"
-              cursor={selectionMode ? "pointer" : "default"}
+              cursor={selectionMode || mode === "manage" ? "pointer" : "default"}
               onClick={
-                selectionMode ? () => onPlayerToggle?.(player.id) : undefined
+                selectionMode 
+                  ? () => onPlayerToggle?.(player.id) 
+                  : mode === "manage" 
+                  ? () => setSelectedPlayerForDetail(player)
+                  : undefined
               }
               _hover={
-                selectionMode
+                selectionMode || mode === "manage"
                   ? { transform: "scale(1.02)", boxShadow: "lg" }
                   : undefined
               }
@@ -409,6 +415,17 @@ export const PlayerGrid = ({
             </Flex>
           </Box>
         </Box>
+      )}
+
+      {/* Player Detail Modal */}
+      {selectedPlayerForDetail && (
+        <PlayerDetailModal
+          isOpen={!!selectedPlayerForDetail}
+          onClose={() => setSelectedPlayerForDetail(null)}
+          player={selectedPlayerForDetail}
+          sessionId={sessionId}
+          formatWaitTime={formatWaitTime}
+        />
       )}
     </>
   );

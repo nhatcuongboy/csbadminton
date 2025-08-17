@@ -32,7 +32,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
       <Tabs.Root defaultValue="general">
         <Tabs.List>
           <Tabs.Trigger value="general">General</Tabs.Trigger>
-          <Tabs.Trigger value="player">Player Management</Tabs.Trigger>
+          <Tabs.Trigger value="player">Players</Tabs.Trigger>
           <Tabs.Trigger value="qr">QR</Tabs.Trigger>
           <Tabs.Trigger value="court">Courts</Tabs.Trigger>
         </Tabs.List>
