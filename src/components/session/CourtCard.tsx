@@ -147,9 +147,10 @@ const CourtCard: React.FC<CourtCardProps> = ({
                   : "gray.700"
               }
             >
-              {t("courtsTab.courtNumber", {
-                number: court.courtNumber,
-              })}
+              {court.courtName ??
+                t("courtsTab.courtNumber", {
+                  number: court.courtNumber,
+                })}
             </Heading>
           </Box>
 

@@ -1,13 +1,17 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
+import { generatePlayerJoinCode } from "@/utils/session-join-helpers";
 
 interface SessionParams {
   id: string;
 }
 
 // GET /api/sessions/[id]/players - Retrieve list of players in the session
-export async function GET(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
     const { id } = await params;
 
@@ -69,7 +73,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Se
 }
 
 // POST /api/sessions/[id]/players - Create a new player in the session
-export async function POST(request: NextRequest, { params }: { params: Promise<SessionParams> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<SessionParams> }
+) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -125,6 +132,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<S
         levelDescription: levelDescription || null,
         phone: phone || null,
         userId: userId || null,
+        joinCode: generatePlayerJoinCode(),
         preFilledByHost: preFilledByHost || false,
         confirmedByPlayer: confirmedByPlayer || false,
         requireConfirmInfo: requireConfirmInfo || false,

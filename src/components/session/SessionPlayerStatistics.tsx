@@ -9,7 +9,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useTranslations } from "next-intl";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface SessionPlayerStatisticsProps {
   sessionId: string;
@@ -29,7 +29,7 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [genderFilter, setGenderFilter] = useState<string>("");
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -45,11 +45,11 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, sortBy, sortOrder, genderFilter, t]);
 
   useEffect(() => {
     fetchStats();
-  }, [sessionId, sortBy, sortOrder, genderFilter]);
+  }, [fetchStats]);
 
   const sortOptions = [
     { value: "playerNumber", label: t("columnNo") },
@@ -61,6 +61,8 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
     { value: "losses", label: t("columnLosses") },
     { value: "winRate", label: t("columnWinRate") },
     { value: "averageScore", label: t("columnAvgScore") },
+    { value: "totalPlayTime", label: "Total Play Time" },
+    { value: "totalWaitTime", label: "Total Wait Time" },
   ];
 
   return (
@@ -196,6 +198,8 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
                 <Table.ColumnHeader>{t("columnLosses")}</Table.ColumnHeader>
                 <Table.ColumnHeader>{t("columnWinRate")}</Table.ColumnHeader>
                 <Table.ColumnHeader>{t("columnAvgScore")}</Table.ColumnHeader>
+                <Table.ColumnHeader>Total Play Time</Table.ColumnHeader>
+                <Table.ColumnHeader>Total Wait Time</Table.ColumnHeader>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -210,6 +214,8 @@ const SessionPlayerStatistics: React.FC<SessionPlayerStatisticsProps> = ({
                   <Table.Cell>{p.losses}</Table.Cell>
                   <Table.Cell>{p.winRate}%</Table.Cell>
                   <Table.Cell>{p.averageScore}</Table.Cell>
+                  <Table.Cell>{p.totalPlayTime || 0}m</Table.Cell>
+                  <Table.Cell>{p.totalWaitTime || 0}m</Table.Cell>
                 </Table.Row>
               ))}
             </Table.Body>

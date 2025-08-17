@@ -1,6 +1,7 @@
 "use client";
 
 import { ChakraProvider, createSystem, defaultConfig } from "@chakra-ui/react";
+import AuthProvider from "@/components/providers/AuthProvider";
 
 // Custom system configuration for badminton app
 const system = createSystem(defaultConfig, {
@@ -35,5 +36,9 @@ const system = createSystem(defaultConfig, {
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <ChakraProvider value={system}>{children}</ChakraProvider>;
+  return (
+    <ChakraProvider value={system}>
+      <AuthProvider>{children}</AuthProvider>
+    </ChakraProvider>
+  );
 }

@@ -126,8 +126,16 @@ export async function GET(
         }
       });
       const averageScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
-      // Play time and wait time
-      // Activity summary
+      
+      // Calculate total play time (sum of all match durations)
+      const totalPlayTime = playedMatches.reduce((total, match) => {
+        if (match.startTime && match.endTime) {
+          const duration = Math.round((match.endTime.getTime() - match.startTime.getTime()) / (1000 * 60)); // in minutes
+          return total + duration;
+        }
+        return total;
+      }, 0);
+      
       return {
         playerId: player.id,
         playerNumber: player.playerNumber,
@@ -141,6 +149,8 @@ export async function GET(
         losses,
         winRate,
         averageScore,
+        totalPlayTime, // Total play time in minutes
+        totalWaitTime: player.totalWaitTime, // Total wait time in minutes
         status: player.status,
       };
     });

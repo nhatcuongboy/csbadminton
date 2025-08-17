@@ -1,6 +1,7 @@
 "use client";
 
 import BadmintonCourt from "@/components/court/BadmintonCourt";
+import ProtectedRouteGuard from "@/components/guards/ProtectedRouteGuard";
 import CourtsTab from "@/components/session/CourtsTab";
 import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
 import { IconButton } from "@/components/ui/chakra-compat";
@@ -15,7 +16,6 @@ import {
   type Session,
 } from "@/lib/api";
 import { getCourtDisplayName } from "@/utils/session-helpers";
-import { createCourtElapsedTimeFormatter } from "@/utils/time-helpers";
 import {
   Box,
   Center,
@@ -44,9 +44,6 @@ function StatusPageContent() {
   const playerId = searchParams.get("playerId");
   const t = useTranslations("pages.join.status");
   const common = useTranslations("common");
-
-  // Create the bound formatter function
-  const formatCourtElapsedTime = createCourtElapsedTimeFormatter(t, "time.");
 
   const [refreshInterval, setRefreshInterval] = useState(60); // seconds
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
@@ -249,11 +246,7 @@ function StatusPageContent() {
   if (loading && !player) {
     return (
       <>
-        <TopBar
-          title={t("yourStatus")}
-          showBackButton={true}
-          backHref="/join"
-        />
+        <TopBar title={t("yourStatus")} />
         <Container maxW="md" py={12}>
           <Flex
             justify="center"
@@ -272,11 +265,7 @@ function StatusPageContent() {
   if (error || (!loading && (!player || !session))) {
     return (
       <>
-        <TopBar
-          title={t("yourStatus")}
-          showBackButton={true}
-          backHref="/join"
-        />
+        <TopBar title={t("yourStatus")} />
         <Container maxW="md" py={12}>
           <Flex
             justify="center"
@@ -334,7 +323,7 @@ function StatusPageContent() {
 
   return (
     <>
-      <TopBar title={session?.name} showBackButton={true} backHref="/join" />
+      <TopBar title={session?.name} />
 
       <Container maxW="3xl" pt={"70px"} pb={"80px"}>
         {/* Tab Content */}
@@ -766,7 +755,6 @@ function StatusPageContent() {
                 session={session}
                 waitingPlayers={getWaitingPlayers()}
                 getCurrentMatch={getCurrentMatch}
-                formatCourtElapsedTime={formatCourtElapsedTime}
                 getCourtDisplayName={getCourtDisplayName}
                 onDataRefresh={() => fetchPlayerData(true)} // Use background refresh
                 mode="view" // Set to view mode for player status page
@@ -854,14 +842,16 @@ function StatusPageContent() {
 
 export default function StatusPage() {
   return (
-    <Suspense
-      fallback={
-        <Center>
-          <Spinner size="xl" />
-        </Center>
-      }
-    >
-      <StatusPageContent />
-    </Suspense>
+    <ProtectedRouteGuard requiredRole={["PLAYER"]}>
+      <Suspense
+        fallback={
+          <Center>
+            <Spinner size="xl" />
+          </Center>
+        }
+      >
+        <StatusPageContent />
+      </Suspense>
+    </ProtectedRouteGuard>
   );
 }

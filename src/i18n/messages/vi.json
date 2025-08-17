@@ -140,7 +140,9 @@
     "language": "Ngôn ngữ",
     "settings": "Cài đặt",
     "about": "Giới thiệu",
-    "navigation": "Điều hướng"
+    "navigation": "Điều hướng",
+    "logout": "Đăng xuất",
+    "userInfo": "Thông tin người dùng"
   },
   "court": {
     "title": "Sân",
@@ -307,6 +309,42 @@
       "enterCode": "Nhập mã kèo",
       "joinButton": "Tham gia kèo",
       "howToJoin": "Cách tham gia kèo",
+      "joinByCode": {
+        "title": "Tham gia kèo cầu lông",
+        "subtitle": "Nhập mã tham gia để vào kèo",
+        "joinCode": "Mã tham gia",
+        "joinCodePlaceholder": "Nhập mã 8 ký tự",
+        "scanQR": "Quét mã QR",
+        "joinCodeHelp": "Nhập mã thủ công hoặc quét mã QR",
+        "joinSession": "Tham gia kèo",
+        "noCode": "Không có mã tham gia?",
+        "signInToHost": "Đăng nhập để tổ chức",
+        "troubleHelp": "Gặp khó khăn? Liên hệ người tổ chức kèo",
+        "enterCodeError": "Vui lòng nhập mã tham gia",
+        "invalidCodeError": "Mã tham gia không hợp lệ hoặc kèo không khả dụng",
+        "joinFailedError": "Không thể tham gia kèo",
+        "qrScanSuccess": "Quét mã QR thành công!"
+      },
+      "register": {
+        "title": "Tham gia kèo cầu lông",
+        "subtitle": "Vui lòng cung cấp thông tin để tham gia",
+        "name": "Tên",
+        "namePlaceholder": "Nhập tên của bạn",
+        "nameRequired": "Vui lòng nhập tên của bạn",
+        "gender": "Giới tính",
+        "male": "Nam",
+        "female": "Nữ",
+        "other": "Khác",
+        "preferNotToSay": "Không muốn tiết lộ",
+        "skillLevel": "Trình độ",
+        "phone": "Điện thoại (Tùy chọn)",
+        "phonePlaceholder": "Nhập số điện thoại",
+        "joinSession": "Tham gia kèo",
+        "joining": "Đang tham gia...",
+        "agreementText": "Bằng cách tham gia, bạn đồng ý tham gia kèo cầu lông",
+        "invalidSessionCode": "Mã kèo không hợp lệ",
+        "joinFailed": "Không thể tham gia kèo"
+      },
       "steps": {
         "getCode": {
           "title": "Lấy mã kèo",
@@ -570,6 +608,7 @@
       "playing": "Đang chơi",
       "waiting": "Đang chờ",
       "ready": "Sẵn sàng",
+      "inactive": "Tạm dừng",
       "playerStatistics": "Thống kê người chơi",
       "noPlayersFound": "Không tìm thấy người chơi nào có trạng thái {status}"
     },
@@ -616,5 +655,49 @@
     "playing": "Đang chơi",
     "resting": "Đang nghỉ",
     "resetFilters": "Đặt lại"
+  },
+  "auth": {
+    "signin": {
+      "title": "Đăng nhập",
+      "appTitle": "Quản lý kèo cầu lông",
+      "description": "Đăng nhập để quản lý các kèo cầu lông của bạn",
+      "email": "Email",
+      "emailPlaceholder": "Nhập email của bạn",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu của bạn",
+      "signInButton": "Đăng nhập",
+      "continueWithGoogle": "Tiếp tục với Google",
+      "noAccount": "Chưa có tài khoản?",
+      "signUp": "Đăng ký",
+      "or": "Hoặc",
+      "joinAsGuest": "tham gia kèo với tư cách khách",
+      "invalidCredentials": "Thông tin đăng nhập không hợp lệ",
+      "loginSuccessful": "Đăng nhập thành công",
+      "loginFailed": "Đăng nhập thất bại",
+      "authenticationFailed": "Xác thực thất bại",
+      "invalidEmailOrPassword": "Email hoặc mật khẩu không hợp lệ"
+    },
+    "signup": {
+      "title": "Đăng ký",
+      "heading": "Tạo tài khoản",
+      "description": "Tham gia Quản lý kèo cầu lông",
+      "name": "Tên",
+      "namePlaceholder": "Nhập họ và tên",
+      "email": "Email",
+      "emailPlaceholder": "Nhập email của bạn",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Tạo mật khẩu (tối thiểu 6 ký tự)",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "confirmPasswordPlaceholder": "Xác nhận mật khẩu của bạn",
+      "createAccount": "Tạo tài khoản",
+      "alreadyHaveAccount": "Đã có tài khoản?",
+      "signIn": "Đăng nhập",
+      "or": "Hoặc",
+      "joinAsGuest": "tham gia kèo với tư cách khách",
+      "passwordsDoNotMatch": "Mật khẩu không khớp",
+      "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+      "accountCreated": "Tạo tài khoản thành công! Vui lòng đăng nhập.",
+      "registrationFailed": "Đăng ký thất bại"
+    }
   }
 }

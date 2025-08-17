@@ -30,8 +30,8 @@ interface Player {
   confirmedByPlayer: boolean;
 }
 
-// Ensure PlayerFilter type includes 'READY'
-export type PlayerFilter = "ALL" | "PLAYING" | "WAITING" | "READY";
+// Ensure PlayerFilter type includes 'READY' and 'INACTIVE'
+export type PlayerFilter = "ALL" | "PLAYING" | "WAITING" | "READY" | "INACTIVE";
 
 interface PlayersTabProps {
   sessionPlayers: Player[];
@@ -40,6 +40,7 @@ interface PlayersTabProps {
   formatWaitTime: (waitTimeInMinutes: number) => string;
   mode?: "view" | "manage"; // Optional mode prop to control UI
   sessionId: string; // Add sessionId prop
+  onPlayerUpdate?: () => void;
 }
 const PlayersTab: React.FC<PlayersTabProps> = ({
   sessionPlayers,
@@ -48,6 +49,7 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
   formatWaitTime,
   mode = "manage", // Default to manage mode
   sessionId, // Destructure sessionId from props
+  onPlayerUpdate,
 }) => {
   const t = useTranslations("SessionDetail");
   
@@ -119,6 +121,15 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
                 {t("playersTab.ready")} (
                 {sessionPlayers.filter((p) => p.status === "READY").length})
               </Button>
+              <Button
+                size="sm"
+                onClick={() => setPlayerFilter("INACTIVE")}
+                colorScheme={playerFilter === "INACTIVE" ? "red" : "gray"}
+                variant={playerFilter === "INACTIVE" ? "solid" : "outline"}
+              >
+                {t("playersTab.inactive")} (
+                {sessionPlayers.filter((p) => p.status === "INACTIVE").length})
+              </Button>
             </HStack>
           </Flex>
           {/* Filtered Players Grid */}
@@ -142,6 +153,8 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
                 playerFilter={playerFilter}
                 formatWaitTime={formatWaitTime}
                 mode={mode}
+                sessionId={sessionId}
+                onPlayerUpdate={onPlayerUpdate}
               />
             );
           })()}
@@ -168,7 +181,9 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
           </HStack>
         </Collapsible.Trigger>
         <Collapsible.Content>
-          <SessionPlayerStatistics sessionId={sessionId} />
+          {isStatisticsSectionOpen && (
+            <SessionPlayerStatistics sessionId={sessionId} />
+          )}
         </Collapsible.Content>
       </Collapsible.Root>
     </VStack>

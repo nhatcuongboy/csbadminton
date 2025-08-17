@@ -6,7 +6,8 @@ export const routing = defineRouting({
   locales: ["vi", "en"],
 
   // Used when no locale matches
-  defaultLocale: "vi",
+  defaultLocale:
+    (process.env.NEXT_PUBLIC_DEFAULT_LOCALE as "vi" | "en") || "en",
 
   // The locale prefix strategy - always show locale in URL
   localePrefix: "always",

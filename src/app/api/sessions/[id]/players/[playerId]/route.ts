@@ -19,14 +19,17 @@ export async function PATCH(
       gender,
       level,
       levelDescription,
+      desire,
+      status,
+      preFilledByHost,
       requireConfirmInfo,
       confirmedByPlayer,
     } = body;
 
-    // Validate input
-    if (!name || !gender || !level) {
+    // Validate input - only name is required
+    if (!name || name.trim() === "") {
       return NextResponse.json(
-        { success: false, message: "Name, gender, and level are required" },
+        { success: false, message: "Player name is required" },
         { status: 400 }
       );
     }
@@ -63,11 +66,14 @@ export async function PATCH(
       where: { id: playerId },
       data: {
         name: name.trim(),
-        gender,
-        level,
+        gender: gender || null,
+        level: level || null,
         levelDescription: levelDescription || null,
-        confirmedByPlayer: confirmedByPlayer || false,
-        requireConfirmInfo: requireConfirmInfo || false,
+        desire: desire || null,
+        status: status || existingPlayer.status,
+        preFilledByHost: preFilledByHost !== undefined ? preFilledByHost : existingPlayer.preFilledByHost,
+        confirmedByPlayer: confirmedByPlayer !== undefined ? confirmedByPlayer : existingPlayer.confirmedByPlayer,
+        requireConfirmInfo: requireConfirmInfo !== undefined ? requireConfirmInfo : existingPlayer.requireConfirmInfo,
       },
     });
 

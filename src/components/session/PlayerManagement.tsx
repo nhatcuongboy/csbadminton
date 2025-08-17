@@ -31,8 +31,10 @@ import {
   Venus,
   User,
   HelpCircle,
+  QrCode,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import QRCodeGenerator from "@/components/QRCodeGenerator";
 
 interface Player {
   id: string;
@@ -108,7 +110,10 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
     [key: string]: Player;
   }>({});
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [showMaxPlayersWarning, setShowMaxPlayersWarning] = useState<boolean>(false);
+  const [showMaxPlayersWarning, setShowMaxPlayersWarning] =
+    useState<boolean>(false);
+  const [showQRModal, setShowQRModal] = useState<boolean>(false);
+  const [selectedPlayerForQR, setSelectedPlayerForQR] = useState<any>(null);
 
   const toast = useToast();
 
@@ -134,9 +139,9 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
         playerNumber: nextPlayerNumber,
         name: "",
         gender: "MALE",
-        level: Level.Y,
+        level: Level.TB_MINUS,
         levelDescription: "",
-        requireConfirmInfo: false,
+        requireConfirmInfo: true,
       },
     ]);
   };
@@ -361,6 +366,17 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
     setShowMaxPlayersWarning(false);
   };
 
+  const showPlayerQR = (player: any) => {
+    console.log(player);
+    setSelectedPlayerForQR(player);
+    setShowQRModal(true);
+  };
+
+  const closeQRModal = () => {
+    setShowQRModal(false);
+    setSelectedPlayerForQR(null);
+  };
+
   // Track the last player count to know when a new player is added
   const lastPlayerCount = useRef(newPlayers.length);
 
@@ -530,7 +546,8 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 <Text fontSize="sm" color="orange.600">
                   You have {currentPlayerCount} players for{" "}
                   {session.numberOfCourts} courts ({session.maxPlayersPerCourt}{" "}
-                  players per court). Adding more players may increase waiting times.
+                  players per court). Adding more players may increase waiting
+                  times.
                 </Text>
               </VStack>
             </HStack>
@@ -673,7 +690,9 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                               <option value="MALE">Male</option>
                               <option value="FEMALE">Female</option>
                               <option value="OTHER">Other</option>
-                              <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                              <option value="PREFER_NOT_TO_SAY">
+                                Prefer not to say
+                              </option>
                             </select>
                           </Box>
                           <Box>
@@ -994,7 +1013,9 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                     <option value="MALE">Male</option>
                                     <option value="FEMALE">Female</option>
                                     <option value="OTHER">Other</option>
-                                    <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                                    <option value="PREFER_NOT_TO_SAY">
+                                      Prefer not to say
+                                    </option>
                                   </select>
                                 </Box>
                                 <Box>
@@ -1171,7 +1192,9 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                                   >
                                     {/* Gender badge */}
                                     <Badge
-                                      colorScheme={getGenderColor(player.gender)}
+                                      colorScheme={getGenderColor(
+                                        player.gender
+                                      )}
                                       variant="subtle"
                                       borderRadius="md"
                                       px={2}
@@ -1226,6 +1249,14 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
                                 {/* Action buttons */}
                                 <HStack spacing={1}>
+                                  <IconButton
+                                    aria-label="Show QR code"
+                                    icon={<Box as={QrCode} boxSize={4} />}
+                                    size="sm"
+                                    colorScheme="green"
+                                    variant="ghost"
+                                    onClick={() => showPlayerQR(player)}
+                                  />
                                   <IconButton
                                     aria-label="Edit player"
                                     icon={<Box as={Edit} boxSize={4} />}
@@ -1419,14 +1450,20 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                   Player Limit Warning
                 </Heading>
               </HStack>
-              
-              <Text color="gray.600" _dark={{ color: "gray.300" }} lineHeight="1.6">
-                You currently have <strong>{currentPlayerCount} players</strong> for{" "}
-                <strong>{session.numberOfCourts} courts</strong> ({session.maxPlayersPerCourt} players per court).
-                <br /><br />
+
+              <Text
+                color="gray.600"
+                _dark={{ color: "gray.300" }}
+                lineHeight="1.6"
+              >
+                You currently have <strong>{currentPlayerCount} players</strong>{" "}
+                for <strong>{session.numberOfCourts} courts</strong> (
+                {session.maxPlayersPerCourt} players per court).
+                <br />
+                <br />
                 Adding more players may result in:
               </Text>
-              
+
               <VStack align="start" spacing={2} pl={4}>
                 <Text fontSize="sm" color="gray.600">
                   • Longer waiting times for players
@@ -1444,11 +1481,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
               </Text>
 
               <Flex gap={3} justifyContent="flex-end" pt={2}>
-                <Button
-                  variant="outline"
-                  onClick={cancelAddPlayer}
-                  size="sm"
-                >
+                <Button variant="outline" onClick={cancelAddPlayer} size="sm">
                   Cancel
                 </Button>
                 <Button
@@ -1459,6 +1492,66 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                   Add Anyway
                 </Button>
               </Flex>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && selectedPlayerForQR && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="blackAlpha.800"
+          zIndex={9999}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          p={4}
+          onClick={closeQRModal}
+        >
+          <Box
+            bg="white"
+            borderRadius="lg"
+            p={6}
+            maxW="sm"
+            w="full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VStack gap={4}>
+              <HStack justify="space-between" w="full">
+                <Text fontSize="lg" fontWeight="bold">
+                  Player #{selectedPlayerForQR.playerNumber} QR Code
+                </Text>
+                <Button size="sm" variant="ghost" onClick={closeQRModal}>
+                  ✕
+                </Button>
+              </HStack>
+
+              <Text textAlign="center" color="gray.600">
+                {selectedPlayerForQR.name ||
+                  `Player ${selectedPlayerForQR.playerNumber}`}
+              </Text>
+
+              {selectedPlayerForQR.joinCode && (
+                <QRCodeGenerator
+                  joinCode={selectedPlayerForQR.joinCode}
+                  size={200}
+                />
+              )}
+
+              {!selectedPlayerForQR.joinCode && (
+                <Text color="red.500" textAlign="center">
+                  Join code not available for this player
+                </Text>
+              )}
+
+              <Text fontSize="sm" color="gray.500" textAlign="center">
+                Share this QR code with the player to join quickly
+              </Text>
             </VStack>
           </Box>
         </Box>

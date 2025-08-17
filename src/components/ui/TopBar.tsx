@@ -7,22 +7,16 @@ import {
   Flex,
   Heading,
   IconButton,
-  Text,
-  Stack,
 } from "@chakra-ui/react";
 import {
   ArrowLeft,
   Menu,
-  Home,
-  Users,
-  Calendar,
-  Settings,
-  Info,
-  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, Suspense } from "react";
-import LanguageSwitcher from "./LanguageSwitcher";
+import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useLocale } from "next-intl";
+import SlideOutMenu from "./SlideOutMenu";
 
 interface TopBarProps {
   showBackButton?: boolean;
@@ -36,14 +30,25 @@ export default function TopBar({
   title,
 }: TopBarProps) {
   const common = useTranslations("common");
-  const nav = useTranslations("navigation");
   const appName = "🏸";
+  const { data: session } = useSession();
+  const locale = useLocale();
 
   // Menu drawer state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const onMenuOpen = () => setIsMenuOpen(true);
   const onMenuClose = () => setIsMenuOpen(false);
+
+  const handleLogout = async () => {
+    const userRole = session?.user?.role;
+    const callbackUrl =
+      userRole === "HOST"
+        ? `/${locale}/auth/signin`
+        : `/${locale}/join-by-code`;
+    await signOut({ callbackUrl });
+    onMenuClose();
+  };
 
   return (
     <>
@@ -128,162 +133,11 @@ export default function TopBar({
         </Container>
       </Box>
 
-      {/* Menu Drawer */}
-      {/* Overlay */}
-      {isMenuOpen && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="blackAlpha.600"
-          zIndex={1500}
-          onClick={onMenuClose}
-        />
-      )}
-
-      {/* Slide-out Menu */}
-      <Box
-        position="fixed"
-        top={0}
-        right={0}
-        bottom={0}
-        width="320px"
-        bg="white"
-        _dark={{ bg: "gray.800" }}
-        shadow="xl"
-        zIndex={1600}
-        transform={isMenuOpen ? "translateX(0)" : "translateX(100%)"}
-        transition="transform 0.3s ease"
-        overflowY="auto"
-      >
-        {/* Header */}
-        <Flex
-          justify="space-between"
-          align="center"
-          p={4}
-          borderBottomWidth="1px"
-          borderColor="gray.200"
-          _dark={{ borderColor: "gray.600" }}
-          height={"65px"}
-        >
-          <Text fontSize="xl" fontWeight="bold">
-            Menu
-          </Text>
-          <IconButton
-            aria-label="Close menu"
-            variant="ghost"
-            size="sm"
-            onClick={onMenuClose}
-          >
-            <X size={20} />
-          </IconButton>
-        </Flex>
-
-        {/* Body */}
-        <Box p={4}>
-          <Stack gap={6}>
-            {/* Navigation Links */}
-            <Box>
-              <Text fontSize="sm" fontWeight="semibold" color="gray.500" mb={3}>
-                {common("navigation")}
-              </Text>
-              <Stack gap={2}>
-                <NextLinkButton
-                  href="/"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={onMenuClose}
-                  w="full"
-                >
-                  <Flex align="center" gap={3} w="full">
-                    <Home size={18} />
-                    <Text>{nav("home")}</Text>
-                  </Flex>
-                </NextLinkButton>
-                <NextLinkButton
-                  href="/host"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={onMenuClose}
-                  w="full"
-                >
-                  <Flex align="center" gap={3} w="full">
-                    <Calendar size={18} />
-                    <Text>{nav("host")}</Text>
-                  </Flex>
-                </NextLinkButton>
-                <NextLinkButton
-                  href="/join"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={onMenuClose}
-                  w="full"
-                >
-                  <Flex align="center" gap={3} w="full">
-                    <Users size={18} />
-                    <Text>{nav("join")}</Text>
-                  </Flex>
-                </NextLinkButton>
-              </Stack>
-            </Box>
-
-            {/* Language Switcher */}
-            <Box>
-              <Text fontSize="sm" fontWeight="semibold" color="gray.500" mb={3}>
-                {common("language")}
-              </Text>
-              <Suspense fallback={<Text fontSize="sm">Loading...</Text>}>
-                <LanguageSwitcher keepDrawerOpen={false} />
-              </Suspense>
-            </Box>
-
-            {/* Settings Section */}
-            <Box>
-              <Text fontSize="sm" fontWeight="semibold" color="gray.500" mb={3}>
-                {common("settings")}
-              </Text>
-              <Stack gap={2}>
-                <NextLinkButton
-                  href="/settings"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={onMenuClose}
-                  w="full"
-                >
-                  <Flex align="center" gap={3} w="full">
-                    <Settings size={18} />
-                    <Text>{common("settings")}</Text>
-                  </Flex>
-                </NextLinkButton>
-                <NextLinkButton
-                  href="/about"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={onMenuClose}
-                  w="full"
-                >
-                  <Flex align="center" gap={3} w="full">
-                    <Info size={18} />
-                    <Text>{common("about")}</Text>
-                  </Flex>
-                </NextLinkButton>
-              </Stack>
-            </Box>
-
-            {/* Footer */}
-            <Box pt={4}>
-              <Text fontSize="xs" color="gray.500" textAlign="center">
-                Badminton Session Manager
-              </Text>
-              <Text fontSize="xs" color="gray.400" textAlign="center">
-                © {new Date().getFullYear()}
-              </Text>
-            </Box>
-          </Stack>
-        </Box>
-      </Box>
+      <SlideOutMenu
+        isOpen={isMenuOpen}
+        onClose={onMenuClose}
+        onLogout={handleLogout}
+      />
     </>
   );
 }

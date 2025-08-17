@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       sessionDuration,
       maxPlayersPerCourt,
       requirePlayerInfo,
+      allowGuestJoin = true, // New field for guest access
       startTime,
       endTime,
     } = body;
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         sessionDuration: sessionDuration || 120,
         maxPlayersPerCourt: maxPlayersPerCourt || 8,
         requirePlayerInfo: requirePlayerInfo ?? true,
+        allowGuestJoin: allowGuestJoin ?? true,
         startTime: startTime ? new Date(startTime) : new Date(),
         endTime: endTime
           ? new Date(endTime)
@@ -127,7 +129,45 @@ export async function POST(request: NextRequest) {
       data: courts,
     });
 
-    return successResponse(session, "Session created successfully");
+    // Return session with courts (no automatic player creation)
+    const createdSession = await prisma.session.findUnique({
+      where: { id: session.id },
+      include: {
+        host: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        courts: {
+          orderBy: { courtNumber: "asc" },
+        },
+        players: {
+          orderBy: { playerNumber: "asc" },
+          select: {
+            id: true,
+            playerNumber: true,
+            joinCode: true,
+            qrCodeData: true,
+            name: true,
+            isJoined: true,
+            isGuest: true,
+          },
+        },
+        _count: {
+          select: {
+            players: true,
+            courts: true,
+          },
+        },
+      },
+    });
+
+    return successResponse(
+      createdSession,
+      "Session created successfully"
+    );
   } catch (error) {
     console.error("Error creating session:", error);
     return errorResponse("Failed to create session");

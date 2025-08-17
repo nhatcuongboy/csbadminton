@@ -28,7 +28,9 @@
     "language": "Language",
     "settings": "Settings",
     "about": "About",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "logout": "Logout",
+    "userInfo": "User Information"
   },
   "session": {
     "title": "Badminton Session",
@@ -307,6 +309,42 @@
       "enterCode": "Enter Session Code",
       "joinButton": "Join Session",
       "howToJoin": "How to Join a Session",
+      "joinByCode": {
+        "title": "Join Badminton Session",
+        "subtitle": "Enter your join code to participate",
+        "joinCode": "Join Code",
+        "joinCodePlaceholder": "Enter 8-character code",
+        "scanQR": "Scan QR Code",
+        "joinCodeHelp": "Enter code manually or scan QR code",
+        "joinSession": "Join Session",
+        "noCode": "Don't have a join code?",
+        "signInToHost": "Sign in to host",
+        "troubleHelp": "Having trouble? Contact your session host",
+        "enterCodeError": "Please enter a join code",
+        "invalidCodeError": "Invalid join code or session not available",
+        "joinFailedError": "Failed to join session",
+        "qrScanSuccess": "QR code scanned successfully!"
+      },
+      "register": {
+        "title": "Join Badminton Session",
+        "subtitle": "Please provide your information to join",
+        "name": "Name",
+        "namePlaceholder": "Enter your name",
+        "nameRequired": "Please enter your name",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "other": "Other",
+        "preferNotToSay": "Prefer not to say",
+        "skillLevel": "Skill Level",
+        "phone": "Phone (Optional)",
+        "phonePlaceholder": "Enter your phone number",
+        "joinSession": "Join Session",
+        "joining": "Joining...",
+        "agreementText": "By joining, you agree to participate in the badminton session",
+        "invalidSessionCode": "Invalid session code",
+        "joinFailed": "Failed to join session"
+      },
       "steps": {
         "getCode": {
           "title": "Get Session Code",
@@ -570,6 +608,7 @@
       "playing": "Playing",
       "waiting": "Waiting",
       "ready": "Ready",
+      "inactive": "Inactive",
       "playerStatistics": "Player Statistics",
       "noPlayersFound": "No players found for {status} status"
     },
@@ -584,7 +623,7 @@
     "columnNo": "No.",
     "columnName": "Name",
     "columnTotalMatches": "Total Matches",
-    "columnRegularMatches": "Regular Matches",
+    "columnRegularMatches": "Main Matches",
     "columnExtraMatches": "Extra Matches",
     "columnWins": "Wins",
     "columnLosses": "Losses",
@@ -616,5 +655,49 @@
     "playing": "Playing",
     "resting": "Resting",
     "resetFilters": "Reset"
+  },
+  "auth": {
+    "signin": {
+      "title": "Sign In",
+      "appTitle": "Badminton Session Manager",
+      "description": "Sign in to manage your badminton sessions",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "signInButton": "Sign In",
+      "continueWithGoogle": "Continue with Google",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "or": "Or",
+      "joinAsGuest": "join a session as guest",
+      "invalidCredentials": "Invalid credentials",
+      "loginSuccessful": "Login successful",
+      "loginFailed": "Login failed",
+      "authenticationFailed": "Authentication failed",
+      "invalidEmailOrPassword": "Invalid email or password"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "heading": "Create Account",
+      "description": "Join Badminton Session Manager",
+      "name": "Name",
+      "namePlaceholder": "Enter your full name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Create a password (min 6 chars)",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "createAccount": "Create Account",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "or": "Or",
+      "joinAsGuest": "join a session as guest",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "accountCreated": "Account created successfully! Please sign in.",
+      "registrationFailed": "Registration failed"
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
+import { generatePlayerJoinCode } from "@/utils/session-join-helpers";
 
 interface SessionParams {
   id: string;
@@ -113,9 +114,15 @@ export async function POST(
       // Validate gender
       if (
         playerData.gender &&
-        !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(playerData.gender)
+        !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(
+          playerData.gender
+        )
       ) {
-        errors.push(`Player ${index + 1}: gender must be MALE, FEMALE, OTHER, or PREFER_NOT_TO_SAY`);
+        errors.push(
+          `Player ${
+            index + 1
+          }: gender must be MALE, FEMALE, OTHER, or PREFER_NOT_TO_SAY`
+        );
       }
 
       // Validate level
@@ -191,6 +198,7 @@ export async function POST(
           level: playerData.level || null,
           levelDescription: playerData.levelDescription || null,
           phone: playerData.phone || null,
+          joinCode: generatePlayerJoinCode(),
           preFilledByHost: true, // Marked as pre-filled by host
           confirmedByPlayer: false, // Player has not confirmed
           requireConfirmInfo: playerData.requireConfirmInfo || false,

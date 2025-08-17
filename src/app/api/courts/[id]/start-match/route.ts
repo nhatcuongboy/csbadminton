@@ -22,7 +22,7 @@ export async function POST(
         currentPlayers: true,
       },
     });
-    console.log(court);
+
     if (!court) {
       return errorResponse("Court not found", 404);
     }
@@ -53,7 +53,9 @@ export async function POST(
       async (tx) => {
         // Calculate if this is an extra match (started after session end time)
         const currentTime = new Date();
-        const isExtra = court.session.endTime ? currentTime > court.session.endTime : false;
+        const isExtra = court.session.endTime
+          ? currentTime > court.session.endTime
+          : false;
 
         // Create new match
         const match = await tx.match.create({
@@ -78,7 +80,7 @@ export async function POST(
               },
             });
 
-            // Update player matches count and status to PLAYING
+            // Update player matches count, status to PLAYING, and reset wait time
             return tx.player.update({
               where: { id: player.id },
               data: {
@@ -86,6 +88,7 @@ export async function POST(
                   increment: 1,
                 },
                 status: "PLAYING", // Update status to PLAYING
+                currentWaitTime: 0, // Reset wait time to 0
               },
             });
           }

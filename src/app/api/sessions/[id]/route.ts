@@ -72,7 +72,7 @@ export async function GET(
         },
         players: {
           orderBy: {
-            currentWaitTime: "desc",
+            playerNumber: "asc",
           },
           select: {
             id: true,
@@ -89,6 +89,7 @@ export async function GET(
             preFilledByHost: true,
             confirmedByPlayer: true,
             requireConfirmInfo: true,
+            joinCode: true,
           },
         },
         _count: {
@@ -172,13 +173,7 @@ export async function PUT(
       return errorResponse("Session not found", 404);
     }
 
-    // Prevent updating if session is in progress or finished
-    if (existingSession.status !== "PREPARING") {
-      return errorResponse(
-        "Cannot update a session that has already started or finished",
-        400
-      );
-    }
+    // Allow updating session regardless of status
 
     // Update session
     const {
@@ -187,6 +182,10 @@ export async function PUT(
       sessionDuration,
       maxPlayersPerCourt,
       requirePlayerInfo,
+      allowGuestJoin,
+      allowNewPlayers,
+      startTime,
+      endTime,
     } = body;
 
     const session = await prisma.session.update({
@@ -197,6 +196,10 @@ export async function PUT(
         sessionDuration: sessionDuration ?? undefined,
         maxPlayersPerCourt: maxPlayersPerCourt ?? undefined,
         requirePlayerInfo: requirePlayerInfo ?? undefined,
+        allowGuestJoin: allowGuestJoin ?? undefined,
+        allowNewPlayers: allowNewPlayers ?? undefined,
+        startTime: startTime ? new Date(startTime) : undefined,
+        endTime: endTime ? new Date(endTime) : undefined,
       },
       include: {
         host: {

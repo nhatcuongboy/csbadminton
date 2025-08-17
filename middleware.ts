@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const locales = ["vi", "en"];
-const defaultLocale = "vi";
+const defaultLocale =
+  (process.env.NEXT_PUBLIC_DEFAULT_LOCALE as "vi" | "en") || "en";
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -19,13 +20,15 @@ export function middleware(request: NextRequest) {
 
   // If no first segment (root), redirect to default locale
   if (pathname === "/") {
-    console.log("Root path, redirecting to /vi");
+    console.log("Root path, redirecting to /" + defaultLocale);
     const newUrl = new URL(`/${defaultLocale}`, request.url);
     return NextResponse.redirect(newUrl);
   }
 
   // For all other paths (including invalid locales), redirect to default locale + path
-  console.log("Invalid locale or no locale, redirecting to /vi" + pathname);
+  console.log(
+    "Invalid locale or no locale, redirecting to /" + defaultLocale + pathname
+  );
   const newUrl = new URL(`/${defaultLocale}${pathname}`, request.url);
   return NextResponse.redirect(newUrl);
 }

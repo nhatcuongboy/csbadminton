@@ -2,14 +2,9 @@
 
 import { Button } from "@/components/ui/chakra-compat";
 import TopBar from "@/components/ui/TopBar";
+import ProtectedRouteGuard from "@/components/guards/ProtectedRouteGuard";
 import { useRouter } from "@/i18n/config";
-import {
-  Level,
-  PlayerService,
-  SessionService,
-  type Player,
-  type Session,
-} from "@/lib/api";
+import { Level, PlayerService, type Player } from "@/lib/api";
 import {
   Box,
   Container,
@@ -29,15 +24,12 @@ import toast from "react-hot-toast";
 function ConfirmPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("sessionId");
-  const playerNumber = searchParams.get("playerNumber");
   const playerId = searchParams.get("playerId");
   const t = useTranslations("pages.join");
   const tCommon = useTranslations("common");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -49,66 +41,37 @@ function ConfirmPageContent() {
   });
 
   useEffect(() => {
-    async function loadSessionAndPlayer() {
+    async function loadPlayer() {
       try {
-        if (!sessionId || !playerNumber) {
+        if (!playerId) {
           toast.error(t("confirm.errors.missingInfo"));
           router.push("/join");
           return;
         }
 
         setIsLoading(true);
-        // Fetch session details
-        const sessionData = await SessionService.getSession(sessionId);
-        setSession(sessionData);
+        const playerData = await PlayerService.getPlayer(playerId);
+        setPlayer(playerData);
 
-        if (playerId) {
-          // If we have a player ID, fetch the player directly
-          const playerData = await PlayerService.getPlayer(playerId);
-          setPlayer(playerData);
-
-          // Pre-populate form with any existing data
-          setFormData({
-            name: playerData.name || "",
-            gender: playerData.gender || "",
-            level: playerData.level || "",
-            levelDescription: playerData.levelDescription || "",
-            phone: playerData.phone || "",
-            desire: playerData.desire || "",
-          });
-        } else {
-          // If we only have player number, find the player in the session
-          const players = sessionData.players || [];
-          const foundPlayer = players.find(
-            (p) => p.playerNumber.toString() === playerNumber
-          );
-
-          if (foundPlayer) {
-            setPlayer(foundPlayer);
-            // Pre-populate form with any existing data
-            setFormData({
-              name: foundPlayer.name || "",
-              gender: foundPlayer.gender || "",
-              level: foundPlayer.level || "",
-              levelDescription: foundPlayer.levelDescription || "",
-              phone: foundPlayer.phone || "",
-              desire: foundPlayer.desire || "",
-            });
-          } else {
-            toast.error(t("confirm.errors.playerNotFound"));
-            router.push("/join");
-          }
-        }
+        // Pre-populate form with existing data
+        setFormData({
+          name: playerData.name || "",
+          gender: playerData.gender || "",
+          level: playerData.level || "",
+          levelDescription: playerData.levelDescription || "",
+          phone: playerData.phone || "",
+          desire: playerData.desire || "",
+        });
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.error("Error loading player:", error);
         toast.error(t("confirm.errors.loadFailed"));
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadSessionAndPlayer();
-  }, [sessionId, playerNumber, playerId, router]);
+    loadPlayer();
+  }, [playerId, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -163,11 +126,7 @@ function ConfirmPageContent() {
   if (isLoading) {
     return (
       <Box minH="100vh">
-        <TopBar
-          showBackButton={true}
-          backHref="/join"
-          title={t("confirm.title")}
-        />
+        <TopBar title={t("confirm.title")} />
         <Container maxW="md" py={12} pt={24}>
           <Flex
             justify="center"
@@ -186,11 +145,7 @@ function ConfirmPageContent() {
   return (
     <Box minH="100vh">
       {/* Top Bar */}
-      <TopBar
-        showBackButton={true}
-        backHref="/join"
-        title={t("confirm.title")}
-      />
+      <TopBar title={t("confirm.title")} />
 
       <Container maxW="md" py={12} pt={24}>
         <Box
@@ -214,7 +169,7 @@ function ConfirmPageContent() {
               <Heading size="md">{t("confirm.subtitle")}</Heading>
             </Flex>
             <Text color="gray.500" fontSize="sm">
-              {t("confirm.description", { sessionName: session?.name || "" })}
+              {t("confirm.description", { sessionName: "" })}
             </Text>
           </Box>
 
@@ -229,36 +184,6 @@ function ConfirmPageContent() {
                     })}
                   </Text>
 
-                  {!player?.requireConfirmInfo && (
-                    <Box
-                      mb={4}
-                      p={3}
-                      bg="yellow.50"
-                      borderRadius="md"
-                      borderWidth="1px"
-                      borderColor="yellow.200"
-                    >
-                      <Text fontSize="sm" color="yellow.800">
-                        ℹ️ {t("confirm.form.noInfoRequired")}
-                      </Text>
-                    </Box>
-                  )}
-
-                  {/* {player?.requireConfirmInfo && (
-                    <Box
-                      mb={4}
-                      p={3}
-                      bg="blue.50"
-                      borderRadius="md"
-                      borderWidth="1px"
-                      borderColor="blue.200"
-                    >
-                      <Text fontSize="sm" color="blue.800">
-                        📝 Please fill in your details to complete your
-                        registration.
-                      </Text>
-                    </Box>
-                  )} */}
                   <Box mb={4}>
                     <Text fontWeight="medium" mb={1} fontSize="sm">
                       {t("confirm.form.fullName")}{" "}
@@ -273,8 +198,6 @@ function ConfirmPageContent() {
                       placeholder={t("confirm.form.namePlaceholder")}
                       size="lg"
                       required
-                      disabled={!player?.requireConfirmInfo}
-                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
                     />
                   </Box>
 
@@ -291,7 +214,6 @@ function ConfirmPageContent() {
                         onChange={handleInputChange}
                         name="gender"
                         required
-                        disabled={!player?.requireConfirmInfo}
                         style={{
                           width: "100%",
                           padding: "12px",
@@ -299,7 +221,6 @@ function ConfirmPageContent() {
                           borderWidth: "1px",
                           borderColor: "#CBD5E0",
                           height: "48px",
-                          opacity: !player?.requireConfirmInfo ? 0.6 : 1,
                         }}
                       >
                         <option value="">
@@ -324,7 +245,6 @@ function ConfirmPageContent() {
                         onChange={handleInputChange}
                         name="level"
                         required
-                        disabled={!player?.requireConfirmInfo}
                         style={{
                           width: "100%",
                           padding: "12px",
@@ -332,7 +252,6 @@ function ConfirmPageContent() {
                           borderWidth: "1px",
                           borderColor: "#CBD5E0",
                           height: "48px",
-                          opacity: !player?.requireConfirmInfo ? 0.6 : 1,
                         }}
                       >
                         <option value="">
@@ -378,8 +297,6 @@ function ConfirmPageContent() {
                         "confirm.form.levelDescriptionPlaceholder"
                       )}
                       size="lg"
-                      disabled={!player?.requireConfirmInfo}
-                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
                     />
                   </Box>
 
@@ -393,8 +310,6 @@ function ConfirmPageContent() {
                       name="desire"
                       placeholder={t("confirm.form.desirePlaceholder")}
                       size="lg"
-                      disabled={!player?.requireConfirmInfo}
-                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
                     />
                   </Box>
 
@@ -408,8 +323,6 @@ function ConfirmPageContent() {
                       name="phone"
                       placeholder={t("confirm.form.phonePlaceholder")}
                       size="lg"
-                      disabled={!player?.requireConfirmInfo}
-                      opacity={!player?.requireConfirmInfo ? 0.6 : 1}
                     />
                   </Box>
                 </Box>
@@ -421,21 +334,13 @@ function ConfirmPageContent() {
                   width="full"
                   mt={4}
                   loading={isSubmitting}
-                  disabled={
-                    isSubmitting ||
-                    (!player?.requireConfirmInfo && player?.confirmedByPlayer)
-                  }
+                  disabled={isSubmitting}
                 >
                   <Flex align="center" justify="center" width="100%">
                     {isSubmitting
                       ? t("confirm.form.processing")
-                      : !player?.requireConfirmInfo && player?.confirmedByPlayer
-                      ? t("confirm.form.alreadyConfirmed")
                       : t("confirm.form.confirmButton")}
-                    {!isSubmitting &&
-                      !(
-                        !player?.requireConfirmInfo && player?.confirmedByPlayer
-                      ) && <Box as={Check} ml={2} boxSize={5} />}
+                    {!isSubmitting && <Box as={Check} ml={2} boxSize={5} />}
                   </Flex>
                 </Button>
               </Stack>
@@ -462,8 +367,10 @@ function ConfirmPageContent() {
 
 export default function ConfirmPage() {
   return (
-    <Suspense fallback={<Spinner />}>
-      <ConfirmPageContent />
-    </Suspense>
+    <ProtectedRouteGuard requiredRole={["PLAYER"]}>
+      <Suspense fallback={<Spinner />}>
+        <ConfirmPageContent />
+      </Suspense>
+    </ProtectedRouteGuard>
   );
 }

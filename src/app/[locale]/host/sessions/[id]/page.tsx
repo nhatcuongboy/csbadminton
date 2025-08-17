@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Spinner, Center, Box, Text } from "@chakra-ui/react";
 import { SessionService } from "@/lib/api";
 import SessionDetailContent from "@/components/session/SessionDetailContent";
+import ProtectedRouteGuard from "@/components/guards/ProtectedRouteGuard";
 
-// Get the session detail data and adapt it to the format expected by SessionDetailContent
-export default function SessionDetailPage({
+function SessionDetailPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -31,31 +31,37 @@ export default function SessionDetailPage({
       try {
         setLoading(true);
         const sessionData = await SessionService.getSession(sessionId);
-        
+
         // Transform API data format to match what SessionDetailContent expects
         const formattedSession = {
           ...sessionData,
           // SessionDetailContent expects string dates (ISO format)
-          startTime: sessionData.startTime ? new Date(sessionData.startTime).toISOString() : null,
-          endTime: sessionData.endTime ? new Date(sessionData.endTime).toISOString() : null,
+          startTime: sessionData.startTime
+            ? new Date(sessionData.startTime).toISOString()
+            : null,
+          endTime: sessionData.endTime
+            ? new Date(sessionData.endTime).toISOString()
+            : null,
           // Transform courts and their currentMatch
           courts: (sessionData.courts || []).map((court: any) => ({
             ...court,
             currentPlayers: court.currentPlayers || [],
-            currentMatch: court.currentMatch ? {
-              ...court.currentMatch,
-              startTime: court.currentMatch.startTime 
-                ? new Date(court.currentMatch.startTime).toISOString() 
-                : new Date().toISOString(),
-              endTime: court.currentMatch.endTime 
-                ? new Date(court.currentMatch.endTime).toISOString() 
-                : undefined,
-            } : undefined,
+            currentMatch: court.currentMatch
+              ? {
+                  ...court.currentMatch,
+                  startTime: court.currentMatch.startTime
+                    ? new Date(court.currentMatch.startTime).toISOString()
+                    : new Date().toISOString(),
+                  endTime: court.currentMatch.endTime
+                    ? new Date(court.currentMatch.endTime).toISOString()
+                    : undefined,
+                }
+              : undefined,
           })),
           players: sessionData.players || [],
-          waitingQueue: sessionData.players?.filter(
-            (p: any) => p.status === "WAITING"
-          ) || [],
+          waitingQueue:
+            sessionData.players?.filter((p: any) => p.status === "WAITING") ||
+            [],
         };
 
         setSession(formattedSession);
@@ -124,4 +130,17 @@ export default function SessionDetailPage({
 
   // Pass the session data to the SessionDetailContent component
   return <SessionDetailContent sessionData={session} />;
+}
+
+// Get the session detail data and adapt it to the format expected by SessionDetailContent
+export default function SessionDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <ProtectedRouteGuard requiredRole={["HOST"]}>
+      <SessionDetailPageContent params={params} />
+    </ProtectedRouteGuard>
+  );
 }

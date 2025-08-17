@@ -17,7 +17,6 @@ interface CourtsTabProps {
   session: any;
   waitingPlayers: Player[];
   getCurrentMatch: (courtId: string) => Match | null;
-  formatCourtElapsedTime?: (startTime: string) => string;
   getCourtDisplayName: (
     courtName: string | undefined,
     courtNumber: number
@@ -35,7 +34,6 @@ const CourtsTab: React.FC<CourtsTabProps> = ({
   waitingPlayers,
   selectedPlayers,
   getCurrentMatch,
-  formatCourtElapsedTime,
   getCourtDisplayName,
   mode = "manage",
   startManualMatchCreation,
@@ -46,8 +44,7 @@ const CourtsTab: React.FC<CourtsTabProps> = ({
   const t = useTranslations("SessionDetail");
 
   // Create formatter function if not provided via props
-  const elapsedTimeFormatter =
-    formatCourtElapsedTime || createCourtElapsedTimeFormatter(t);
+  const elapsedTimeFormatter = createCourtElapsedTimeFormatter(t);
 
   // Custom hooks for modals and actions
   const modals = useCourtsTabModals();

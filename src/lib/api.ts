@@ -85,7 +85,7 @@ export interface Player {
   currentWaitTime: number;
   totalWaitTime: number;
   matchesPlayed: number;
-  status: "WAITING" | "PLAYING" | "FINISHED" | "READY";
+  status: "WAITING" | "PLAYING" | "FINISHED" | "READY" | "INACTIVE";
   currentCourtId?: string;
   currentCourt?: Court;
   preFilledByHost: boolean;
@@ -159,6 +159,8 @@ export interface PlayerStatistics {
   losses: number;
   winRate: number;
   averageScore: number;
+  totalPlayTime: number; // Total play time in minutes
+  totalWaitTime: number; // Total wait time in minutes
   status: string;
 }
 
@@ -343,6 +345,15 @@ export const SessionService = {
     >(`/sessions/${id}/matches`);
     // Handle the new API response format that returns an object with matches array
     return response.data.data?.matches || [];
+  },
+
+  // Toggle player inactive status
+  togglePlayerInactive: async (sessionId: string, playerId: string): Promise<Player> => {
+    const response = await api.patch<ApiResponse<Player>>(
+      `/sessions/${sessionId}/players/toggle-inactive`,
+      { playerId }
+    );
+    return response.data.data!;
   },
 
   // Get session matches with filters
@@ -940,3 +951,56 @@ export interface SuggestedPlayersResponse {
   scoreDifference: number;
   totalPlayersConsidered: number;
 }
+
+// Join by code response types
+export interface JoinByCodeResponse {
+  player: {
+    id: string;
+    playerNumber: number;
+    name: string;
+    status: string;
+    sessionId: string;
+    requireConfirmInfo?: boolean;
+    confirmedByPlayer?: boolean;
+    joinCode?: string;
+  };
+  session: {
+    id: string;
+    name: string;
+    status: string;
+    numberOfCourts: number;
+    maxPlayersPerCourt: number;
+  };
+  message: string;
+}
+
+// Auth service
+export const AuthService = {
+  // Check if code is valid player code
+  checkCode: async (code: string): Promise<{ isPlayerCode: boolean }> => {
+    const response = await api.get<ApiResponse<{ isPlayerCode: boolean }>>(
+      `/players/check-code?code=${code}`
+    );
+    return response.data.data!;
+  },
+
+  // Join session by code
+  joinByCode: async (
+    sessionCode: string,
+    playerInfo?: {
+      name?: string;
+      gender?: string;
+      level?: Level;
+      phone?: string;
+    }
+  ): Promise<ApiResponse<JoinByCodeResponse>> => {
+    const response = await api.post<ApiResponse<JoinByCodeResponse>>(
+      "/join-by-code",
+      {
+        sessionCode: sessionCode.trim().toUpperCase(),
+        ...playerInfo,
+      }
+    );
+    return response.data;
+  },
+};

@@ -1,5 +1,6 @@
 // Script tạo user làm host mặc định
 const { PrismaClient } = require('../src/generated/prisma')
+const bcrypt = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
@@ -18,11 +19,14 @@ async function main() {
     }
 
     // Tạo user mới với role HOST
+    const hashedPassword = await bcrypt.hash('Rambolun@69', 12)
+    
     const newUser = await prisma.user.create({
       data: {
         email: 'nhatcuongboy@gmail.com',
-        name: 'Nhat Cuong',
+        name: 'Nhật Cường',
         role: 'HOST',
+        password: hashedPassword,
       },
     })
 

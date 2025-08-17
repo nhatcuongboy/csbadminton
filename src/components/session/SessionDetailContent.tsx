@@ -1,8 +1,9 @@
 "use client";
 
-import { CourtService, Level, MatchService, SessionService } from "@/lib/api";
+import { Level, SessionService } from "@/lib/api";
 import { Box, Container, Flex, Heading, Text } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 // Import compatibility components
 import CourtsTab from "@/components/session/CourtsTab";
 import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
@@ -88,11 +89,19 @@ export default function SessionDetailContent({
   sessionData: SessionData;
 }) {
   const t = useTranslations("SessionDetail");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [session, setSession] = useState<SessionData>(sessionData);
   const [refreshInterval, setRefreshInterval] = useState<number>(60);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<number>(0);
+
+  // Initialize activeTab from URL parameter or default to 0
+  const [activeTab, setActiveTab] = useState<number>(() => {
+    const tabParam = searchParams.get("tab");
+    const tabIndex = tabParam ? parseInt(tabParam, 10) : 0;
+    return tabIndex >= 0 && tabIndex <= 3 ? tabIndex : 0;
+  });
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [selectedCourt, setSelectedCourt] = useState<string | null>(null);
   const [matchMode, setMatchMode] = useState<"auto" | "manual">("auto");
@@ -104,6 +113,19 @@ export default function SessionDetailContent({
   const [pendingAction, setPendingAction] = useState<string>("");
 
   const toast = useToast();
+
+  // Function to update URL with current tab
+  const updateTabInURL = (tabIndex: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tabIndex.toString());
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
+  // Function to handle tab change
+  const handleTabChange = (tabIndex: number) => {
+    setActiveTab(tabIndex);
+    updateTabInURL(tabIndex);
+  };
 
   // Get waiting players (players with status WAITING)
   const waitingPlayers = session.players
@@ -312,150 +334,12 @@ export default function SessionDetailContent({
     return t("minutesShort", { minutes });
   };
 
-  // End a match
-  const endMatch = async (matchId: string) => {
-    try {
-      await MatchService.endMatch(session.id, matchId);
-      await refreshSessionData();
-
-      toast.toast({
-        title: t("matchEndedSuccessfully"),
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error ending match:", error);
-      toast.toast({
-        title: t("errorEndingMatch"),
-        status: "error",
-        duration: 3000,
-      });
-    }
-  };
-
-  // Auto-assign players to a specific court
-  const autoAssignPlayersToSpecificCourt = async (courtId: string) => {
-    try {
-      // Check if we have enough waiting players
-      if (waitingPlayers.length < 4) {
-        toast.toast({
-          title: t("notEnoughPlayers"),
-          description: t("need4PlayersToStartMatch"),
-          status: "error",
-          duration: 3000,
-        });
-        return;
-      }
-
-      // Select the top 4 waiting players (those with longest wait time)
-      const selectedPlayerIds = waitingPlayers.slice(0, 4).map((p) => p.id);
-
-      // First, assign players to the court
-      await CourtService.selectPlayers(courtId, selectedPlayerIds);
-
-      // Then, start the match
-      await CourtService.startMatch(courtId);
-
-      await refreshSessionData();
-
-      toast.toast({
-        title: t("matchStartedSuccessfully"),
-        description: t("4PlayersAutoAssigned"),
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error auto-assigning players:", error);
-      toast.toast({
-        title: t("errorAutoAssigningPlayers"),
-        status: "error",
-        duration: 3000,
-      });
-    }
-  };
-
-  // Auto-assign players to empty courts
-  const autoAssignPlayers = async () => {
-    try {
-      await MatchService.autoAssignPlayers(session.id);
-      await refreshSessionData();
-
-      toast.toast({
-        title: t("playersAutoAssignedSuccessfully"),
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error auto-assigning players:", error);
-      toast.toast({
-        title: t("errorAutoAssigningPlayers"),
-        status: "error",
-        duration: 3000,
-      });
-    }
-  };
-
-  // Toggle player selection for new match
-  const togglePlayerSelection = (playerId: string) => {
-    if (selectedPlayers.includes(playerId)) {
-      setSelectedPlayers(selectedPlayers.filter((id) => id !== playerId));
-    } else {
-      if (selectedPlayers.length < 4) {
-        setSelectedPlayers([...selectedPlayers, playerId]);
-      }
-    }
-  };
-
   // Start manual match creation for a court
   const startManualMatchCreation = (courtId: string) => {
     setSelectedCourt(courtId);
     setMatchMode("manual");
     setShowMatchCreation(true);
     setSelectedPlayers([]);
-  };
-
-  // Cancel match creation
-  const cancelMatchCreation = () => {
-    setSelectedCourt(null);
-    setMatchMode("auto");
-    setShowMatchCreation(false);
-    setSelectedPlayers([]);
-  };
-
-  // Confirm manual match creation
-  const confirmManualMatch = async () => {
-    if (selectedPlayers.length !== 4 || !selectedCourt) {
-      toast.toast({
-        title: t("selectExactly4Players"),
-        status: "error",
-        duration: 3000,
-      });
-      return;
-    }
-
-    try {
-      await MatchService.createMatch(session.id, {
-        courtId: selectedCourt,
-        playerIds: selectedPlayers,
-      });
-
-      // Clear selections and refresh data
-      cancelMatchCreation();
-      await refreshSessionData();
-
-      toast.toast({
-        title: t("matchStartedSuccessfully"),
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error starting match:", error);
-      toast.toast({
-        title: t("errorStartingMatch"),
-        status: "error",
-        duration: 3000,
-      });
-    }
   };
 
   return (
@@ -508,6 +392,7 @@ export default function SessionDetailContent({
               setPlayerFilter={setPlayerFilter}
               formatWaitTime={formatWaitTime}
               sessionId={session.id}
+              onPlayerUpdate={refreshSessionData}
             />
           )}
           {activeTab === 2 && (
@@ -546,7 +431,7 @@ export default function SessionDetailContent({
             as="button"
             flex={1}
             py={2}
-            onClick={() => setActiveTab(0)}
+            onClick={() => handleTabChange(0)}
             display="flex"
             flexDirection="column"
             alignItems="center"
@@ -560,7 +445,7 @@ export default function SessionDetailContent({
             as="button"
             flex={1}
             py={2}
-            onClick={() => setActiveTab(1)}
+            onClick={() => handleTabChange(1)}
             display="flex"
             flexDirection="column"
             alignItems="center"
@@ -574,7 +459,7 @@ export default function SessionDetailContent({
             as="button"
             flex={1}
             py={2}
-            onClick={() => setActiveTab(2)}
+            onClick={() => handleTabChange(2)}
             display="flex"
             flexDirection="column"
             alignItems="center"
@@ -588,7 +473,7 @@ export default function SessionDetailContent({
             as="button"
             flex={1}
             py={2}
-            onClick={() => setActiveTab(3)}
+            onClick={() => handleTabChange(3)}
             display="flex"
             flexDirection="column"
             alignItems="center"
