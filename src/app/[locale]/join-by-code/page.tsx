@@ -19,7 +19,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Camera } from "lucide-react";
 import toast from "react-hot-toast";
 import QRScanner from "@/components/QRScanner";
-import { AuthService } from "@/lib/api";
+import { AuthService } from "@/lib/api/auth.service";
 import TopBar from "@/components/ui/TopBar";
 
 function JoinByCodeContent() {

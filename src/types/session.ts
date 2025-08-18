@@ -1,5 +1,5 @@
 // Common types for the session management components
-import { Level, CourtDirection } from "@/lib/api";
+import { Level, CourtDirection } from "@/lib/api/types";
 
 export interface Player {
   id: string;

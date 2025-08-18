@@ -10,7 +10,7 @@ import {
   Button,
   Image,
 } from "@chakra-ui/react";
-import { Level } from "@/lib/api";
+import { Level } from "@/lib/api/types";
 import { getLevelLabel } from "@/utils/level-mapping";
 import { Mars, Venus, Users, User, X, Copy, QrCode } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -54,10 +54,12 @@ export const PlayerDetailModal = ({
       // Generate join code (simplified - you might want to get this from API)
       const code = `${sessionId}-${player.playerNumber}`;
       setJoinCode(code);
-      
+
       // Generate QR code URL (using a QR code service)
       const joinUrl = `${window.location.origin}/join/${sessionId}?player=${player.playerNumber}`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinUrl)}`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+        joinUrl
+      )}`;
       setQrCodeUrl(qrUrl);
     }
   }, [isOpen, sessionId, player.playerNumber]);
@@ -240,7 +242,7 @@ export const PlayerDetailModal = ({
               <Text fontSize="lg" fontWeight="semibold" color="gray.800">
                 Join Session
               </Text>
-              
+
               {/* QR Code */}
               <VStack gap={2}>
                 <Text fontSize="sm" color="gray.600">

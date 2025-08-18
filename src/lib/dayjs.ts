@@ -1,13 +1,11 @@
 // src/lib/dayjs.ts
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import localizedFormat from "dayjs/plugin/localizedFormat";
-import vi from "dayjs/locale/vi";
-import relativeTime from "dayjs/plugin/relativeTime";
-import updateLocale from "dayjs/plugin/updateLocale";
 import "dayjs/locale/vi";
+import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
+import timezone from "dayjs/plugin/timezone";
+import updateLocale from "dayjs/plugin/updateLocale";
+import utc from "dayjs/plugin/utc";
 
 // Activate plugins
 dayjs.extend(duration);

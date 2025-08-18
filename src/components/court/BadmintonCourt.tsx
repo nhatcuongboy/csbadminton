@@ -1,6 +1,6 @@
 "use client";
 
-import { CourtDirection } from "@/lib/api";
+import { CourtDirection } from "@/lib/api/types";
 import { Box, Spinner } from "@chakra-ui/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Level, SessionService } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
 import { Box, Container, Flex, Heading, Text } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import { getCourtDisplayName } from "@/utils/session-helpers";
 import { RefreshCw, Square, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import WaitTimeUpdater from "./WaitTimeUpdater";
+import { Level } from "@/lib/api/types";
 
 // Types for session data and related entities
 interface Player {

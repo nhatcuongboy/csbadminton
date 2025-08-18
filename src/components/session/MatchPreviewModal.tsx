@@ -1,9 +1,6 @@
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
-import {
-  CourtDirection,
-  CourtService,
-  SuggestedPlayersResponse,
-} from "@/lib/api";
+import { CourtService } from "@/lib/api/court.service";
+import { CourtDirection, SuggestedPlayersResponse } from "@/lib/api/types";
 import { Court, Player } from "@/types/session";
 import { getLevelLabel } from "@/utils/level-mapping";
 import {

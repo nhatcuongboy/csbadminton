@@ -9,9 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Court, Match, Player } from "@/lib/api";
-import { User, Play, Square, Clock } from "lucide-react";
+import { Court, Player } from "@/lib/api/types";
 import { Button } from "@chakra-ui/react";
+import { Clock, Play, Square, User } from "lucide-react";
 
 export function CourtCard({
   court,

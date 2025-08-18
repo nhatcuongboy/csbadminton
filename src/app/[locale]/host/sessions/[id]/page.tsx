@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner, Center, Box, Text } from "@chakra-ui/react";
-import { SessionService } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
 import SessionDetailContent from "@/components/session/SessionDetailContent";
 import ProtectedRouteGuard from "@/components/guards/ProtectedRouteGuard";
 

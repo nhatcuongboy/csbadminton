@@ -1,3 +1,4 @@
+import QRCodeGenerator from "@/components/QRCodeGenerator";
 import {
   Button,
   Card,
@@ -7,34 +8,34 @@ import {
   VStack,
   useToast,
 } from "@/components/ui/chakra-compat";
-import { Level, PlayerService } from "@/lib/api";
+import { PlayerService } from "@/lib/api/player.service";
+import { Level } from "@/lib/api/types";
 import { getLevelLabel } from "@/utils/level-mapping";
 import {
+  Badge,
   Box,
   Flex,
+  Grid,
   Heading,
   Input,
   Text,
   Textarea,
-  Grid,
-  Badge,
 } from "@chakra-ui/react";
 import {
+  AlertCircle,
   Edit,
+  HelpCircle,
+  Mars,
   Plus,
+  QrCode,
   Save,
   Trash2,
-  Users,
-  UserCheck,
-  AlertCircle,
-  Mars,
-  Venus,
   User,
-  HelpCircle,
-  QrCode,
+  UserCheck,
+  Users,
+  Venus,
 } from "lucide-react";
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import QRCodeGenerator from "@/components/QRCodeGenerator";
+import React, { useEffect, useRef, useState } from "react";
 
 interface Player {
   id: string;

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/chakra-compat";
 import TopBar from "@/components/ui/TopBar";
 import ProtectedRouteGuard from "@/components/guards/ProtectedRouteGuard";
 import { useRouter } from "@/i18n/config";
-import { Level, PlayerService, type Player } from "@/lib/api";
+import { PlayerService } from "@/lib/api/player.service";
+import { Level, type Player } from "@/lib/api/types";
 import {
   Box,
   Container,

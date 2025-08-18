@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/chakra-compat";
 import { useState } from "react";
-import { SessionService } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
 import toast from "react-hot-toast";
 
 interface GeneralSettingsProps {
@@ -87,18 +87,64 @@ const GeneralSettings = ({ session, onDataRefresh }: GeneralSettingsProps) => {
         <Card maxW="4xl" w="full">
           <CardBody p={8}>
             <VStack gap={6} align="stretch">
+              <Box>
+                <HStack mb={3}>
+                  <FileText size={16} color="#4a5568" />
+                  <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                    Session Name
+                  </Text>
+                </HStack>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Enter session name"
+                  size="lg"
+                  borderRadius="lg"
+                  borderColor="gray.300"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px #3182ce",
+                  }}
+                />
+              </Box>
 
+              <Box>
+                <HStack mb={3}>
+                  <FileText size={16} color="#4a5568" />
+                  <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                    Description
+                  </Text>
+                </HStack>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  placeholder="Enter session description"
+                  rows={4}
+                  borderRadius="lg"
+                  borderColor="gray.300"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px #3182ce",
+                  }}
+                />
+              </Box>
+
+              <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                 <Box>
                   <HStack mb={3}>
-                    <FileText size={16} color="#4a5568" />
+                    <MapPin size={16} color="#4a5568" />
                     <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-                      Session Name
+                      Location
                     </Text>
                   </HStack>
                   <Input
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Enter session name"
+                    value={formData.location}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
+                    placeholder="Enter location"
                     size="lg"
                     borderRadius="lg"
                     borderColor="gray.300"
@@ -111,18 +157,48 @@ const GeneralSettings = ({ session, onDataRefresh }: GeneralSettingsProps) => {
 
                 <Box>
                   <HStack mb={3}>
-                    <FileText size={16} color="#4a5568" />
+                    <Users size={16} color="#4a5568" />
                     <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-                      Description
+                      Max Players Per Court
                     </Text>
                   </HStack>
-                  <Textarea
-                    value={formData.description}
+                  <Input
+                    type="number"
+                    value={formData.maxPlayersPerCourt}
                     onChange={(e) =>
-                      handleInputChange("description", e.target.value)
+                      handleInputChange(
+                        "maxPlayersPerCourt",
+                        parseInt(e.target.value) || 4
+                      )
                     }
-                    placeholder="Enter session description"
-                    rows={4}
+                    min={2}
+                    max={8}
+                    size="lg"
+                    borderRadius="lg"
+                    borderColor="gray.300"
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px #3182ce",
+                    }}
+                  />
+                </Box>
+              </Grid>
+
+              <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
+                <Box>
+                  <HStack mb={3}>
+                    <Clock size={16} color="#4a5568" />
+                    <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                      Start Time
+                    </Text>
+                  </HStack>
+                  <Input
+                    type="datetime-local"
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      handleInputChange("startTime", e.target.value)
+                    }
+                    size="lg"
                     borderRadius="lg"
                     borderColor="gray.300"
                     _focus={{
@@ -132,236 +208,143 @@ const GeneralSettings = ({ session, onDataRefresh }: GeneralSettingsProps) => {
                   />
                 </Box>
 
-                <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
-                  <Box>
-                    <HStack mb={3}>
-                      <MapPin size={16} color="#4a5568" />
-                      <Text
-                        fontSize="sm"
-                        fontWeight="semibold"
-                        color="gray.700"
-                      >
-                        Location
-                      </Text>
-                    </HStack>
-                    <Input
-                      value={formData.location}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      placeholder="Enter location"
-                      size="lg"
-                      borderRadius="lg"
-                      borderColor="gray.300"
-                      _focus={{
-                        borderColor: "blue.400",
-                        boxShadow: "0 0 0 1px #3182ce",
-                      }}
-                    />
-                  </Box>
-
-                  <Box>
-                    <HStack mb={3}>
-                      <Users size={16} color="#4a5568" />
-                      <Text
-                        fontSize="sm"
-                        fontWeight="semibold"
-                        color="gray.700"
-                      >
-                        Max Players Per Court
-                      </Text>
-                    </HStack>
-                    <Input
-                      type="number"
-                      value={formData.maxPlayersPerCourt}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "maxPlayersPerCourt",
-                          parseInt(e.target.value) || 4
-                        )
-                      }
-                      min={2}
-                      max={8}
-                      size="lg"
-                      borderRadius="lg"
-                      borderColor="gray.300"
-                      _focus={{
-                        borderColor: "blue.400",
-                        boxShadow: "0 0 0 1px #3182ce",
-                      }}
-                    />
-                  </Box>
-                </Grid>
-
-                <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
-                  <Box>
-                    <HStack mb={3}>
-                      <Clock size={16} color="#4a5568" />
-                      <Text
-                        fontSize="sm"
-                        fontWeight="semibold"
-                        color="gray.700"
-                      >
-                        Start Time
-                      </Text>
-                    </HStack>
-                    <Input
-                      type="datetime-local"
-                      value={formData.startTime}
-                      onChange={(e) =>
-                        handleInputChange("startTime", e.target.value)
-                      }
-                      size="lg"
-                      borderRadius="lg"
-                      borderColor="gray.300"
-                      _focus={{
-                        borderColor: "blue.400",
-                        boxShadow: "0 0 0 1px #3182ce",
-                      }}
-                    />
-                  </Box>
-
-                  <Box>
-                    <HStack mb={3}>
-                      <Clock size={16} color="#4a5568" />
-                      <Text
-                        fontSize="sm"
-                        fontWeight="semibold"
-                        color="gray.700"
-                      >
-                        End Time
-                      </Text>
-                    </HStack>
-                    <Input
-                      type="datetime-local"
-                      value={formData.endTime}
-                      onChange={(e) =>
-                        handleInputChange("endTime", e.target.value)
-                      }
-                      size="lg"
-                      borderRadius="lg"
-                      borderColor="gray.300"
-                      _focus={{
-                        borderColor: "blue.400",
-                        boxShadow: "0 0 0 1px #3182ce",
-                      }}
-                    />
-                  </Box>
-                </Grid>
-
-                <VStack gap={4} align="stretch">
-                  <Heading size="sm" color="gray.700">
-                    Session Settings
-                  </Heading>
-
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    p={4}
-                    bg="gray.50"
+                <Box>
+                  <HStack mb={3}>
+                    <Clock size={16} color="#4a5568" />
+                    <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                      End Time
+                    </Text>
+                  </HStack>
+                  <Input
+                    type="datetime-local"
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      handleInputChange("endTime", e.target.value)
+                    }
+                    size="lg"
                     borderRadius="lg"
-                  >
-                    <HStack>
-                      <UserCheck size={16} color="#4a5568" />
-                      <Box>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          color="gray.700"
-                        >
-                          Require Player Info
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          Players must provide personal information
-                        </Text>
-                      </Box>
-                    </HStack>
-                    <input
-                      type="checkbox"
-                      checked={formData.requirePlayerInfo}
-                      onChange={(e) =>
-                        handleInputChange("requirePlayerInfo", e.target.checked)
-                      }
-                      style={{ width: '20px', height: '20px' }}
-                    />
-                  </Flex>
+                    borderColor="gray.300"
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px #3182ce",
+                    }}
+                  />
+                </Box>
+              </Grid>
 
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    p={4}
-                    bg="gray.50"
-                    borderRadius="lg"
-                  >
-                    <HStack>
-                      <Users size={16} color="#4a5568" />
-                      <Box>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          color="gray.700"
-                        >
-                          Allow Guest Join
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          Allow guests to join without registration
-                        </Text>
-                      </Box>
-                    </HStack>
-                    <input
-                      type="checkbox"
-                      checked={formData.allowGuestJoin}
-                      onChange={(e) =>
-                        handleInputChange("allowGuestJoin", e.target.checked)
-                      }
-                      style={{ width: '20px', height: '20px' }}
-                    />
-                  </Flex>
+              <VStack gap={4} align="stretch">
+                <Heading size="sm" color="gray.700">
+                  Session Settings
+                </Heading>
 
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    p={4}
-                    bg="gray.50"
-                    borderRadius="lg"
-                  >
-                    <HStack>
-                      <UserPlus size={16} color="#4a5568" />
-                      <Box>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          color="gray.700"
-                        >
-                          Allow New Players
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          Allow new players to join during session
-                        </Text>
-                      </Box>
-                    </HStack>
-                    <input
-                      type="checkbox"
-                      checked={formData.allowNewPlayers}
-                      onChange={(e) =>
-                        handleInputChange("allowNewPlayers", e.target.checked)
-                      }
-                      style={{ width: '20px', height: '20px' }}
-                    />
-                  </Flex>
-                </VStack>
-
-                <Button
-                  colorScheme="blue"
-                  size="lg"
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  p={4}
+                  bg="gray.50"
                   borderRadius="lg"
-                  loading={isLoading}
-                  onClick={handleUpdateSession}
-                  mt={4}
-                  _hover={{ transform: "translateY(-1px)", boxShadow: "lg" }}
                 >
-                  Update Session
-                </Button>
+                  <HStack>
+                    <UserCheck size={16} color="#4a5568" />
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="semibold"
+                        color="gray.700"
+                      >
+                        Require Player Info
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        Players must provide personal information
+                      </Text>
+                    </Box>
+                  </HStack>
+                  <input
+                    type="checkbox"
+                    checked={formData.requirePlayerInfo}
+                    onChange={(e) =>
+                      handleInputChange("requirePlayerInfo", e.target.checked)
+                    }
+                    style={{ width: "20px", height: "20px" }}
+                  />
+                </Flex>
+
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  p={4}
+                  bg="gray.50"
+                  borderRadius="lg"
+                >
+                  <HStack>
+                    <Users size={16} color="#4a5568" />
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="semibold"
+                        color="gray.700"
+                      >
+                        Allow Guest Join
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        Allow guests to join without registration
+                      </Text>
+                    </Box>
+                  </HStack>
+                  <input
+                    type="checkbox"
+                    checked={formData.allowGuestJoin}
+                    onChange={(e) =>
+                      handleInputChange("allowGuestJoin", e.target.checked)
+                    }
+                    style={{ width: "20px", height: "20px" }}
+                  />
+                </Flex>
+
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  p={4}
+                  bg="gray.50"
+                  borderRadius="lg"
+                >
+                  <HStack>
+                    <UserPlus size={16} color="#4a5568" />
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="semibold"
+                        color="gray.700"
+                      >
+                        Allow New Players
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        Allow new players to join during session
+                      </Text>
+                    </Box>
+                  </HStack>
+                  <input
+                    type="checkbox"
+                    checked={formData.allowNewPlayers}
+                    onChange={(e) =>
+                      handleInputChange("allowNewPlayers", e.target.checked)
+                    }
+                    style={{ width: "20px", height: "20px" }}
+                  />
+                </Flex>
+              </VStack>
+
+              <Button
+                colorScheme="blue"
+                size="lg"
+                borderRadius="lg"
+                loading={isLoading}
+                onClick={handleUpdateSession}
+                mt={4}
+                _hover={{ transform: "translateY(-1px)", boxShadow: "lg" }}
+              >
+                Update Session
+              </Button>
             </VStack>
           </CardBody>
         </Card>

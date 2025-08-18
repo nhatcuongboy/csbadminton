@@ -1,6 +1,7 @@
 "use client";
 
-import { SessionService, CourtDirection } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
+import { CourtDirection } from "@/lib/api/types";
 import { parseScoreData } from "@/utils/match-result-utils";
 import {
   Badge,

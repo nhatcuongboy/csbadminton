@@ -1,10 +1,6 @@
-import { useState } from "react";
 import { useToast } from "@/components/ui/chakra-compat";
-import {
-  CourtService,
-  SuggestedPlayersResponse,
-  CourtDirection,
-} from "@/lib/api";
+import { CourtService } from "@/lib/api/court.service";
+import { CourtDirection, SuggestedPlayersResponse } from "@/lib/api/types";
 import { Court, Player } from "@/types/session";
 import { useTranslations } from "next-intl";
 

@@ -1,17 +1,12 @@
 import React, { useState, useMemo, useEffect } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { X, Check } from "lucide-react";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
 import { Button as CompatButton } from "@/components/ui/chakra-compat";
 import { Player, Court } from "@/types/session";
 import BadmintonCourt from "@/components/court/BadmintonCourt";
 import { useTranslations } from "next-intl";
-import { CourtDirection } from "@/lib/api";
+import { CourtDirection } from "@/lib/api/types";
 
 interface ManualSelectPlayersModalProps {
   isOpen: boolean;
@@ -19,7 +14,9 @@ interface ManualSelectPlayersModalProps {
   waitingPlayers: Player[];
   selectedPlayers: string[];
   onPlayerToggle: (playerId: string) => void;
-  onConfirm: (playersWithPosition: Array<{playerId: string, position: number}>) => void;
+  onConfirm: (
+    playersWithPosition: Array<{ playerId: string; position: number }>
+  ) => void;
   onCancel: () => void;
   formatWaitTime: (waitTimeInMinutes: number) => string;
   isLoading?: boolean; // Add loading prop
@@ -51,8 +48,13 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
 
   // Create selectedPositions array for BadmintonCourt
   const selectedPositions = useMemo(() => {
-    const positions: (Player | undefined)[] = [undefined, undefined, undefined, undefined];
-    
+    const positions: (Player | undefined)[] = [
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ];
+
     // Fill positions sequentially based on selectedPlayers order
     selectedPlayers.forEach((playerId, index) => {
       if (index < 4) {
@@ -62,7 +64,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
         }
       }
     });
-    
+
     return positions;
   }, [selectedPlayers, waitingPlayers]);
 
@@ -72,7 +74,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
     if (selectedPlayers.length >= 4) {
       return;
     }
-    
+
     // Find first empty position
     for (let i = 0; i < 4; i++) {
       if (!selectedPositions[i]) {
@@ -80,7 +82,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
         return;
       }
     }
-    
+
     // If somehow all positions are filled, reset to 0
     setCurrentPlayerPosition(0);
   };
@@ -107,7 +109,7 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
     if (selectedPlayers.length === 4) {
       const playersWithPosition = selectedPlayers.map((playerId, index) => ({
         playerId,
-        position: index // 0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right
+        position: index, // 0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right
       }));
       if (typeof onConfirm === "function") {
         onConfirm(playersWithPosition);
@@ -150,9 +152,10 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
             flexShrink={0}
           >
             <Heading size="md">
-              {title || t("courtsTab.manualPlayerSelectionTitle", {
-                courtNumber: court.courtNumber,
-              })}
+              {title ||
+                t("courtsTab.manualPlayerSelectionTitle", {
+                  courtNumber: court.courtNumber,
+                })}
             </Heading>
             <Box
               as="button"
@@ -183,7 +186,10 @@ const ManualSelectPlayersModal: React.FC<ManualSelectPlayersModalProps> = ({
                   selectedPositions={selectedPositions}
                   currentPlayerPosition={currentPlayerPosition}
                   onPlayerRemove={handleRemoveFromPosition}
-                  courtName={getCourtDisplayName(court.courtName, court.courtNumber)}
+                  courtName={getCourtDisplayName(
+                    court.courtName,
+                    court.courtNumber
+                  )}
                   width="100%"
                   showTimeInCenter={false}
                   direction={court?.direction || CourtDirection.HORIZONTAL}

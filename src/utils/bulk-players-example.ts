@@ -1,4 +1,4 @@
-import { PlayerService, BulkPlayerData, Level } from "@/lib/api";
+import { BulkPlayerData } from "@/lib/api/types";
 
 // Function to create players from CSV data
 export function parseCSVToBulkPlayers(csvData: string): BulkPlayerData[] {

@@ -10,7 +10,7 @@ import {
   Collapsible,
 } from "@chakra-ui/react";
 import { PlayerGrid } from "@/components/player/PlayerGrid";
-import { Level } from "@/lib/api";
+import { Level } from "@/lib/api/types";
 import SessionPlayerStatistics from "./SessionPlayerStatistics";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -52,7 +52,7 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
   onPlayerUpdate,
 }) => {
   const t = useTranslations("SessionDetail");
-  
+
   // Collapsible state for players section
   const [isPlayersSectionOpen, setIsPlayersSectionOpen] = React.useState(true);
   // Collapsible state for statistics section
@@ -141,8 +141,8 @@ const PlayersTab: React.FC<PlayersTabProps> = ({
             if (filteredPlayers.length === 0) {
               return (
                 <Text fontSize="lg" color="gray.500" textAlign="center" py={8}>
-                  {t("playersTab.noPlayersFound", { 
-                    status: t(`playersTab.${playerFilter.toLowerCase()}`) 
+                  {t("playersTab.noPlayersFound", {
+                    status: t(`playersTab.${playerFilter.toLowerCase()}`),
                   })}
                 </Text>
               );

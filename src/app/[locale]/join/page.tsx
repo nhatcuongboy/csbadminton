@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/chakra-compat";
 import TopBar from "@/components/ui/TopBar";
 import { useRouter } from "@/i18n/config";
-import { PlayerService, SessionService, type Session } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
+import { PlayerService } from "@/lib/api/player.service";
 import {
   Box,
   Container,
@@ -19,6 +20,7 @@ import { Activity, ArrowRight, Hash, LogIn, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { ISession } from "@/lib/api/types";
 
 const formatRangeTime = (
   startTime?: string | Date,
@@ -37,10 +39,10 @@ export default function JoinPage() {
   const [sessionId, setSessionId] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<ISession[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(true);
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [selectedSession, setSelectedSession] = useState<ISession | null>(null);
   const [existingPlayers, setExistingPlayers] = useState<any[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
 

@@ -15,11 +15,12 @@ import {
 } from "@chakra-ui/react";
 import { Calendar, Clock, Users, SquareAsterisk } from "lucide-react";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
-import { SessionService, type Session } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
 import { useTranslations, useLocale } from "next-intl";
 import dayjs from "@/lib/dayjs";
 import "dayjs/locale/vi";
 import "dayjs/locale/en";
+import { ISession } from "@/lib/api/types";
 
 // Helper functions for formatting with locale support
 const formatDate = (dateString: string | Date, locale: string): string => {
@@ -27,7 +28,7 @@ const formatDate = (dateString: string | Date, locale: string): string => {
   const date = dayjs(dateString).locale(locale === "vi" ? "vi" : "en");
 
   let formattedDate: string;
-  
+
   if (locale === "vi") {
     // Vietnamese format: "Thứ 2, 04 tháng 7, 2025"
     formattedDate = date.format("dddd, DD MMMM, YYYY");
@@ -35,7 +36,7 @@ const formatDate = (dateString: string | Date, locale: string): string => {
     // English format: "Mon, Jul 04, 2025"
     formattedDate = date.format("ddd, MMM DD, YYYY");
   }
-  
+
   // Capitalize the first letter of the day name
   return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 };
@@ -215,7 +216,7 @@ export default function SessionsList({
         const sessionData = await SessionService.getAllSessions();
 
         // Transform API data to UI format
-        const uiSessions = sessionData.map((session: Session) => {
+        const uiSessions = sessionData.map((session: ISession) => {
           // Calculate max players based on courts and maxPlayersPerCourt
           const maxPlayers =
             session.numberOfCourts * session.maxPlayersPerCourt;

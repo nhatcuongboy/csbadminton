@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Player } from "@/lib/api";
+import { Player } from "@/lib/api/types";
 import { UserPlus, User, Edit, Trash } from "lucide-react";
 import { Button } from "@chakra-ui/react";
 import { getLevelLabel } from "@/utils/level-mapping";
@@ -32,7 +32,11 @@ export function AddPlayerForm({
       const formData = new FormData(e.currentTarget);
       const playerData = {
         name: formData.get("name") as string,
-        gender: formData.get("gender") as "MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY",
+        gender: formData.get("gender") as
+          | "MALE"
+          | "FEMALE"
+          | "OTHER"
+          | "PREFER_NOT_TO_SAY",
         level: formData.get("level") as
           | "Y"
           | "Y_PLUS"

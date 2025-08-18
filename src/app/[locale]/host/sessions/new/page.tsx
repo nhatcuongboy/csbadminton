@@ -1,7 +1,8 @@
 "use client";
 
 import TopBar from "@/components/ui/TopBar";
-import { SessionService, CourtDirection } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
+import { CourtDirection } from "@/lib/api/types";
 import ProtectedRouteGuard from "@/components/guards/ProtectedRouteGuard";
 import {
   Box,

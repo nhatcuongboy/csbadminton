@@ -1,4 +1,4 @@
-import { Level } from "@/lib/api";
+import { Level } from "@/lib/api/types";
 import { LevelLabel } from "@/types/session";
 
 /**
@@ -7,9 +7,12 @@ import { LevelLabel } from "@/types/session";
  * @param fallback - Custom fallback text when level is undefined (defaults to "N/A")
  * @returns The corresponding LevelLabel for display, or fallback if level is undefined
  */
-export const getLevelLabel = (level?: Level, fallback: string = "N/A"): string => {
+export const getLevelLabel = (
+  level?: Level,
+  fallback: string = "N/A"
+): string => {
   if (!level) return fallback;
-  
+
   const levelMap: Record<Level, LevelLabel> = {
     [Level.Y_MINUS]: LevelLabel.Y_MINUS,
     [Level.Y]: LevelLabel.Y,
@@ -20,7 +23,7 @@ export const getLevelLabel = (level?: Level, fallback: string = "N/A"): string =
     [Level.TB_PLUS]: LevelLabel.TB_PLUS,
     [Level.K]: LevelLabel.K,
   };
-  
+
   return levelMap[level] || fallback;
 };
 
@@ -31,7 +34,7 @@ export const getLevelLabel = (level?: Level, fallback: string = "N/A"): string =
  */
 export const getLevelDescription = (level?: Level): string => {
   if (!level) return "No level specified";
-  
+
   const descriptions: Record<Level, string> = {
     [Level.Y_MINUS]: "Beginner (Y-)",
     [Level.Y]: "Beginner (Y)",
@@ -42,6 +45,6 @@ export const getLevelDescription = (level?: Level): string => {
     [Level.TB_PLUS]: "Basic Plus (TB+)",
     [Level.K]: "Advanced (K)",
   };
-  
+
   return descriptions[level] || "Unknown level";
 };

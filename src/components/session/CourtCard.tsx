@@ -5,7 +5,7 @@ import {
   CardHeader,
   Button as CompatButton,
 } from "@/components/ui/chakra-compat";
-import { CourtDirection } from "@/lib/api";
+import { CourtDirection } from "@/lib/api/types";
 import { Court, Match } from "@/types/session";
 import {
   Badge,

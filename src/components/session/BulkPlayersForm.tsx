@@ -2,29 +2,37 @@
 
 import { useState } from "react";
 import { Box, Input, Text } from "@chakra-ui/react";
-import { 
-  Button, 
-  VStack, 
+import {
+  Button,
+  VStack,
   HStack,
   Card,
   CardBody,
-  CardHeader
+  CardHeader,
 } from "@/components/ui/chakra-compat";
-import { PlayerService, type BulkPlayerData, type BulkPlayersInfoResponse } from "@/lib/api";
+import { PlayerService } from "@/lib/api/player.service";
+import {
+  type BulkPlayerData,
+  type BulkPlayersInfoResponse,
+} from "@/lib/api/types";
 
 interface BulkPlayersFormProps {
   sessionId: string;
   onSuccess?: () => void;
 }
 
-export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFormProps) {
+export default function BulkPlayersForm({
+  sessionId,
+  onSuccess,
+}: BulkPlayersFormProps) {
   const [players, setPlayers] = useState<BulkPlayerData[]>([
-    { playerNumber: 1 }
+    { playerNumber: 1 },
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [sessionInfo, setSessionInfo] = useState<BulkPlayersInfoResponse | null>(null);
+  const [sessionInfo, setSessionInfo] =
+    useState<BulkPlayersInfoResponse | null>(null);
 
   // Load session info
   const loadSessionInfo = async () => {
@@ -41,7 +49,8 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
 
   // Add new player row
   const addPlayer = () => {
-    const nextPlayerNumber = Math.max(...players.map(p => p.playerNumber), 0) + 1;
+    const nextPlayerNumber =
+      Math.max(...players.map((p) => p.playerNumber), 0) + 1;
     setPlayers([...players, { playerNumber: nextPlayerNumber }]);
   };
 
@@ -51,7 +60,11 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
   };
 
   // Update player data
-  const updatePlayer = (index: number, field: keyof BulkPlayerData, value: any) => {
+  const updatePlayer = (
+    index: number,
+    field: keyof BulkPlayerData,
+    value: any
+  ) => {
     const updated = [...players];
     updated[index] = { ...updated[index], [field]: value };
     setPlayers(updated);
@@ -64,8 +77,13 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
     setSuccess(null);
 
     try {
-      const response = await PlayerService.createBulkPlayers(sessionId, players);
-      setSuccess(`${response.createdPlayers.length} players created successfully`);
+      const response = await PlayerService.createBulkPlayers(
+        sessionId,
+        players
+      );
+      setSuccess(
+        `${response.createdPlayers.length} players created successfully`
+      );
       onSuccess?.();
     } catch (err: any) {
       setError(err.message || "Failed to create players");
@@ -86,31 +104,44 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
           </Button>
         </HStack>
       </CardHeader>
-      
+
       <CardBody>
         <VStack gap={4}>
           {sessionInfo && (
             <Box p={3} bg="blue.50" borderRadius="md" width="100%">
               <Text fontSize="sm">
-                Session: {sessionInfo.sessionName} | 
-                Max Players: {sessionInfo.maxPlayers} | 
-                Current: {sessionInfo.currentPlayersCount} | 
-                Available: {sessionInfo.availableSlots}
+                Session: {sessionInfo.sessionName} | Max Players:{" "}
+                {sessionInfo.maxPlayers} | Current:{" "}
+                {sessionInfo.currentPlayersCount} | Available:{" "}
+                {sessionInfo.availableSlots}
               </Text>
               <Text fontSize="xs" color="gray.600">
-                Available Numbers: {sessionInfo.availablePlayerNumbers.join(", ")}
+                Available Numbers:{" "}
+                {sessionInfo.availablePlayerNumbers.join(", ")}
               </Text>
             </Box>
           )}
 
           {error && (
-            <Box p={3} bg="red.50" color="red.600" borderRadius="md" width="100%">
+            <Box
+              p={3}
+              bg="red.50"
+              color="red.600"
+              borderRadius="md"
+              width="100%"
+            >
               <Text>{error}</Text>
             </Box>
           )}
 
           {success && (
-            <Box p={3} bg="green.50" color="green.600" borderRadius="md" width="100%">
+            <Box
+              p={3}
+              bg="green.50"
+              color="green.600"
+              borderRadius="md"
+              width="100%"
+            >
               <Text>{success}</Text>
             </Box>
           )}
@@ -122,18 +153,33 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
                   type="number"
                   placeholder="Player #"
                   value={player.playerNumber}
-                  onChange={(e: any) => updatePlayer(index, 'playerNumber', parseInt(e.target.value) || 1)}
+                  onChange={(e: any) =>
+                    updatePlayer(
+                      index,
+                      "playerNumber",
+                      parseInt(e.target.value) || 1
+                    )
+                  }
                   width="80px"
                 />
                 <Input
                   placeholder="Name (optional)"
-                  value={player.name || ''}
-                  onChange={(e: any) => updatePlayer(index, 'name', e.target.value || undefined)}
+                  value={player.name || ""}
+                  onChange={(e: any) =>
+                    updatePlayer(index, "name", e.target.value || undefined)
+                  }
                 />
-                <select 
-                  value={player.gender || ''}
-                  onChange={(e: any) => updatePlayer(index, 'gender', e.target.value || undefined)}
-                  style={{ padding: '8px', borderWidth: '1px', borderRadius: '6px', width: '120px' }}
+                <select
+                  value={player.gender || ""}
+                  onChange={(e: any) =>
+                    updatePlayer(index, "gender", e.target.value || undefined)
+                  }
+                  style={{
+                    padding: "8px",
+                    borderWidth: "1px",
+                    borderRadius: "6px",
+                    width: "120px",
+                  }}
                 >
                   <option value="">Gender</option>
                   <option value="MALE">Male</option>
@@ -142,9 +188,16 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
                   <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
                 </select>
                 <select
-                  value={player.level || ''}
-                  onChange={(e: any) => updatePlayer(index, 'level', e.target.value || undefined)}
-                  style={{ padding: '8px', borderWidth: '1px', borderRadius: '6px', width: '120px' }}
+                  value={player.level || ""}
+                  onChange={(e: any) =>
+                    updatePlayer(index, "level", e.target.value || undefined)
+                  }
+                  style={{
+                    padding: "8px",
+                    borderWidth: "1px",
+                    borderRadius: "6px",
+                    width: "120px",
+                  }}
                 >
                   <option value="">Level</option>
                   <option value="Y">Y</option>
@@ -156,8 +209,10 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
                 </select>
                 <Input
                   placeholder="Phone (optional)"
-                  value={player.phone || ''}
-                  onChange={(e: any) => updatePlayer(index, 'phone', e.target.value || undefined)}
+                  value={player.phone || ""}
+                  onChange={(e: any) =>
+                    updatePlayer(index, "phone", e.target.value || undefined)
+                  }
                   width="150px"
                 />
                 <Button
@@ -173,14 +228,8 @@ export default function BulkPlayersForm({ sessionId, onSuccess }: BulkPlayersFor
           </VStack>
 
           <HStack gap={2}>
-            <Button onClick={addPlayer}>
-              Add Player
-            </Button>
-            <Button
-              colorScheme="blue"
-              onClick={handleSubmit}
-              loading={loading}
-            >
+            <Button onClick={addPlayer}>Add Player</Button>
+            <Button colorScheme="blue" onClick={handleSubmit} loading={loading}>
               {loading ? "Creating..." : "Create Players"}
             </Button>
           </HStack>

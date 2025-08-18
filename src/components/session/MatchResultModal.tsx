@@ -1,21 +1,19 @@
-import React, { useState } from "react";
+import { Button as CompatButton } from "@/components/ui/chakra-compat";
+import { CourtDirection } from "@/lib/api/types";
+import { Match } from "@/types/session";
 import {
   Box,
   Flex,
   Heading,
-  Text,
-  VStack,
   HStack,
-  Badge,
   Input,
+  Text,
   Textarea,
+  VStack,
 } from "@chakra-ui/react";
-import { X, Trophy, Users } from "lucide-react";
-import { Button as CompatButton } from "@/components/ui/chakra-compat";
-import { Player, Match } from "@/types/session";
-import { getLevelLabel } from "@/utils/level-mapping";
+import { Trophy, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { CourtDirection } from "@/lib/api";
+import React, { useState } from "react";
 
 interface MatchResultModalProps {
   isOpen: boolean;

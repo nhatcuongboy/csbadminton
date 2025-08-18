@@ -12,7 +12,8 @@ import {
   VStack,
   Spinner,
 } from "@chakra-ui/react";
-import { Level, AuthService } from "@/lib/api";
+import { AuthService } from "@/lib/api/auth.service";
+import { Level } from "@/lib/api/types";
 import toast from "react-hot-toast";
 import { signIn, getSession } from "next-auth/react";
 import TopBar from "@/components/ui/TopBar";
@@ -143,7 +144,9 @@ function RegisterContent() {
                     <option value="MALE">{t("male")}</option>
                     <option value="FEMALE">{t("female")}</option>
                     <option value="OTHER">{t("other")}</option>
-                    <option value="PREFER_NOT_TO_SAY">{t("preferNotToSay")}</option>
+                    <option value="PREFER_NOT_TO_SAY">
+                      {t("preferNotToSay")}
+                    </option>
                   </select>
                 </Box>
 

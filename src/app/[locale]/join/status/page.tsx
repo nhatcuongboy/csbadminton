@@ -7,14 +7,9 @@ import PlayersTab, { PlayerFilter } from "@/components/session/PlayersTab";
 import { IconButton } from "@/components/ui/chakra-compat";
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import TopBar from "@/components/ui/TopBar";
-import {
-  PlayerService,
-  SessionService,
-  type Court,
-  type Match,
-  type Player,
-  type Session,
-} from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
+import { PlayerService } from "@/lib/api/player.service";
+import { type Court, type Match, type Player } from "@/lib/api/types";
 import { getCourtDisplayName } from "@/utils/session-helpers";
 import {
   Box,
@@ -38,6 +33,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { ISession } from "@/lib/api/types";
 
 function StatusPageContent() {
   const searchParams = useSearchParams();
@@ -52,7 +48,7 @@ function StatusPageContent() {
   const [refreshing, setRefreshing] = useState(false); // For background refresh
   const [error, setError] = useState<string | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<ISession | null>(null);
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
   const [currentCourt, setCurrentCourt] = useState<Court | null>(null);
   const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);

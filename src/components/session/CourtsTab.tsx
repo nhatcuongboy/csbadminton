@@ -1,5 +1,5 @@
 import { SimpleGrid } from "@/components/ui/chakra-compat";
-import { CourtDirection } from "@/lib/api";
+import { CourtDirection } from "@/lib/api/types";
 import { Court, Match, Player } from "@/types/session";
 import { Box, Flex, Heading, HStack } from "@chakra-ui/react";
 import { useTranslations } from "next-intl";

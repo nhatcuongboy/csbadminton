@@ -1,12 +1,12 @@
 "use client";
 
-import { Box, Badge, Flex, Text, VStack, Button } from "@chakra-ui/react";
 import { Card, CardBody, SimpleGrid } from "@/components/ui/chakra-compat";
-import { Level, SessionService } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
+import { Level } from "@/lib/api/types";
 import { getLevelLabel } from "@/utils/level-mapping";
-import { Mars, Pause, Play, User, UserCheck, Users, Venus } from "lucide-react";
+import { Badge, Box, Button, Flex, Text, VStack } from "@chakra-ui/react";
+import { Mars, Pause, Play, User, Users, Venus } from "lucide-react";
 import { useState } from "react";
-import toast from "react-hot-toast";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 
 // Color constants for different player states
@@ -88,7 +88,8 @@ export const PlayerGrid = ({
     action: string;
   }>({ isOpen: false, playerId: "", playerName: "", action: "" });
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPlayerForDetail, setSelectedPlayerForDetail] = useState<Player | null>(null);
+  const [selectedPlayerForDetail, setSelectedPlayerForDetail] =
+    useState<Player | null>(null);
 
   const handleToggleInactive = async (playerId: string) => {
     if (!sessionId) return;
@@ -186,11 +187,13 @@ export const PlayerGrid = ({
               transition="all 0.2s"
               minH="140px"
               position="relative"
-              cursor={selectionMode || mode === "manage" ? "pointer" : "default"}
+              cursor={
+                selectionMode || mode === "manage" ? "pointer" : "default"
+              }
               onClick={
-                selectionMode 
-                  ? () => onPlayerToggle?.(player.id) 
-                  : mode === "manage" 
+                selectionMode
+                  ? () => onPlayerToggle?.(player.id)
+                  : mode === "manage"
                   ? () => setSelectedPlayerForDetail(player)
                   : undefined
               }

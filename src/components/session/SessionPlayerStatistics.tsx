@@ -1,4 +1,5 @@
-import { PlayerStatistics, SessionService } from "@/lib/api";
+import { SessionService } from "@/lib/api/session.service";
+import { PlayerStatistics } from "@/lib/api/types";
 import {
   Box,
   Button,

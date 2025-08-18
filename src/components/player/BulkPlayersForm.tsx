@@ -11,7 +11,8 @@ import {
   Thead,
   Tr,
 } from "@/components/ui/chakra-compat";
-import { PlayerService, BulkPlayerData } from "@/lib/api";
+import { PlayerService } from "@/lib/api/player.service";
+import { BulkPlayerData } from "@/lib/api/types";
 import {
   parseCSVToBulkPlayers,
   EXAMPLE_CSV,
@@ -144,15 +145,28 @@ export default function BulkPlayersForm({
 
       // Validate gender and level values
       const invalidGender = players.some(
-        (p) => p.gender && !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
+        (p) =>
+          p.gender &&
+          !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
       );
       if (invalidGender) {
-        setErrorMessage("Gender must be one of: Male, Female, Other, or Prefer not to say");
+        setErrorMessage(
+          "Gender must be one of: Male, Female, Other, or Prefer not to say"
+        );
         setIsLoading(false);
         return;
       }
 
-      const validLevels = ["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"];
+      const validLevels = [
+        "Y_MINUS",
+        "Y",
+        "Y_PLUS",
+        "TBY",
+        "TB_MINUS",
+        "TB",
+        "TB_PLUS",
+        "K",
+      ];
       const invalidLevel = players.some(
         (p) => p.level && !validLevels.includes(p.level)
       );
@@ -260,10 +274,21 @@ export default function BulkPlayersForm({
 
       // Validate gender and level in CSV data
       const invalidGender = parsedPlayers.some(
-        (p) => p.gender && !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
+        (p) =>
+          p.gender &&
+          !["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
       );
 
-      const validLevels = ["Y_MINUS", "Y", "Y_PLUS", "TBY", "TB_MINUS", "TB", "TB_PLUS", "K"];
+      const validLevels = [
+        "Y_MINUS",
+        "Y",
+        "Y_PLUS",
+        "TBY",
+        "TB_MINUS",
+        "TB",
+        "TB_PLUS",
+        "K",
+      ];
       const invalidLevel = parsedPlayers.some(
         (p) => p.level && !validLevels.includes(p.level)
       );
@@ -281,7 +306,8 @@ export default function BulkPlayersForm({
         const fixedPlayers = parsedPlayers.map((p) => ({
           ...p,
           gender:
-            p.gender && ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
+            p.gender &&
+            ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"].includes(p.gender)
               ? p.gender
               : undefined,
           level: p.level && validLevels.includes(p.level) ? p.level : undefined,
@@ -506,17 +532,21 @@ export default function BulkPlayersForm({
                     />
                   </Td>
                   <Td>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ display: "flex", alignItems: "center" }}>
                       <input
                         type="checkbox"
                         checked={player.requireConfirmInfo || false}
                         onChange={(e) =>
-                          updatePlayer(index, "requireConfirmInfo", e.target.checked)
+                          updatePlayer(
+                            index,
+                            "requireConfirmInfo",
+                            e.target.checked
+                          )
                         }
                         style={{
                           width: "16px",
                           height: "16px",
-                          marginRight: "8px"
+                          marginRight: "8px",
                         }}
                       />
                       <span>Required</span>

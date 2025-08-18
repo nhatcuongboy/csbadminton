@@ -1,43 +1,28 @@
-import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/chakra-compat";
+import { MatchService } from "@/lib/api/match.service";
+import { RealTimeService } from "@/lib/api/real-time.service";
+import { ISession } from "@/lib/api/types";
+import { WaitTimeService } from "@/lib/api/wait-time.service";
+import { getLevelLabel } from "@/utils/level-mapping";
 import {
+  Badge,
   Box,
-  Heading,
-  Text,
-  Stack,
   Flex,
   Grid,
-  Badge,
-  Spinner,
+  Heading,
   Input,
+  Spinner,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
-import {
-  Play,
-  Square,
-  Users,
-  Clock,
-  Trophy,
-  RefreshCw,
-  Zap,
-  RotateCcw,
-  Target,
-  TrendingUp,
-} from "lucide-react";
+import { Clock, RefreshCw, RotateCcw, Square, Target } from "lucide-react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/chakra-compat";
-import {
-  MatchService,
-  WaitTimeService,
-  RealTimeService,
-  type Session,
-  type Match,
-  type Player,
-} from "@/lib/api";
-import { getLevelLabel } from "@/utils/level-mapping";
 
 interface SessionManagementProps {
   sessionId: string;
-  session: Session;
-  onSessionUpdate?: (session: Session) => void;
+  session: ISession;
+  onSessionUpdate?: (session: ISession) => void;
 }
 
 export default function SessionManagement({

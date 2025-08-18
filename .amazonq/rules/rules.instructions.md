@@ -1,2 +1,3 @@
 - Do not run build after generating code unless asked to run.
 - Use useRouter from "@/i18n/config".
+- On FE side, always call API from services in `@/lib/api`.
