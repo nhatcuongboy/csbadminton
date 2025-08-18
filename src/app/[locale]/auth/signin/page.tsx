@@ -12,18 +12,28 @@ import {
   Spinner,
   Text,
   VStack,
+  Field,
 } from "@chakra-ui/react";
 import { signIn } from "next-auth/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/config";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import toast from "react-hot-toast";
 import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { PasswordInput } from "@/components/ui/password-input";
+
+// Define zod schema for form validation
+const signInSchema = z.object({
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type SignInFormData = z.infer<typeof signInSchema>;
 
 function SignInForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
@@ -31,14 +41,23 @@ function SignInForm() {
   const callbackUrl = searchParams.get("callbackUrl") || `/${locale}/host`;
   const t = useTranslations("auth.signin");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
+  const onSubmit = async (data: SignInFormData) => {
     try {
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         redirect: false,
       });
 
@@ -52,8 +71,6 @@ function SignInForm() {
     } catch (error) {
       toast.error(t("loginFailed"));
       console.error("Login error:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -106,40 +123,35 @@ function SignInForm() {
                 </Box>
               )}
 
-              <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+              <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
                 <VStack gap={4}>
-                  <Box w="full">
-                    <Text mb={2} fontWeight="medium">
-                      {t("email")}
-                    </Text>
+                  <Field.Root invalid={!!errors.email}>
+                    <Field.Label>{t("email")}</Field.Label>
                     <Input
+                      {...register("email")}
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
                       placeholder={t("emailPlaceholder")}
-                      required
                     />
-                  </Box>
+                    <Field.ErrorText>{errors.email?.message}</Field.ErrorText>
+                  </Field.Root>
 
-                  <Box w="full">
-                    <Text mb={2} fontWeight="medium">
-                      {t("password")}
-                    </Text>
-                    <Input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                  <Field.Root invalid={!!errors.password}>
+                    <Field.Label>{t("password")}</Field.Label>
+                    <PasswordInput
+                      {...register("password")}
                       placeholder={t("passwordPlaceholder")}
-                      required
                     />
-                  </Box>
+                    <Field.ErrorText>
+                      {errors.password?.message}
+                    </Field.ErrorText>
+                  </Field.Root>
 
                   <Button
                     type="submit"
                     colorScheme="blue"
                     width="full"
                     size="lg"
-                    loading={loading}
+                    loading={isSubmitting}
                   >
                     {t("signInButton")}
                   </Button>

@@ -84,6 +84,8 @@
 
 - Use `react-hook-form` for form management.
 - Use `zod` for schema validation.
+- Use `Field` from `@chakra-ui/react` to add labels, help text, and error messages to form fields.
+- Use `PasswordInput` from `@chakra-ui/react` for password fields.
 
 ## State Management
 

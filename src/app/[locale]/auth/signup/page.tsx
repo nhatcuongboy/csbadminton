@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/config";
 import PublicRouteGuard from "@/components/guards/PublicRouteGuard";
@@ -12,40 +11,55 @@ import {
   Button,
   Text,
   Link,
-  Separator,
+  Field,
 } from "@chakra-ui/react";
 import toast from "react-hot-toast";
 import TopBar from "@/components/ui/TopBar";
 import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { PasswordInput } from "@/components/ui/password-input";
+
+// Define zod schema for form validation
+const signUpSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z
+      .string()
+      .email("Invalid email address")
+      .min(1, "Email is required"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpPage() {
   const t = useTranslations("auth.signup");
   const params = useParams();
   const locale = params.locale as string;
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error(t("passwordsDoNotMatch"));
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error(t("passwordTooShort"));
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data: SignUpFormData) => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -53,33 +67,25 @@ export default function SignUpPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
+          name: data.name,
+          email: data.email,
+          password: data.password,
         }),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (response.ok) {
         toast.success(t("accountCreated"));
-        router.push("/auth/signin");
+        router.push(`/${locale}/auth/signin`);
       } else {
-        toast.error(data.message || t("registrationFailed"));
+        toast.error(result.message || t("registrationFailed"));
       }
     } catch (error) {
       toast.error(t("registrationFailed"));
       console.error("Registration error:", error);
-    } finally {
-      setLoading(false);
     }
   };
-
-  const handleChange =
-    (field: keyof typeof formData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-    };
 
   return (
     <PublicRouteGuard redirectTo="/host">
@@ -111,65 +117,55 @@ export default function SignUpPage() {
                 </Text>
               </Box>
 
-              <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+              <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
                 <VStack gap={4}>
-                  <Box w="full">
-                    <Text mb={2} fontWeight="medium">
-                      {t("name")}
-                    </Text>
+                  <Field.Root invalid={!!errors.name}>
+                    <Field.Label>{t("name")}</Field.Label>
                     <Input
-                      value={formData.name}
-                      onChange={handleChange("name")}
+                      {...register("name")}
                       placeholder={t("namePlaceholder")}
-                      required
                     />
-                  </Box>
+                    <Field.ErrorText>{errors.name?.message}</Field.ErrorText>
+                  </Field.Root>
 
-                  <Box w="full">
-                    <Text mb={2} fontWeight="medium">
-                      {t("email")}
-                    </Text>
+                  <Field.Root invalid={!!errors.email}>
+                    <Field.Label>{t("email")}</Field.Label>
                     <Input
+                      {...register("email")}
                       type="email"
-                      value={formData.email}
-                      onChange={handleChange("email")}
                       placeholder={t("emailPlaceholder")}
-                      required
                     />
-                  </Box>
+                    <Field.ErrorText>{errors.email?.message}</Field.ErrorText>
+                  </Field.Root>
 
-                  <Box w="full">
-                    <Text mb={2} fontWeight="medium">
-                      {t("password")}
-                    </Text>
-                    <Input
-                      type="password"
-                      value={formData.password}
-                      onChange={handleChange("password")}
+                  <Field.Root invalid={!!errors.password}>
+                    <Field.Label>{t("password")}</Field.Label>
+                    <PasswordInput
+                      {...register("password")}
                       placeholder={t("passwordPlaceholder")}
-                      required
                     />
-                  </Box>
+                    <Field.ErrorText>
+                      {errors.password?.message}
+                    </Field.ErrorText>
+                  </Field.Root>
 
-                  <Box w="full">
-                    <Text mb={2} fontWeight="medium">
-                      {t("confirmPassword")}
-                    </Text>
-                    <Input
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={handleChange("confirmPassword")}
+                  <Field.Root invalid={!!errors.confirmPassword}>
+                    <Field.Label>{t("confirmPassword")}</Field.Label>
+                    <PasswordInput
+                      {...register("confirmPassword")}
                       placeholder={t("confirmPasswordPlaceholder")}
-                      required
                     />
-                  </Box>
+                    <Field.ErrorText>
+                      {errors.confirmPassword?.message}
+                    </Field.ErrorText>
+                  </Field.Root>
 
                   <Button
                     type="submit"
                     colorScheme="blue"
                     width="full"
                     size="lg"
-                    loading={loading}
+                    loading={isSubmitting}
                   >
                     {t("createAccount")}
                   </Button>
@@ -180,7 +176,7 @@ export default function SignUpPage() {
                 <Text color="gray.600">
                   {t("alreadyHaveAccount")}{" "}
                   <Link
-                    href="/auth/signin"
+                    href={`/${locale}/auth/signin`}
                     color="blue.600"
                     fontWeight="semibold"
                   >
