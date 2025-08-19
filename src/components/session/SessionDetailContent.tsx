@@ -11,7 +11,7 @@ import SessionHistoryList from "@/components/session/SessionHistoryList";
 import SessionStatusHeader from "@/components/session/SessionStatusHeader";
 import SettingsTab from "@/components/session/SettingsTab";
 import { Button, useToast } from "@/components/ui/chakra-compat";
-import TopBar from "@/components/ui/TopBar";
+import MainLayout from "@/components/layout/MainLayout";
 import { getCourtDisplayName } from "@/utils/session-helpers";
 import { RefreshCw, Square, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -344,15 +344,15 @@ export default function SessionDetailContent({
   };
 
   return (
-    <>
+    <MainLayout
+      title={session.name}
+      showBackButton={true}
+      backHref="/host/sessions"
+      contentPadding={0}
+    >
       {/* Add WaitTimeUpdater to automatically update wait times every minute */}
       <WaitTimeUpdater />
-      <TopBar
-        title={session.name}
-        showBackButton={true}
-        backHref="/host/sessions"
-      />
-      <Container maxW="7xl" py={20}>
+      <Container maxW="7xl" py={4}>
         {/* Session Status Cards */}
         <SessionStatusHeader
           session={session}
@@ -537,6 +537,6 @@ export default function SessionDetailContent({
           </Box>
         </Box>
       )}
-    </>
+    </MainLayout>
   );
 }

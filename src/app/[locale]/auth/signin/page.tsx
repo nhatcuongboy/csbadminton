@@ -1,10 +1,13 @@
 "use client";
 
 import PublicRouteGuard from "@/components/guards/PublicRouteGuard";
-import TopBar from "@/components/ui/TopBar";
+import MainLayout from "@/components/layout/MainLayout";
+import { PasswordInput } from "@/components/ui/password-input";
+import { useRouter } from "@/i18n/config";
 import {
   Box,
   Button,
+  Field,
   Heading,
   Input,
   Link,
@@ -12,18 +15,15 @@ import {
   Spinner,
   Text,
   VStack,
-  Field,
 } from "@chakra-ui/react";
-import { signIn } from "next-auth/react";
-import { useParams, useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/config";
-import { Suspense } from "react";
-import toast from "react-hot-toast";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
+import { useParams, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { z } from "zod";
-import { PasswordInput } from "@/components/ui/password-input";
 
 // Define zod schema for form validation
 const signInSchema = z.object({
@@ -74,21 +74,20 @@ function SignInForm() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl });
-  };
+  // const handleGoogleSignIn = () => {
+  //   signIn("google", { callbackUrl });
+  // };
 
   return (
     <PublicRouteGuard redirectTo="/host">
-      <Box minH="100vh" bg="gray.50">
-        <TopBar title={t("title")} />
+      <MainLayout title={t("title")}>
         <Box
           display="flex"
           alignItems="center"
           justifyContent="center"
           px={4}
           py={8}
-          pt="80px"
+          height="100%"
         >
           <Box
             maxW="md"
@@ -160,14 +159,14 @@ function SignInForm() {
 
               <Separator />
 
-              <Button
+              {/* <Button
                 onClick={handleGoogleSignIn}
                 variant="outline"
                 width="full"
                 size="lg"
               >
                 {t("continueWithGoogle")}
-              </Button>
+              </Button> */}
 
               <VStack gap={2}>
                 <Text color="gray.600">
@@ -195,7 +194,7 @@ function SignInForm() {
             </VStack>
           </Box>
         </Box>
-      </Box>
+      </MainLayout>
     </PublicRouteGuard>
   );
 }

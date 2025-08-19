@@ -20,7 +20,7 @@ import { Camera } from "lucide-react";
 import toast from "react-hot-toast";
 import QRScanner from "@/components/QRScanner";
 import { AuthService } from "@/lib/api/auth.service";
-import TopBar from "@/components/ui/TopBar";
+import MainLayout from "@/components/layout/MainLayout";
 
 function JoinByCodeContent() {
   const [joinCode, setJoinCode] = useState("");
@@ -120,84 +120,96 @@ function JoinByCodeContent() {
   };
 
   return (
-    <Box
-      minH="100vh"
-      bg="gray.50"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      px={4}
-      pt="64px"
-    >
-      <TopBar title={t("title")} />
-      <Box maxW="md" w="full" bg="white" p={8} borderRadius="lg" boxShadow="lg">
-        <VStack gap={6}>
-          <Box textAlign="center">
-            <Heading size="lg" color="green.600">
-              🏸 {t("title")}
-            </Heading>
-            <Text color="gray.600" mt={2}>
-              {t("subtitle")}
-            </Text>
-          </Box>
+    <MainLayout title={t("title")}>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        px={4}
+        height="100%"
+      >
+        <Box
+          maxW="md"
+          w="full"
+          bg="white"
+          p={8}
+          borderRadius="lg"
+          boxShadow="lg"
+        >
+          <VStack gap={6}>
+            <Box textAlign="center">
+              <Heading size="lg" color="green.600">
+                🏸 {t("title")}
+              </Heading>
+              <Text color="gray.600" mt={2}>
+                {t("subtitle")}
+              </Text>
+            </Box>
 
-          <form onSubmit={handleJoinSession} style={{ width: "100%" }}>
-            <VStack gap={4}>
-              <Box w="full">
-                <Text mb={2} fontWeight="medium">
-                  {t("joinCode")}
-                </Text>
-                <HStack gap={2}>
-                  <Input
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    placeholder={t("joinCodePlaceholder")}
-                    maxLength={8}
-                    required
-                    fontSize="lg"
-                    textAlign="center"
-                    letterSpacing="2px"
-                    flex={1}
-                  />
-                  <Button onClick={onOpen} variant="outline" size="lg" px={3}>
-                    <Camera size={20} />
-                  </Button>
-                </HStack>
-                <Text fontSize="sm" color="gray.500" mt={1}>
-                  {t("joinCodeHelp")}
-                </Text>
-              </Box>
+            <form onSubmit={handleJoinSession} style={{ width: "100%" }}>
+              <VStack gap={4}>
+                <Box w="full">
+                  <Text mb={2} fontWeight="medium">
+                    {t("joinCode")}
+                  </Text>
+                  <HStack gap={2}>
+                    <Input
+                      value={joinCode}
+                      onChange={(e) =>
+                        setJoinCode(e.target.value.toUpperCase())
+                      }
+                      placeholder={t("joinCodePlaceholder")}
+                      maxLength={8}
+                      required
+                      fontSize="lg"
+                      textAlign="center"
+                      letterSpacing="2px"
+                      flex={1}
+                    />
+                    <Button onClick={onOpen} variant="outline" size="lg" px={3}>
+                      <Camera size={20} />
+                    </Button>
+                  </HStack>
+                  <Text fontSize="sm" color="gray.500" mt={1}>
+                    {t("joinCodeHelp")}
+                  </Text>
+                </Box>
 
-              <Button
-                type="submit"
-                colorScheme="green"
-                width="full"
-                size="lg"
-                loading={loading}
-                disabled={!joinCode.trim()}
-              >
-                {loading ? <Spinner size="sm" /> : t("joinSession")}
-              </Button>
+                <Button
+                  type="submit"
+                  colorScheme="green"
+                  width="full"
+                  size="lg"
+                  loading={loading}
+                  disabled={!joinCode.trim()}
+                >
+                  {loading ? <Spinner size="sm" /> : t("joinSession")}
+                </Button>
+              </VStack>
+            </form>
+
+            <VStack gap={2}>
+              <Text color="gray.600" textAlign="center">
+                {t("noCode")}{" "}
+                <Link
+                  href="/auth/signin"
+                  color="blue.600"
+                  fontWeight="semibold"
+                >
+                  {t("signInToHost")}
+                </Link>
+              </Text>
+
+              <Text color="gray.500" fontSize="sm" textAlign="center">
+                {t("troubleHelp")}
+              </Text>
             </VStack>
-          </form>
-
-          <VStack gap={2}>
-            <Text color="gray.600" textAlign="center">
-              {t("noCode")}{" "}
-              <Link href="/auth/signin" color="blue.600" fontWeight="semibold">
-                {t("signInToHost")}
-              </Link>
-            </Text>
-
-            <Text color="gray.500" fontSize="sm" textAlign="center">
-              {t("troubleHelp")}
-            </Text>
           </VStack>
-        </VStack>
-      </Box>
+        </Box>
 
-      <QRScanner isOpen={isOpen} onClose={onClose} onScan={handleQRScan} />
-    </Box>
+        <QRScanner isOpen={isOpen} onClose={onClose} onScan={handleQRScan} />
+      </Box>
+    </MainLayout>
   );
 }
 
