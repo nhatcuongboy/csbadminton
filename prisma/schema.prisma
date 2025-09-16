@@ -17,6 +17,13 @@ model User {
   emailVerified  DateTime?
   image          String?
   role           Role      @default(PLAYER)
+  
+  // Player related information
+  gender         Gender?
+  level          Level?
+  levelDescription String?
+  phone          String?
+  
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   
