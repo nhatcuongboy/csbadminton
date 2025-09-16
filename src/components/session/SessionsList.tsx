@@ -94,7 +94,7 @@ interface SessionCardProps {
   mode?: "view" | "manage";
 }
 
-const SessionCard = ({
+export const SessionCard = ({
   session,
   onDelete,
   mode = "view",
@@ -152,7 +152,7 @@ const SessionCard = ({
             href={`/host/sessions/${session.id}`}
             colorScheme="blue"
           >
-            {t("manageSession")}
+            {t("host")}
           </NextLinkButton>
           {mode === "manage" && onDelete && (
             <button

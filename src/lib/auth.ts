@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/app/lib/prisma";
 import bcrypt from "bcryptjs";
+import { UserRole } from "./api/types";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
@@ -82,7 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: `guest_${player.id}`,
           //   email: `g${player.id}@g.co`,
           name: player.name || `Player ${player.playerNumber}`,
-          role: "PLAYER",
+          role: UserRole.GUEST,
           playerId: player.id,
           sessionId: player.sessionId,
           playerNumber: player.playerNumber,
@@ -103,7 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
-        if (user.role === "PLAYER") {
+        if (user.role === UserRole.PLAYER || user.role === UserRole.GUEST) {
           token.playerId = (user as any).playerId;
           token.sessionId = (user as any).sessionId;
           token.playerNumber = (user as any).playerNumber;
@@ -118,7 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub!;
         session.user.role = token.role as string;
         // Add player-specific fields
-        if (token.role === "PLAYER") {
+        if (token.role === UserRole.PLAYER || token.role === UserRole.GUEST) {
           (session.user as any).playerId = (token as any).playerId;
           (session.user as any).sessionId = (token as any).sessionId;
           (session.user as any).playerNumber = (token as any).playerNumber;

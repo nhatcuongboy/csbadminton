@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Box, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useLocale } from "next-intl";
+import { UserRole } from "@/lib/api/types";
 
 interface PublicRouteGuardProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ interface PublicRouteGuardProps {
  */
 export default function PublicRouteGuard({
   children,
-  redirectTo = "/host",
+  redirectTo = "/dashboard",
 }: PublicRouteGuardProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -30,13 +31,11 @@ export default function PublicRouteGuard({
       let targetPath = redirectTo;
 
       // Override redirectTo based on user role
-      if (session.user.role === "HOST") {
-        targetPath = "/host";
-      } else if (session.user.role === "PLAYER") {
-        const playerId = (session.user as any).playerId;
-        targetPath = playerId
-          ? `/join/status?playerId=${playerId}`
-          : "/join-by-code";
+      if (session.user.role !== UserRole.GUEST) {
+        targetPath = "/dashboard";
+      } else {
+        const playerId = session.user.playerId;
+        targetPath = playerId ? `/my-session` : "/join-by-code";
       }
 
       // Ensure the redirect path includes the locale

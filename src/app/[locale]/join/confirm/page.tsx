@@ -116,7 +116,7 @@ function ConfirmPageContent() {
       await PlayerService.confirmPlayer(player.id, playerData);
 
       // Redirect to status page with player ID
-      router.push(`/join/status?playerId=${player.id}`);
+      router.push(`/my-session`);
     } catch (error) {
       console.error("Error confirming player:", error);
       toast.error(t("confirm.errors.confirmFailed"));

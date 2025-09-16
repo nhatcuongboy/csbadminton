@@ -3,7 +3,7 @@ import { successResponse, errorResponse } from "@/app/lib/api-response";
 import { NextRequest } from "next/server";
 
 // GET /api/sessions - Retrieve list of all sessions
-export async function GET(request: NextRequest) {
+export async function GET(_: NextRequest) {
   try {
     const sessions = await prisma.session.findMany({
       include: {
@@ -164,10 +164,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return successResponse(
-      createdSession,
-      "Session created successfully"
-    );
+    return successResponse(createdSession, "Session created successfully");
   } catch (error) {
     console.error("Error creating session:", error);
     return errorResponse("Failed to create session");

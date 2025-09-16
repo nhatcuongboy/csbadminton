@@ -36,13 +36,14 @@ import toast from "react-hot-toast";
 import { ISession } from "@/lib/api/types";
 import { useSession } from "next-auth/react";
 
-function StatusPageContent() {
+function MySession() {
+  const { data: sessionData } = useSession();
   const searchParams = useSearchParams();
-  const playerId = searchParams.get("playerId");
+  // const playerId = searchParams.get("playerId");
+  const playerId = sessionData?.user.playerId;
   const t = useTranslations("pages.join.status");
   const common = useTranslations("common");
-  // const { data: sessionData } = useSession();
-  // console.log(sessionData);
+
   const [refreshInterval, setRefreshInterval] = useState(60); // seconds
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [queuePosition, setQueuePosition] = useState(0);
@@ -848,7 +849,7 @@ export default function StatusPage() {
           </Center>
         }
       >
-        <StatusPageContent />
+        <MySession />
       </Suspense>
     </ProtectedRouteGuard>
   );

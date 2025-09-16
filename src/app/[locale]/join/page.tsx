@@ -140,7 +140,7 @@ export default function JoinPage() {
         });
 
         // Navigate directly to status page
-        router.push(`/join/status?playerId=${selectedPlayer.id}`);
+        router.push(`/my-session`);
       }
     } catch (error) {
       console.error("Error:", error);

@@ -2,11 +2,12 @@
 
 import { NextLinkButton } from "@/components/ui/NextLinkButton";
 import { Box, Flex, IconButton, Text, Stack, Button } from "@chakra-ui/react";
-import { Home, Settings, Info, X, LogOut } from "lucide-react";
+import { Home, Settings, Info, X, LogOut, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { useSession } from "next-auth/react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { UserRole } from "@/lib/api/types";
 
 interface SlideOutMenuProps {
   isOpen: boolean;
@@ -88,12 +89,10 @@ export default function SlideOutMenu({
               <Stack gap={2}>
                 <NextLinkButton
                   href={
-                    session?.user?.role === "HOST"
+                    session?.user?.role === UserRole.HOST
                       ? "/host/sessions"
-                      : session?.user?.role === "PLAYER"
-                      ? `/join/status?playerId=${
-                          (session.user as any).playerId
-                        }`
+                      : session?.user?.role === UserRole.PLAYER
+                      ? `/my-session`
                       : "/"
                   }
                   variant="ghost"

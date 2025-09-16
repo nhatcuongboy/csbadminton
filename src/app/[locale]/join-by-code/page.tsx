@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 import QRScanner from "@/components/QRScanner";
 import { AuthService } from "@/lib/api/auth.service";
 import MainLayout from "@/components/layout/MainLayout";
+import PublicRouteGuard from "@/components/guards/PublicRouteGuard";
 
 function JoinByCodeContent() {
   const [joinCode, setJoinCode] = useState("");
@@ -104,7 +105,7 @@ function JoinByCodeContent() {
       if (user?.requireConfirmInfo && !user?.confirmedByPlayer) {
         router.push("/join/confirm?playerId=" + user.playerId);
       } else {
-        router.push(`/join/status?playerId=${user.playerId}`);
+        router.push(`/my-session`);
       }
     } catch (error: any) {
       toast.error(t("joinFailedError"));
@@ -190,13 +191,13 @@ function JoinByCodeContent() {
 
             <VStack gap={2}>
               <Text color="gray.600" textAlign="center">
-                {t("noCode")}{" "}
+                {t("alreadyHaveAccount")}{" "}
                 <Link
                   href="/auth/signin"
                   color="blue.600"
                   fontWeight="semibold"
                 >
-                  {t("signInToHost")}
+                  {t("signIn")}
                 </Link>
               </Text>
 
@@ -216,7 +217,9 @@ function JoinByCodeContent() {
 export default function JoinByCodePage() {
   return (
     <Suspense fallback={<Spinner />}>
-      <JoinByCodeContent />
+      <PublicRouteGuard redirectTo="/host">
+        <JoinByCodeContent />
+      </PublicRouteGuard>
     </Suspense>
   );
 }

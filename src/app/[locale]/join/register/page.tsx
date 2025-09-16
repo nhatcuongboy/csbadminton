@@ -72,7 +72,7 @@ function RegisterContent() {
       if (user?.requireConfirmInfo && !user?.confirmedByPlayer) {
         router.push("/join/confirm?playerId=" + user.playerId);
       } else {
-        router.push(`/join/status?playerId=${user.playerId}`);
+        router.push(`/my-session`);
       }
     } catch (error) {
       toast.error(t("joinFailed"));

@@ -1,6 +1,12 @@
 import toast from "react-hot-toast";
 import { api, ApiResponse } from "./base";
-import { Player, BulkPlayerData, BulkPlayersResponse, BulkPlayersInfoResponse } from "./types";
+import {
+  BulkPlayerData,
+  BulkPlayersInfoResponse,
+  BulkPlayersResponse,
+  ISession,
+  Player,
+} from "./types";
 
 export const PlayerService = {
   // Get player by ID
@@ -120,5 +126,13 @@ export const PlayerService = {
     );
     toast.success("Players updated successfully");
     return response.data.data!;
+  },
+
+  // Get sessions that the current user has participated in
+  getMySessions: async (): Promise<ISession[]> => {
+    const response = await api.get<ApiResponse<ISession[]>>(
+      "/players/me/sessions"
+    );
+    return response.data.data || [];
   },
 };

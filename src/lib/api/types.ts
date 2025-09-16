@@ -6,6 +6,13 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// User roles
+export enum UserRole {
+  HOST = "HOST",
+  GUEST = "GUEST",
+  PLAYER = "PLAYER",
+}
+
 // Level enum
 export enum Level {
   Y_MINUS = "Y_MINUS",
