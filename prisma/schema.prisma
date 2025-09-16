@@ -10,19 +10,28 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(cuid())
-  email          String        @unique
+  id             String    @id @default(cuid())
+  email          String    @unique
   name           String
-  role           Role          @default(PLAYER)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  password       String?   // For email/password auth
   emailVerified  DateTime?
   image          String?
-  password       String?
+  role           Role      @default(PLAYER)
+  
+  // Player related information
+  gender         Gender?
+  level          Level?
+  levelDescription String?
+  phone          String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  // Relations
+  playerRecords  Player[]
+  hostedSessions Session[] @relation("HostedSessions")
   accounts       Account[]
   sessions       AuthSession[]
-  playerRecords  Player[]
-  hostedSessions Session[]     @relation("HostedSessions")
 
   @@map("users")
 }
@@ -33,14 +42,15 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -76,10 +86,13 @@ model Session {
   status             SessionStatus @default(PREPARING)
   startTime          DateTime?
   endTime            DateTime?
+  
+  // Guest access settings
+  allowGuestJoin     Boolean       @default(true)  // Allow joining without account
+  allowNewPlayers    Boolean       @default(true)  // Allow new players to join via session QR
+  
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
-  allowGuestJoin     Boolean       @default(true)
-  allowNewPlayers    Boolean       @default(true)
   courts             Court[]
   matches            Match[]
   players            Player[]
@@ -89,56 +102,59 @@ model Session {
 }
 
 model Player {
-  id                 String        @id @default(cuid())
-  sessionId          String
-  userId             String?
-  playerNumber       Int
-  name               String?
-  gender             Gender?
-  level              Level?
-  phone              String?
-  preFilledByHost    Boolean       @default(false)
-  confirmedByPlayer  Boolean       @default(false)
-  currentWaitTime    Int           @default(0)
-  totalWaitTime      Int           @default(0)
-  matchesPlayed      Int           @default(0)
-  status             PlayerStatus  @default(WAITING)
-  currentCourtId     String?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  courtPosition      Int?
-  desire             String?
-  isGuest            Boolean       @default(true)
-  isJoined           Boolean       @default(false)
-  joinCode           String        @unique
-  joinedAt           DateTime?
-  levelDescription   String?
-  qrCodeData         String?
-  requireConfirmInfo Boolean       @default(false)
-  matchPlayers       MatchPlayer[]
-  currentCourt       Court?        @relation(fields: [currentCourtId], references: [id])
-  session            Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user               User?         @relation(fields: [userId], references: [id])
+  id                String        @id @default(cuid())
+  sessionId         String
+  userId            String?       // Linked user account (optional for guests)
+  playerNumber      Int
+  name              String?
+  gender            Gender?
+  level             Level?
+  levelDescription  String?
+  desire            String?
+  phone             String?
+  preFilledByHost   Boolean       @default(false)
+  confirmedByPlayer Boolean       @default(false)
+  requireConfirmInfo Boolean      @default(false)
+  currentWaitTime   Int           @default(0)
+  totalWaitTime     Int           @default(0)
+  matchesPlayed     Int           @default(0)
+  status            PlayerStatus  @default(WAITING)
+  currentCourtId    String?
+  courtPosition     Int?          // Position on court (0-3), null when not on court
+  
+  // Player-specific join fields
+  joinCode          String        @unique          // Unique join code for this player slot
+  qrCodeData        String?                        // QR code data for this player
+  isJoined          Boolean       @default(false)  // Whether someone has joined this slot
+  isGuest           Boolean       @default(true)   // True if joined without account
+  joinedAt          DateTime?                      // When the slot was filled
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  matchPlayers      MatchPlayer[]
+  currentCourt      Court?        @relation(fields: [currentCourtId], references: [id])
+  session           Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user              User?         @relation(fields: [userId], references: [id])
 
   @@unique([sessionId, playerNumber])
   @@map("players")
 }
 
 model Court {
-  id                 String         @id @default(cuid())
-  sessionId          String
-  courtNumber        Int
-  courtName          String?
-  status             CourtStatus    @default(EMPTY)
-  currentMatchId     String?        @unique
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  direction          CourtDirection @default(HORIZONTAL)
-  preSelectedPlayers Json?
-  currentMatch       Match?         @relation("CurrentMatch", fields: [currentMatchId], references: [id])
-  session            Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  matches            Match[]        @relation("CourtMatches")
-  currentPlayers     Player[]
+  id             String          @id @default(cuid())
+  sessionId      String
+  courtNumber    Int
+  courtName      String?
+  direction      CourtDirection  @default(HORIZONTAL)
+  status         CourtStatus     @default(EMPTY)
+  currentMatchId String?         @unique
+  preSelectedPlayers Json?       // JSON array of pre-selected players with positions
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  currentMatch   Match?      @relation("CurrentMatch", fields: [currentMatchId], references: [id])
+  session        Session     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  matches        Match[]     @relation("CourtMatches")
+  currentPlayers Player[]
 
   @@unique([sessionId, courtNumber])
   @@map("courts")
@@ -151,17 +167,19 @@ model Match {
   status       MatchStatus   @default(IN_PROGRESS)
   startTime    DateTime      @default(now())
   endTime      DateTime?
+  isExtra      Boolean       @default(false)  // Indicates match started after session endTime
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  isDraw       Boolean?      @default(false)
-  isExtra      Boolean       @default(false)
-  notes        String?
-  score        String?
-  winnerIds    String?
   currentCourt Court?        @relation("CurrentMatch")
   players      MatchPlayer[]
   court        Court         @relation("CourtMatches", fields: [courtId], references: [id])
   session      Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Match result
+  score        String?
+  winnerIds    String?
+  isDraw       Boolean?      @default(false)
+  notes        String?
 
   @@map("matches")
 }
