@@ -30,16 +30,12 @@ CREATE TABLE "public"."users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "password" TEXT,
-    "emailVerified" TIMESTAMP(3),
-    "image" TEXT,
     "role" "public"."Role" NOT NULL DEFAULT 'PLAYER',
-    "gender" "public"."Gender",
-    "level" "public"."Level",
-    "levelDescription" TEXT,
-    "phone" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "emailVerified" TIMESTAMP(3),
+    "image" TEXT,
+    "password" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -91,10 +87,10 @@ CREATE TABLE "public"."sessions" (
     "status" "public"."SessionStatus" NOT NULL DEFAULT 'PREPARING',
     "startTime" TIMESTAMP(3),
     "endTime" TIMESTAMP(3),
-    "allowGuestJoin" BOOLEAN NOT NULL DEFAULT true,
-    "allowNewPlayers" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "allowGuestJoin" BOOLEAN NOT NULL DEFAULT true,
+    "allowNewPlayers" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
 );
@@ -108,25 +104,25 @@ CREATE TABLE "public"."players" (
     "name" TEXT,
     "gender" "public"."Gender",
     "level" "public"."Level",
-    "levelDescription" TEXT,
-    "desire" TEXT,
     "phone" TEXT,
     "preFilledByHost" BOOLEAN NOT NULL DEFAULT false,
     "confirmedByPlayer" BOOLEAN NOT NULL DEFAULT false,
-    "requireConfirmInfo" BOOLEAN NOT NULL DEFAULT false,
     "currentWaitTime" INTEGER NOT NULL DEFAULT 0,
     "totalWaitTime" INTEGER NOT NULL DEFAULT 0,
     "matchesPlayed" INTEGER NOT NULL DEFAULT 0,
     "status" "public"."PlayerStatus" NOT NULL DEFAULT 'WAITING',
     "currentCourtId" TEXT,
-    "courtPosition" INTEGER,
-    "joinCode" TEXT NOT NULL,
-    "qrCodeData" TEXT,
-    "isJoined" BOOLEAN NOT NULL DEFAULT false,
-    "isGuest" BOOLEAN NOT NULL DEFAULT true,
-    "joinedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "courtPosition" INTEGER,
+    "desire" TEXT,
+    "isGuest" BOOLEAN NOT NULL DEFAULT true,
+    "isJoined" BOOLEAN NOT NULL DEFAULT false,
+    "joinCode" TEXT NOT NULL,
+    "joinedAt" TIMESTAMP(3),
+    "levelDescription" TEXT,
+    "qrCodeData" TEXT,
+    "requireConfirmInfo" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "players_pkey" PRIMARY KEY ("id")
 );
@@ -137,12 +133,12 @@ CREATE TABLE "public"."courts" (
     "sessionId" TEXT NOT NULL,
     "courtNumber" INTEGER NOT NULL,
     "courtName" TEXT,
-    "direction" "public"."CourtDirection" NOT NULL DEFAULT 'HORIZONTAL',
     "status" "public"."CourtStatus" NOT NULL DEFAULT 'EMPTY',
     "currentMatchId" TEXT,
-    "preSelectedPlayers" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "direction" "public"."CourtDirection" NOT NULL DEFAULT 'HORIZONTAL',
+    "preSelectedPlayers" JSONB,
 
     CONSTRAINT "courts_pkey" PRIMARY KEY ("id")
 );
@@ -155,13 +151,13 @@ CREATE TABLE "public"."matches" (
     "status" "public"."MatchStatus" NOT NULL DEFAULT 'IN_PROGRESS',
     "startTime" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "endTime" TIMESTAMP(3),
-    "isExtra" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isDraw" BOOLEAN DEFAULT false,
+    "isExtra" BOOLEAN NOT NULL DEFAULT false,
+    "notes" TEXT,
     "score" TEXT,
     "winnerIds" TEXT,
-    "isDraw" BOOLEAN DEFAULT false,
-    "notes" TEXT,
 
     CONSTRAINT "matches_pkey" PRIMARY KEY ("id")
 );
