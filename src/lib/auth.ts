@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+// import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/app/lib/prisma";
@@ -7,7 +8,7 @@ import bcrypt from "bcryptjs";
 import { UserRole } from "./api/types";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -81,7 +82,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           id: `guest_${player.id}`,
-          //   email: `g${player.id}@g.co`,
+          // email: `guest_${player.id}@badminton.local`,
           name: player.name || `Player ${player.playerNumber}`,
           role: UserRole.GUEST,
           playerId: player.id,
@@ -137,5 +138,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
-  trustHost: true,
+  // trustHost: true,
 });

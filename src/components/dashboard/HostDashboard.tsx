@@ -38,7 +38,7 @@ export default function HostDashboard() {
               </NextLinkButton>
             </Flex>
           </Flex>
-          <SessionsList status="UPCOMING_AND_INPROGRESS" />
+          <SessionsList status="UPCOMING_AND_INPROGRESS" mode="manage" />
         </Box>
       </Container>
     </ProtectedRouteGuard>

@@ -36,19 +36,6 @@ const formatTime = (dateString: string | Date, locale: string): string => {
   return date.format("HH:mm");
 };
 
-// UI Session type based on API data
-interface UISession {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  numberOfCourts: number;
-  totalPlayers: number;
-  maxPlayers: number;
-  status: "PREPARING" | "IN_PROGRESS" | "FINISHED";
-  hostName: string;
-}
-
 const statusColors = {
   PREPARING: "blue",
   IN_PROGRESS: "green",
